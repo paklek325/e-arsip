@@ -1,0 +1,355 @@
+/* =======================================================
+   📨 SURAT.CSS — E-ARSIP
+   Hanya berisi style SPESIFIK halaman surat.
+   Style global (card, table, badge, dark mode umum)
+   sudah ada di layout.css
+======================================================= */
+
+/* =======================================================
+   🎨 SURAT THEME VARIABLES
+======================================================= */
+:root {
+  --surat-input-ph:     #6c757d;
+  --surat-thead-bg:     #f8f9fa;
+  --surat-thead-color:  #495057;
+  --surat-td-color:     #212529;
+  --surat-tr-hover:     #f1f3f5;
+  --surat-row-border:   #e9ecef;
+  --surat-footer-bg:    #f9fafb;
+  --surat-modal-bg:     #ffffff;
+  --surat-modal-footer: #f8f9fa;
+  --surat-file-bg:      #f8f9fa;
+  --surat-file-border:  #e9ecef;
+}
+
+[data-theme="dark"] {
+  --surat-input-ph:     #64748b;
+  --surat-thead-bg:     #1a2942;
+  --surat-thead-color:  #94a3b8;
+  --surat-td-color:     #cbd5e1;
+  --surat-tr-hover:     #273549;
+  --surat-row-border:   #1e293b;
+  --surat-footer-bg:    #172033;
+  --surat-modal-bg:     #1e293b;
+  --surat-modal-footer: #172033;
+  --surat-file-bg:      #172033;
+  --surat-file-border:  #334155;
+}
+
+/* =======================================================
+   🔍 FILTER BAR
+======================================================= */
+.filter-bar {
+  width: 100%;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  margin-bottom: 1rem;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.filter-bar .form-control,
+.filter-bar .form-select {
+  font-size: 0.9rem;
+  border-radius: 0.5rem;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border-color: var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.filter-bar .form-control::placeholder {
+  color: var(--surat-input-ph);
+}
+
+.filter-bar .form-control:focus,
+.filter-bar .form-select:focus {
+  border-color: var(--active-color);
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
+}
+
+[data-theme="dark"] .filter-bar .form-control:focus,
+[data-theme="dark"] .filter-bar .form-select:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+/* Padding untuk select agar tombol X tidak menutupi panah */
+.position-relative .form-select {
+  padding-right: 4.6rem !important;
+  background-position: right 2.7rem center !important;
+  background-repeat: no-repeat;
+  background-size: 0.65rem auto;
+}
+
+.position-relative .form-control {
+  padding-right: 2.2rem !important;
+}
+
+@media (max-width: 768px) {
+  .filter-bar { padding: 0.75rem; }
+  .filter-bar .row > div { flex: 1 1 100%; }
+}
+
+@media (max-width: 992px) {
+  .filter-bar    { flex-direction: column; align-items: stretch; }
+  .filter-group  { width: 100%; justify-content: space-between; }
+  .filter-group > div { flex: 1 1 48%; }
+  .filter-actions { width: 100%; justify-content: flex-end; }
+}
+
+/* =======================================================
+   📋 TABEL SURAT (.table-custom)
+======================================================= */
+.table-custom {
+  font-size: 0.9rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  background-color: var(--card-bg);
+  color: var(--surat-td-color);
+  transition: background 0.3s;
+}
+
+.table-custom th,
+.table-custom td {
+  vertical-align: middle;
+  white-space: nowrap;
+  color: var(--surat-td-color);
+}
+
+.table-custom thead {
+  background-color: var(--surat-thead-bg);
+  color: var(--surat-thead-color);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.table-custom thead th { color: var(--surat-thead-color); }
+
+.table-custom tbody tr {
+  transition: all 0.2s ease-in-out;
+  border-bottom: 1px solid var(--surat-row-border);
+}
+
+.table-custom tbody tr:hover {
+  background-color: var(--surat-tr-hover);
+  transform: scale(1.002);
+}
+
+[data-theme="dark"] .table-custom td,
+[data-theme="dark"] .table-custom th,
+[data-theme="dark"] .table-custom tbody tr td { color: #e2e8f0 !important; }
+
+[data-theme="dark"] .table-custom thead th {
+  color: #94a3b8 !important;
+  background-color: #1a2942 !important;
+}
+
+[data-theme="dark"] .table-custom td strong,
+[data-theme="dark"] .table-custom td span:not(.badge) { color: #e2e8f0 !important; }
+
+[data-theme="dark"] .table-custom td .text-muted { color: #64748b !important; }
+
+/* =======================================================
+   🔘 TOMBOL CLEAR FILTER (X)
+======================================================= */
+.filter-clear-btn {
+  position: absolute !important;
+  top: 50% !important;
+  right: 1.2rem !important;
+  transform: translateY(-50%) !important;
+  width: 1.4rem !important;
+  height: 1.4rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 50% !important;
+  color: #6c757d !important;
+  cursor: pointer !important;
+  z-index: 5 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.filter-clear-btn i { font-size: 0.8rem !important; pointer-events: none !important; }
+
+.filter-clear-btn:hover {
+  background-color: #f1f3f5 !important;
+  color: #dc3545 !important;
+}
+
+[data-theme="dark"] .filter-clear-btn { color: #64748b !important; }
+[data-theme="dark"] .filter-clear-btn:hover {
+  background-color: #334155 !important;
+  color: #f87171 !important;
+}
+
+/* =======================================================
+   🪟 MODAL
+======================================================= */
+.modal-content {
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: var(--surat-modal-bg);
+  color: var(--surat-td-color);
+  transition: background 0.3s;
+}
+
+[data-theme="dark"] .modal-content { border: 1px solid #334155; }
+
+.modal-header .btn-close { opacity: 0.8; transition: opacity 0.2s; }
+.modal-header .btn-close:hover { opacity: 1; }
+
+[data-theme="dark"] .modal-header { border-color: #334155; color: #f1f5f9; }
+[data-theme="dark"] .modal-title  { color: #f1f5f9; }
+
+#editSuratModal .modal-header {
+  background-color: #ffc107 !important;
+  color: #212529 !important;
+}
+
+.modal-footer {
+  background-color: var(--surat-modal-footer) !important;
+  border-top: 1px solid var(--border-color);
+}
+
+.form-label { color: var(--text-color); }
+
+.modal-content .form-control,
+.modal-content .form-select,
+.modal-content textarea {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.modal-content .form-control::placeholder,
+.modal-content textarea::placeholder { color: var(--surat-input-ph); }
+
+.modal-content .form-control:focus,
+.modal-content .form-select:focus,
+.modal-content textarea:focus {
+  border-color: var(--active-color);
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+[data-theme="dark"] .modal-content .form-control:focus,
+[data-theme="dark"] .modal-content .form-select:focus,
+[data-theme="dark"] .modal-content textarea:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 0.25rem rgba(96, 165, 250, 0.25);
+}
+
+.modal-content .form-text,
+.modal-body p,
+.modal-body span { color: var(--text-color); opacity: 0.7; }
+
+/* =======================================================
+   📎 FILE ITEM
+======================================================= */
+.file-item {
+  border: 1px solid var(--surat-file-border);
+  background-color: var(--surat-file-bg);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+  color: var(--surat-td-color);
+}
+
+.file-item.bg-danger-subtle {
+  border-color: #fca5a5 !important;
+  background-color: #fee2e2 !important;
+  color: #ef4444 !important;
+}
+
+[data-theme="dark"] .file-item.bg-danger-subtle {
+  border-color: #ef4444 !important;
+  background-color: #3b1010 !important;
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .file-item a { color: #60a5fa; }
+
+/* =======================================================
+   🤖 AI SEARCH ANIMASI
+======================================================= */
+#btnAiSearch.ai-searching i {
+  animation: ai-spin-pulse 0.9s ease-in-out infinite;
+}
+
+#btnAiSearch.ai-searching {
+  animation: ai-glow 1.2s ease-in-out infinite;
+  cursor: progress;
+}
+
+@keyframes ai-spin-pulse {
+  0%   { transform: scale(1) rotate(0deg);     opacity: 1; }
+  50%  { transform: scale(1.25) rotate(180deg); opacity: 0.6; }
+  100% { transform: scale(1) rotate(360deg);   opacity: 1; }
+}
+
+@keyframes ai-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.55); }
+  50%       { box-shadow: 0 0 0 8px rgba(13, 110, 253, 0); }
+}
+
+[data-theme="dark"] #btnAiSearch.ai-searching {
+  animation: ai-glow-dark 1.2s ease-in-out infinite;
+}
+
+@keyframes ai-glow-dark {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.6); }
+  50%       { box-shadow: 0 0 0 8px rgba(96, 165, 250, 0); }
+}
+
+/* =======================================================
+   📄 PAGINATION (dark mode)
+======================================================= */
+[data-theme="dark"] .page-link {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .page-item.active .page-link {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+[data-theme="dark"] .page-item.disabled .page-link {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #475569;
+}
+
+/* =======================================================
+   Select2 (dark mode)
+======================================================= */
+[data-theme="dark"] .select2-container--default .select2-selection--single {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+[data-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__rendered {
+  color: #e2e8f0;
+}
+[data-theme="dark"] .select2-dropdown {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+[data-theme="dark"] .select2-container--default .select2-results__option {
+  color: #cbd5e1;
+}
+[data-theme="dark"] .select2-container--default .select2-results__option--highlighted[aria-selected] {
+  background-color: #334155;
+  color: #e2e8f0;
+}

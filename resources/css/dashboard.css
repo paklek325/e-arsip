@@ -1,0 +1,283 @@
+/* ==== ANIMASI ==== */
+.fade-up {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease forwards;
+}
+@keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==== CARD DASHBOARD ==== */
+.dashboard-card {
+    border-radius: 0.75rem !important;
+    transition: all 0.35s ease;
+    position: relative;
+    overflow: hidden;
+}
+.clickable-card { cursor: pointer; }
+.clickable-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* ==== ISI CARD ==== */
+.dashboard-card .card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0.9rem 0.75rem !important;
+}
+.icon-wrapper {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.85);
+    transition: all 0.3s ease;
+}
+.dashboard-card:hover .icon-wrapper { transform: scale(1.1); }
+.icon-animated {
+    font-size: 24px;
+    transition: transform 0.3s ease;
+}
+.dashboard-card:hover .icon-animated { transform: scale(1.15); }
+
+/* ==== TEKS ==== */
+.dashboard-label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #333;
+    text-align: center;
+    letter-spacing: 0.3px;
+    margin-top: 0.4rem;
+    margin-bottom: 0;
+}
+.dashboard-number {
+    font-weight: 700;
+    font-size: 1.65rem;
+    color: #222;
+    margin: 4px 0;
+    text-align: center;
+    line-height: 1.1;
+}
+
+/* ==== AREA BADGE / SUB KONTEN ==== */
+.card-sub {
+    min-height: 3.8rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+/* Progress bar selalu di bawah */
+.dashboard-card .progress {
+    margin-top: auto !important;
+    width: 100%;
+}
+
+/* ==== BACKGROUND (LIGHT MODE) ==== */
+.bg-primary-light {
+    background: linear-gradient(135deg, #a8c5ff, #d9e6ff, #ffffff);
+}
+.bg-success-light {
+    background: linear-gradient(135deg, #8ed7a0, #dff6e4, #ffffff);
+}
+.bg-warning-light {
+    background: linear-gradient(135deg, #ffdf9b, #fff3cd, #ffffff);
+}
+.bg-danger-light {
+    background: linear-gradient(135deg, #f6a8a8, #ffd6d6, #ffffff);
+}
+
+/* ==== DARK MODE (SINKRON DENGAN [data-theme="dark"]) ==== */
+[data-theme="dark"] .dashboard-label { color: #e0e6f1; }
+[data-theme="dark"] .dashboard-number { color: #ffffff; }
+[data-theme="dark"] .icon-wrapper {
+    background: rgba(255, 255, 255, 0.1);
+}
+[data-theme="dark"] .dashboard-card { box-shadow: none; }
+
+/* ==== DARK MODE CARD BACKGROUND ==== */
+[data-theme="dark"] .bg-primary-light {
+    background: linear-gradient(145deg, #243b6b, #1a2746);
+}
+[data-theme="dark"] .bg-success-light {
+    background: linear-gradient(145deg, #1d4734, #142e22);
+}
+[data-theme="dark"] .bg-warning-light {
+    background: linear-gradient(145deg, #4a3b1d, #2d2514);
+}
+[data-theme="dark"] .bg-danger-light {
+    background: linear-gradient(145deg, #552525, #2c1717);
+}
+
+/* ==== TABEL ==== */
+.users-table {
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    width: 100%;
+}
+.users-table thead {
+    background-color: #f8f9fa;
+}
+.users-table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: #6c757d;
+    border-bottom: 2px solid #dee2e6;
+}
+.users-table tbody tr {
+    background: #fff;
+    transition: all 0.2s ease-in-out;
+}
+.users-table tbody tr:hover {
+    background-color: #f1f3f5;
+    transform: scale(1.002);
+}
+.users-table td {
+    vertical-align: middle;
+    font-size: 0.9rem;
+    padding: 0.85rem 1rem;
+}
+
+/* ==== TABEL DARK MODE ==== */
+[data-theme="dark"] .users-table thead {
+    background-color: #1b2435;
+    color: #ffffff;
+}
+[data-theme="dark"] .users-table th {
+    color: #ffffff !important;
+    border-color: #27324b;
+}
+[data-theme="dark"] .users-table tbody tr {
+    background-color: #141c2c;
+    color: #ffffff;
+    transition: background-color 0.2s ease;
+}
+[data-theme="dark"] .users-table tbody tr:hover {
+    background-color: #1e2a40;
+}
+
+/* ==== BADGE ==== */
+.badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.35rem 0.6rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+/* LIGHT MODE */
+.badge-primary { background: #007bff; color: #fff; }
+.badge-success { background: #28a745; color: #fff; }
+.badge-warning { background: #ffc107; color: #000; }
+.badge-danger  { background: #dc3545; color: #fff; }
+.badge-info    { background: #17a2b8; color: #fff; }
+.badge-secondary { background: #6c757d; color: #fff; }
+
+/* DARK MODE */
+[data-theme="dark"] .badge {
+    font-weight: 600;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+[data-theme="dark"] .badge-primary {
+    background: rgba(30, 100, 210, 0.75);
+    border-color: rgba(120, 180, 255, 0.4);
+    color: #fff !important;
+}
+[data-theme="dark"] .badge-success {
+    background: rgba(25, 135, 84, 0.85);
+    border-color: rgba(100, 220, 140, 0.4);
+    color: #fff !important;
+}
+[data-theme="dark"] .badge-info {
+    background: rgba(13, 110, 200, 0.75);
+    border-color: rgba(130, 200, 255, 0.4);
+    color: #fff !important;
+}
+[data-theme="dark"] .badge-warning {
+    /* kuning butuh teks gelap agar terbaca */
+    background: rgba(255, 193, 7, 0.85);
+    border-color: rgba(255, 220, 80, 0.5);
+    color: #1a1209 !important;
+}
+[data-theme="dark"] .badge-danger {
+    background: rgba(200, 40, 55, 0.75);
+    border-color: rgba(255, 150, 160, 0.4);
+    color: #fff !important;
+}
+[data-theme="dark"] .badge-secondary {
+    background: rgba(140, 155, 175, 0.45);
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ==== TABEL TEXT COLOR ==== */
+[data-theme="dark"] .users-table td,
+[data-theme="dark"] .users-table a {
+    color: #ffffff !important;
+}
+
+/* ==== HEADER DASHBOARD ==== */
+
+[data-theme="dark"] .page-header h5 {
+    color: #ffffff !important;
+}
+
+/* ==== PERBAIKAN TEKS BADGE DI CARD (DARK MODE) ==== */
+[data-theme="dark"] .dashboard-card .badge {
+    color: #0e1525 !important; /* teks gelap agar kontras dengan background terang */
+    font-weight: 700;
+}
+
+/* ==== Badge di dalam stat card — background lebih solid, teks gelap agar kontras ==== */
+[data-theme="dark"] .dashboard-card .badge-primary {
+    background-color: rgba(100, 160, 255, 0.92) !important;
+    color: #0e1525 !important;
+}
+[data-theme="dark"] .dashboard-card .badge-success {
+    background-color: rgba(60, 220, 120, 0.92) !important;
+    color: #071a0e !important;
+}
+[data-theme="dark"] .dashboard-card .badge-info {
+    background-color: rgba(0, 200, 255, 0.92) !important;
+    color: #051525 !important;
+}
+[data-theme="dark"] .dashboard-card .badge-warning {
+    background-color: rgba(255, 200, 20, 0.95) !important;
+    color: #1a1209 !important;
+}
+[data-theme="dark"] .dashboard-card .badge-secondary {
+    background-color: rgba(200, 210, 230, 0.88) !important;
+    color: #0e1525 !important;
+}
+[data-theme="dark"] .dashboard-card .badge-danger {
+    background-color: rgba(255, 100, 110, 0.92) !important;
+    color: #1a0608 !important;
+}
+
+/* ==== RESPONSIF ==== */
+@media (max-width: 991.98px) {
+    .dashboard-number { font-size: 1.4rem; }
+    .icon-wrapper { width: 46px; height: 46px; }
+    .icon-animated { font-size: 21px; }
+    .dashboard-card .card-body { padding: 0.75rem 0.6rem !important; }
+    .card-sub { min-height: 3.4rem; }
+}
+@media (max-width: 767.98px) {
+    .dashboard-number { font-size: 1.3rem; }
+    .dashboard-label { font-size: 0.8rem; }
+    .icon-wrapper { width: 42px; height: 42px; }
+    .icon-animated { font-size: 19px; }
+    .card-sub { min-height: 3.2rem; }
+}

@@ -1,0 +1,472 @@
+/* =======================================================
+   SISWA.CSS
+   Desain modern & responsif dengan dukungan Dark Mode
+   Cakupan: Filter bar, Tabel, Ringkasan, dan Modal
+   (Tambah, Edit, Hapus, Detail, Preview File)
+   ======================================================= */
+
+/* ==== FILTER BAR ==== */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  margin-bottom: 1rem;
+}
+
+.filter-bar .filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filter-bar .form-control,
+.filter-bar .form-select {
+  font-size: 0.9rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.filter-bar .form-control:focus,
+.filter-bar .form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
+}
+
+/* ==== TOMBOL X DI INPUT/SELECT FILTER ==== */
+.filter-bar .position-relative .form-control,
+.filter-bar .position-relative .form-select {
+  padding-right: 2.3rem;
+}
+
+.filter-bar .reset-input-and-submit,
+.filter-bar .reset-sort-and-submit {
+  z-index: 5;
+  width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  background-color: transparent;
+  border: none;
+}
+
+.filter-bar .reset-input-and-submit:hover,
+.filter-bar .reset-sort-and-submit:hover {
+  color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.08);
+}
+
+/* select butuh ruang lebih untuk arrow + tombol X */
+.filter-bar select.form-select {
+  padding-right: 2.6rem;
+}
+
+/* ==== RESET BUTTON UTAMA ==== */
+#resetBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+  color: #495057;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+#resetBtn:hover {
+  background-color: #0d6efd;
+  color: #fff;
+  border-color: #0d6efd;
+  transform: scale(1.05);
+}
+
+/* ==== TABEL SISWA ==== */
+.table-siswa {
+  font-size: 0.9rem;
+  margin-bottom: 0;
+}
+
+.table-siswa thead th {
+  background-color: #f8f9fa;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #495057;
+  vertical-align: middle;
+}
+
+.table-siswa th,
+.table-siswa td {
+  vertical-align: middle;
+  padding: 0.75rem 1rem;
+}
+
+.table-siswa tbody tr {
+  transition: background-color 0.15s ease-in-out;
+}
+
+.table-siswa tbody tr:hover {
+  background-color: #f1f3f5;
+}
+
+/* ==== BADGE JENIS KELAMIN ==== */
+.badge-gender {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.5rem;
+  display: inline-block;
+}
+
+.badge-laki {
+  background-color: #cfe2ff;
+  color: #084298;
+  border: 1px solid #b6d4fe;
+}
+
+.badge-perempuan {
+  background-color: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+}
+
+/* ==== TOMBOL AKSI TABEL ==== */
+.table-siswa .btn-view,
+.table-siswa .btn-edit,
+.table-siswa .btn-delete {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease-in-out;
+  padding: 0;
+}
+
+.table-siswa .btn-view:hover,
+.table-siswa .btn-edit:hover,
+.table-siswa .btn-delete:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+/* ==== RESPONSIVE ==== */
+.table-responsive {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 transparent;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: #cbd5e0;
+  border-radius: 3px;
+}
+
+/* =======================================================
+   MODAL — TAMBAH / EDIT / HAPUS / DETAIL / PREVIEW
+   ======================================================= */
+
+#modalTambahSiswa .modal-content,
+#modalEditSiswa .modal-content,
+#modalHapusSiswa .modal-content,
+#modalDetailSiswa .modal-content,
+#modalPreviewFile .modal-content {
+  border-radius: 0.9rem;
+  overflow: hidden;
+}
+
+#modalTambahSiswa .modal-header,
+#modalEditSiswa .modal-header,
+#modalHapusSiswa .modal-header,
+#modalDetailSiswa .modal-header,
+#modalPreviewFile .modal-header {
+  border-bottom: none;
+  padding: 1rem 1.5rem;
+}
+
+#modalTambahSiswa .modal-body,
+#modalEditSiswa .modal-body,
+#modalDetailSiswa .modal-body,
+#modalPreviewFile .modal-body {
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+#modalTambahSiswa .modal-footer,
+#modalEditSiswa .modal-footer,
+#modalHapusSiswa .modal-footer,
+#modalDetailSiswa .modal-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background-color: #fff;
+}
+
+#modalTambahSiswa .form-label,
+#modalEditSiswa .form-label {
+  font-size: 0.85rem;
+  color: #495057;
+  margin-bottom: 0.35rem;
+}
+
+#modalTambahSiswa .form-control,
+#modalTambahSiswa .form-select,
+#modalEditSiswa .form-control,
+#modalEditSiswa .form-select {
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+}
+
+#modalTambahSiswa .form-control:focus,
+#modalTambahSiswa .form-select:focus,
+#modalEditSiswa .form-control:focus,
+#modalEditSiswa .form-select:focus {
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+/* ==== KOTAK FILE UPLOAD (file-item) ==== */
+.file-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  background-color: #fff;
+  transition: all 0.2s ease;
+  height: 100%;
+}
+
+.file-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.file-item .form-check {
+  margin-bottom: 0;
+}
+
+.file-item .form-check-label {
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.file-item .file-input {
+  font-size: 0.82rem;
+}
+
+.file-item .file-new-badge {
+  font-size: 0.78rem;
+}
+
+.file-item .file-delete-note {
+  font-size: 0.78rem;
+}
+
+.file-item .btn-ganti-single,
+.file-item .btn-download-single {
+  font-size: 0.8rem;
+}
+
+/* ==== MODAL HAPUS ==== */
+#modalHapusSiswa .modal-body {
+  padding: 2rem 1.5rem;
+}
+
+/* ==== MODAL DETAIL ==== */
+.detail-box {
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin: 0;
+  min-height: 2.4rem;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  word-break: break-word;
+}
+
+/* ==== MODAL PREVIEW FILE ==== */
+#modalPreviewFile .modal-body {
+  padding: 1.25rem;
+}
+
+#preview-container embed,
+#preview-container img {
+  max-width: 100%;
+  border-radius: 0.5rem;
+}
+
+/* =======================================================
+   DARK MODE
+   ======================================================= */
+[data-theme="dark"] .filter-bar {
+  background-color: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 2px 6px rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .filter-bar .form-control,
+[data-theme="dark"] .filter-bar .form-select {
+  background-color: #111827;
+  color: #f3f4f6;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .filter-bar .form-control:focus,
+[data-theme="dark"] .filter-bar .form-select:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+[data-theme="dark"] .filter-bar .reset-input-and-submit,
+[data-theme="dark"] .filter-bar .reset-sort-and-submit {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .filter-bar .reset-input-and-submit:hover,
+[data-theme="dark"] .filter-bar .reset-sort-and-submit:hover {
+  color: #f87171;
+  background-color: rgba(248, 113, 113, 0.1);
+}
+
+[data-theme="dark"] #resetBtn {
+  background-color: #1f2937;
+  color: #f3f4f6;
+  border-color: #374151;
+}
+
+[data-theme="dark"] #resetBtn:hover {
+  background-color: #60a5fa;
+  color: #fff;
+}
+
+[data-theme="dark"] .table-siswa thead th {
+  background-color: #374151 !important;
+  color: #f3f4f6;
+}
+
+[data-theme="dark"] .table-siswa tbody tr:hover {
+  background-color: #2d3748 !important;
+}
+
+[data-theme="dark"] .badge-laki {
+  background-color: #3b82f6;
+  color: #fff;
+  border-color: transparent;
+}
+
+[data-theme="dark"] .badge-perempuan {
+  background-color: #f472b6;
+  color: #fff;
+  border-color: transparent;
+}
+
+/* ==== MODAL DARK MODE ==== */
+[data-theme="dark"] #modalTambahSiswa .modal-content,
+[data-theme="dark"] #modalEditSiswa .modal-content,
+[data-theme="dark"] #modalHapusSiswa .modal-content,
+[data-theme="dark"] #modalDetailSiswa .modal-content,
+[data-theme="dark"] #modalPreviewFile .modal-content {
+  background-color: #1f2937;
+  color: #e5e7eb;
+  border: 1px solid #374151;
+}
+
+[data-theme="dark"] #modalTambahSiswa .modal-body,
+[data-theme="dark"] #modalEditSiswa .modal-body,
+[data-theme="dark"] #modalDetailSiswa .modal-body,
+[data-theme="dark"] #modalPreviewFile .modal-body {
+  background-color: #111827;
+}
+
+[data-theme="dark"] #modalTambahSiswa .modal-footer,
+[data-theme="dark"] #modalEditSiswa .modal-footer,
+[data-theme="dark"] #modalHapusSiswa .modal-footer,
+[data-theme="dark"] #modalDetailSiswa .modal-footer {
+  background-color: #1f2937;
+  border-top-color: #374151;
+}
+
+[data-theme="dark"] #modalTambahSiswa .form-label,
+[data-theme="dark"] #modalEditSiswa .form-label {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] #modalTambahSiswa .form-control,
+[data-theme="dark"] #modalTambahSiswa .form-select,
+[data-theme="dark"] #modalEditSiswa .form-control,
+[data-theme="dark"] #modalEditSiswa .form-select {
+  background-color: #0f172a;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] #modalTambahSiswa .form-control:focus,
+[data-theme="dark"] #modalTambahSiswa .form-select:focus,
+[data-theme="dark"] #modalEditSiswa .form-control:focus,
+[data-theme="dark"] #modalEditSiswa .form-select:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 0.2rem rgba(96, 165, 250, 0.25);
+}
+
+[data-theme="dark"] .file-item {
+  background-color: #0f172a;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .file-item:hover {
+  border-color: #475569;
+}
+
+[data-theme="dark"] .detail-box {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] #modalPreviewFile .modal-body {
+  background-color: #0f172a;
+}
+
+/* =======================================================
+   RESPONSIVE MOBILE
+   ======================================================= */
+@media (max-width: 768px) {
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .filter-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .filter-group > * {
+    flex: 1 1 100%;
+  }
+
+  #modalTambahSiswa .modal-body,
+  #modalEditSiswa .modal-body,
+  #modalDetailSiswa .modal-body,
+  #modalPreviewFile .modal-body {
+    max-height: 70vh;
+  }
+}

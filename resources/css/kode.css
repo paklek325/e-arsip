@@ -1,0 +1,60 @@
+/* ===========================
+   TABEL DATA KODE
+=========================== */
+.table-custom {
+  font-size: 0.9rem;
+  text-align: center;
+  border-collapse: collapse;
+}
+
+.table-custom th,
+.table-custom td {
+  vertical-align: middle;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.table-custom tbody tr:hover {
+  background-color: #f8f9fa;
+  transition: 0.2s ease-in-out;
+}
+
+.table-header {
+  background-color: #f1f3f5;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* ===========================
+   CARD DAN PAGINATION
+=========================== */
+.card {
+  border-radius: 0.75rem;
+}
+
+.card-footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}
+
+/* ===========================
+   DARK MODE SUPPORT
+=========================== */
+[data-theme="dark"] .table-custom {
+  color: #e5e7eb;
+  background-color: #1f2937;
+}
+
+[data-theme="dark"] .table-custom thead {
+  background-color: #374151 !important;
+  color: #f3f4f6;
+}
+
+[data-theme="dark"] .table-custom tbody tr:hover {
+  background-color: #2d3748 !important;
+}
+
+[data-theme="dark"] .card-footer {
+  background-color: #1f2937;
+  border-color: #374151;
+}

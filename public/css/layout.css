@@ -1,0 +1,706 @@
+/* =======================================================
+   📋 E-ARSIP — FINAL MODERN UI (DATTA ABLE STYLE)
+   -------------------------------------------------------
+   ✅ Sidebar elegan
+   ✅ Sinkron dark/light mode
+   ✅ Table stylish (no putih mencolok)
+   ✅ Smooth transition & no flicker
+======================================================= */
+
+/* 🌈 THEME VARIABLES */
+:root {
+  --body-bg: #f8f9fa;
+  --sidebar-bg: #1f2a44;
+  --sidebar-header: linear-gradient(135deg, #1b263b, #223047);
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --header-bg: #ffffff;
+  --text-color: #212529;
+  --active-color: #0d6efd;
+  --card-bg: #ffffff;
+  --transition: all 0.3s ease;
+
+  /* Table */
+  --table-head-bg:    #1f2a44;
+  --table-head-color: #e5e7eb;
+  --table-border:     rgba(0, 0, 0, 0.08);
+  --table-row-hover:  rgba(13, 110, 253, 0.05);
+  --table-td-color:   #212529;
+}
+
+[data-theme="dark"] {
+  --body-bg: #0f172a;
+  --sidebar-bg: #1b2233;
+  --sidebar-header: linear-gradient(135deg, #141b2d, #1b2233);
+  --sidebar-hover: rgba(255, 255, 255, 0.1);
+  --header-bg: #1f2937;
+  --text-color: #e5e7eb;
+  --active-color: #22d3ee;
+  --card-bg: #1f2937;
+
+  /* Table dark */
+  --table-head-bg:    #1e293b;
+  --table-head-color: #94a3b8;
+  --table-border:     rgba(255, 255, 255, 0.07);
+  --table-row-hover:  rgba(34, 211, 238, 0.06);
+  --table-td-color:   #e2e8f0;
+}
+
+/* =======================================================
+   🌍 BASE STYLE
+======================================================= */
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', 'Open Sans', sans-serif;
+  background: var(--body-bg);
+  color: var(--text-color);
+  transition: var(--transition);
+  overflow-x: hidden;
+}
+
+a { text-decoration: none; color: inherit; }
+
+/* =======================================================
+   🧭 SIDEBAR — Datta Able Style
+======================================================= */
+.pc-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1c2539 100%);
+  box-shadow: inset -1px 0 0 rgba(255,255,255,0.04), 3px 0 10px rgba(0,0,0,0.25);
+  color: #cfd6e4;
+  overflow-y: auto;
+  transition: var(--transition);
+  z-index: 1040;
+}
+
+/* === HEADER BRAND === */
+.m-header {
+  display: flex;
+  align-items: center;
+  padding: 1.4rem 1rem;
+  gap: 12px;
+  background: var(--sidebar-header);
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,0.05);
+}
+.m-header .logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+.m-header .logo:hover { transform: rotate(10deg) scale(1.05); }
+
+.brand-text {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.4px;
+}
+.brand-text span { color: var(--active-color); }
+
+/* === CAPTION === */
+.pc-caption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  color: #7a8499;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 0.8rem 1.2rem 0.3rem;
+}
+.pc-caption i {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* === MENU ITEM === */
+.pc-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 7px 1.2rem !important;
+  color: #cfd6e4;
+  font-size: 0.88rem;
+  border-radius: 6px;
+  line-height: 1.4;
+  transition: var(--transition);
+}
+.pc-link:hover {
+  background: var(--sidebar-hover);
+  color: #fff;
+}
+.pc-link.active {
+  background: rgba(34, 211, 238, 0.15);
+  color: var(--active-color);
+  font-weight: 600;
+}
+.pc-link i {
+  font-size: 1.05rem;
+  opacity: 0.85;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.pc-link span {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* === SCROLLBAR === */
+.pc-sidebar::-webkit-scrollbar { width: 6px; }
+.pc-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+}
+.pc-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+/* =======================================================
+   🧱 HEADER
+======================================================= */
+.pc-header {
+  position: fixed;
+  top: 0;
+  left: 260px;
+  right: 0;
+  height: 56px;
+  background: var(--header-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  transition: var(--transition);
+  z-index: 1050;
+}
+[data-theme="dark"] .pc-header {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+#sidebar-hide {
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+/* =======================================================
+   📦 CONTAINER
+======================================================= */
+.pc-container {
+  margin-left: 260px;
+  min-height: 100vh;
+  background: var(--body-bg);
+  transition: var(--transition);
+}
+body.sidebar-collapsed .pc-container { margin-left: 0; }
+
+/* =======================================================
+   📄 CARD + TABLE
+======================================================= */
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: var(--transition);
+}
+.card-header {
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* === TABLE === */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 0.93rem;
+  transition: var(--transition);
+}
+
+thead {
+  background: var(--table-head-bg);
+  color: var(--table-head-color);
+  text-transform: uppercase;
+}
+thead th {
+  font-weight: 600;
+  text-align: left;
+  padding: 0.9rem 1rem;
+  border: none;
+  letter-spacing: 0.3px;
+  font-size: 0.8rem;
+  color: var(--table-head-color);
+  /* Pembatas antar kolom header */
+  border-right: 1px solid var(--table-border);
+}
+thead th:last-child {
+  border-right: none;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--table-border);
+  transition: background 0.25s ease;
+}
+tbody tr:hover { background: var(--table-row-hover); }
+
+td {
+  padding: 0.8rem 1rem;
+  color: var(--table-td-color);
+  /* Pembatas antar kolom body */
+  border-right: 1px solid var(--table-border);
+}
+td:last-child {
+  border-right: none;
+}
+
+/* Dark mode — pastikan teks tabel terbaca jelas */
+[data-theme="dark"] td,
+[data-theme="dark"] th {
+  color: var(--table-td-color);
+}
+[data-theme="dark"] thead th {
+  color: var(--table-head-color);
+}
+[data-theme="dark"] tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* === BADGE === */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+}
+.badge-success {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+.badge-info {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+.badge-danger {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* === BUTTON === */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn i { font-size: 1rem; }
+
+.btn-primary {
+  background: linear-gradient(90deg, #0ea5e9, #2563eb);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(37,99,235,0.4);
+}
+.btn-primary:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+.btn-warning {
+  background: #fbbf24;
+  color: #1f2937;
+}
+.btn-warning:hover { filter: brightness(1.1); }
+
+/* === FORM INPUT === */
+input, select {
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.9rem;
+  color: var(--text-color);
+  background: var(--card-bg);
+  transition: var(--transition);
+}
+input:focus, select:focus {
+  border-color: var(--active-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(34,211,238,0.15);
+}
+
+/* =======================================================
+   🌙 THEME TRANSITION
+======================================================= */
+body {
+  opacity: 1;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+body[data-theme-transition] * { transition: none !important; }
+
+/* =======================================================
+   📱 RESPONSIVE FIX
+======================================================= */
+@media (max-width: 992px) {
+  .pc-sidebar { transform: translateX(-100%); }
+  .pc-sidebar.show { transform: translateX(0); }
+  .pc-header { left: 0; }
+  .pc-container { margin-left: 0; }
+}
+
+/* =======================================================
+   📱 MOBILE OPTIMIZATION — FIXED SIDEBAR & SMALL NAVBAR
+======================================================= */
+@media (max-width: 992px) {
+
+  .pc-header {
+    left: 0;
+    width: 100%;
+    height: 50px;
+    padding: 0 0.75rem;
+    background: var(--header-bg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    z-index: 1100;
+  }
+
+  .pc-header h5,
+  .pc-header .brand-text {
+    font-size: 0.95rem;
+  }
+
+  #sidebar-hide {
+    font-size: 1.2rem;
+  }
+
+  .pc-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 230px;
+    height: 100vh;
+    background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1c2539 100%);
+    box-shadow: 3px 0 15px rgba(0,0,0,0.4);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 1090;
+  }
+
+  .pc-sidebar.show {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.45);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1080;
+  }
+
+  .sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .pc-container {
+    margin-left: 0 !important;
+    padding: 65px 1rem 2rem;
+    transition: all 0.3s ease;
+  }
+
+  .card {
+    padding: 1rem;
+    margin: 0.75rem 0;
+    border-radius: 10px;
+  }
+
+  .m-header {
+    padding: 1rem;
+  }
+
+  .brand-text {
+    font-size: 1rem;
+  }
+
+  .pc-header .user-info {
+    display: none;
+  }
+}
+
+@media print {
+  .card, .table {
+    page-break-inside: avoid !important;
+  }
+}
+/* =====================================
+   REKAP CARD
+===================================== */
+
+.rekap-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.rekap-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(
+            circle at top right,
+            rgba(34,211,238,.15),
+            transparent 60%
+        );
+    pointer-events: none;
+}
+
+.rekap-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 5px;
+}
+
+.rekap-title {
+    font-size: .9rem;
+    font-weight: 500;
+    opacity: .9;
+    margin: 0;
+}
+
+.rekap-badge {
+    background: rgba(255,255,255,.9);
+    color: #0f172a;
+    padding: .65rem 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    border: none;
+}
+
+/* DARK MODE */
+
+[data-theme="dark"] .rekap-card {
+    background:
+        linear-gradient(
+            135deg,
+            #0f172a,
+            #0f2d45,
+            #164e63
+        ) !important;
+
+    border: 1px solid rgba(34,211,238,.15);
+}
+
+[data-theme="dark"] .rekap-card .dashboard-label {
+    color: #e0f7ff !important;
+}
+
+[data-theme="dark"] .rekap-card .icon-wrapper {
+    background: rgba(255,255,255,.08);
+}
+
+[data-theme="dark"] .rekap-card .icon-animated {
+    color: #67e8f9 !important;
+}
+
+[data-theme="dark"] .rekap-title {
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .rekap-badge {
+    background: rgba(34,211,238,.15);
+    color: #a5f3fc;
+    border: 1px solid rgba(34,211,238,.25);
+}
+/* =======================================================
+   🌙 DARK MODE TOGGLE SWITCH — .theme-toggle-label
+======================================================= */
+
+/* Sembunyikan #theme-switch lama jika masih ada di DOM lain */
+#theme-switch { display: none !important; }
+
+.theme-toggle-label {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  cursor: pointer;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.theme-toggle-label input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+/* Track (pill background) */
+.theme-toggle-label .tt-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #cbd5e1;
+  border: 1px solid rgba(0,0,0,0.1);
+  transition: background 0.35s ease, border-color 0.35s ease;
+}
+.theme-toggle-label input:checked + .tt-track {
+  background: #1e293b;
+  border-color: rgba(255,255,255,0.12);
+}
+
+/* Thumb (lingkaran geser) */
+.theme-toggle-label .tt-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  transition: transform 0.35s cubic-bezier(.4,0,.2,1), background 0.35s ease, box-shadow 0.35s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  pointer-events: none;
+  user-select: none;
+}
+.theme-toggle-label input:checked + .tt-track + .tt-thumb {
+  transform: translateX(24px);
+  background: #334155;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+/* Icon sun — tampil di light mode (unchecked) */
+.tt-icon-sun {
+  display: block;
+  color: #f59e0b;
+  font-size: 11px;
+}
+.tt-icon-moon {
+  display: none;
+  color: #93c5fd;
+  font-size: 11px;
+}
+
+/* Icon moon — tampil di dark mode (checked) */
+.theme-toggle-label input:checked ~ .tt-thumb .tt-icon-sun  { display: none;  }
+.theme-toggle-label input:checked ~ .tt-thumb .tt-icon-moon { display: block; }
+
+/* =======================================================
+   🎨 BADGE GENDER — Light & Dark Mode
+======================================================= */
+.badge-gender-laki {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+.badge-gender-perempuan {
+  background: #fce7f3;
+  color: #be185d;
+  border: 1px solid #f9a8d4;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .badge-gender-laki {
+  background: rgba(59, 130, 246, 0.18);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+[data-theme="dark"] .badge-gender-perempuan {
+  background: rgba(236, 72, 153, 0.18);
+  color: #f9a8d4;
+  border: 1px solid rgba(236, 72, 153, 0.35);
+}
+
+/* =======================================================
+   🔢 SPINNER INPUT — Dark Mode Fix
+   (chart header: Tahun input number)
+======================================================= */
+.chart-card .form-control,
+.chart-card .form-control-sm,
+.chart-card input[type="number"] {
+  background: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid rgba(0,0,0,0.15);
+  transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+
+[data-theme="dark"] .chart-card .form-control,
+[data-theme="dark"] .chart-card .form-control-sm,
+[data-theme="dark"] .chart-card input[type="number"] {
+  background: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+[data-theme="dark"] .chart-card .form-control::placeholder,
+[data-theme="dark"] .chart-card input[type="number"]::placeholder {
+  color: #64748b;
+}
+
+/* Spinner arrow warna di dark mode (Webkit) */
+[data-theme="dark"] input[type="number"]::-webkit-inner-spin-button,
+[data-theme="dark"] input[type="number"]::-webkit-outer-spin-button {
+  filter: invert(0.7);
+}
+
+/* Label "Tahun" di header chart */
+[data-theme="dark"] .chart-card .card-header .text-muted {
+  color: #64748b !important;
+}
+
+/* =======================================================
+   🃏 CHART CARD HEADER — Dark Mode
+======================================================= */
+[data-theme="dark"] .chart-card {
+  background: var(--card-bg);
+  border: 1px solid rgba(255,255,255,0.06) !important;
+}
+[data-theme="dark"] .chart-card .card-header {
+  border-bottom: 1px solid rgba(255,255,255,0.07) !important;
+}

@@ -1,0 +1,97 @@
+/* ==============================
+   STYLE UNTUK TABEL USER
+   ============================== */
+.card {
+  background-color: var(--bs-card-bg, #fff);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+/* Pastikan table melebar penuh */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: collapse;
+}
+
+/* Header table */
+.table thead th {
+  background-color: #f8f9fa;
+  color: #212529;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0.9rem;
+  font-size: 0.875rem;
+}
+
+/* Isi table */
+.table tbody td {
+  vertical-align: middle;
+  font-size: 0.9rem;
+  padding: 0.8rem;
+}
+
+/* Hover row */
+.table tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+  transition: 0.2s ease;
+}
+
+/* Tombol aksi */
+.table .btn {
+  border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+}
+
+/* ==============================
+   MODE GELAP (DARK MODE)
+   ============================== */
+[data-theme="dark"] .card {
+  background-color: #121826 !important;
+  color: #fff !important;
+}
+
+[data-theme="dark"] .table thead th {
+  background-color: #1e2636 !important;
+  color: #ffffff !important;
+  border-color: #2e3748 !important;
+}
+
+[data-theme="dark"] .table tbody tr {
+  background-color: #121826 !important;
+  border-color: #2e3748 !important;
+}
+
+[data-theme="dark"] .table tbody td {
+  color: #e2e8f0 !important;
+}
+
+/* Tombol tetap kontras di dark mode */
+[data-theme="dark"] .btn-info {
+  background-color: #3b82f6 !important;
+  border: none;
+}
+
+[data-theme="dark"] .btn-warning {
+  background-color: #f59e0b !important;
+  border: none;
+  color: #fff !important;
+}
+
+[data-theme="dark"] .btn-danger {
+  background-color: #ef4444 !important;
+  border: none;
+}
+
+/* ==============================
+   PERBAIKAN WIDTH TABLE
+   ============================== */
+.card .table-responsive {
+  min-width: 100%;
+  display: block;
+}

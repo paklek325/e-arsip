@@ -1,0 +1,391 @@
+/* =======================================================
+   SISWA.CSS
+   Desain modern & responsif dengan dukungan Dark Mode
+   ======================================================= */
+
+/* ==== FILTER BAR ==== */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  margin-bottom: 1rem;
+}
+
+.filter-bar .filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filter-bar .form-control,
+.filter-bar .form-select {
+  font-size: 0.9rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  min-width: 200px;
+}
+
+.filter-bar .form-control:focus,
+.filter-bar .form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
+}
+
+/* ==== TOMBOL X DI INPUT ==== */
+.position-relative {
+  position: relative;
+}
+
+.reset-input {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 50%;
+  width: 1.6rem;
+  height: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  z-index: 3;
+}
+
+.reset-input i {
+  font-size: 0.8rem;
+  color: #6c757d;
+  transition: color 0.2s ease;
+}
+
+.reset-input:hover {
+  background-color: #f8f9fa;
+  border-color: #ced4da;
+}
+
+.reset-input:hover i {
+  color: #dc3545;
+}
+
+.position-relative .form-control,
+.position-relative .form-select {
+  padding-right: 2.3rem !important;
+}
+
+/* ==== PERBAIKAN PANAH DAN X DI SELECT ==== */
+.filter-bar .form-select {
+  padding-right: 4.5rem !important;
+  background-position: right 2.8rem center !important;
+  background-repeat: no-repeat;
+  background-size: 0.65rem auto;
+}
+
+/* ==== RESET BUTTON UTAMA ==== */
+#resetBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+  color: #495057;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+#resetBtn:hover {
+  background-color: #0d6efd;
+  color: #fff;
+  border-color: #0d6efd;
+  transform: scale(1.05);
+}
+
+/* ==== TABEL SISWA ==== */
+.table-siswa {
+  font-size: 0.9rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.table-siswa thead {
+  background-color: #f8f9fa;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.table-siswa th,
+.table-siswa td {
+  vertical-align: middle;
+  white-space: nowrap;
+  padding: 0.75rem 1rem;
+}
+
+.table-siswa tbody td {
+  color: #1e293b;
+}
+
+.table-siswa tbody tr {
+  transition: all 0.2s ease-in-out;
+}
+
+.table-siswa tbody tr:hover {
+  background-color: #f1f3f5;
+  transform: scale(1.002);
+}
+
+/* ==== BADGE JENIS KELAMIN ==== */
+.badge-gender {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.5rem;
+}
+
+.badge-laki {
+  background-color: #cfe2ff;
+  color: #084298;
+  border: 1px solid #b6d4fe;
+}
+
+.badge-perempuan {
+  background-color: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+}
+
+/* ==== TOMBOL AKSI ==== */
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease-in-out;
+  color: #495057;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+}
+
+.btn-action:hover {
+  transform: scale(1.1);
+  color: #fff;
+}
+
+.btn-action.edit:hover {
+  background-color: #ffc107;
+  border-color: #ffc107;
+}
+
+.btn-action.delete:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+/* ==== RESPONSIVE ==== */
+.table-responsive {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 transparent;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: #cbd5e0;
+  border-radius: 3px;
+}
+
+/* ==== DARK MODE ==== */
+[data-theme="dark"] .filter-bar {
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  box-shadow: 0 2px 6px rgba(255,255,255,0.04);
+}
+
+[data-theme="dark"] .filter-bar input,
+[data-theme="dark"] .filter-bar select{
+  background-color: #111827;
+  color: #f3f4f6;
+  border: 1px solid #374151;
+}
+
+/* Custom dropdown arrow agar terlihat jelas di dark mode */
+[data-theme="dark"] .filter-bar .form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .filter-bar input::placeholder {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .filter-bar button {
+  background-color: #111827;
+  color: #f3f4f6;
+  border: 1px solid #374151;
+}
+[data-theme="dark"] .filter-bar button:hover {
+  background-color: #60a5fa;
+  color: #fff;
+  border-color: #60a5fa;
+}
+
+[data-theme="dark"] .filter-bar input:focus,
+[data-theme="dark"] .filter-bar select:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96,165,250,0.2);
+}
+
+/* Tombol X (reset) di dalam input/select supaya kontras */
+[data-theme="dark"] .reset-input {
+  background-color: #374151;
+  border: 1px solid #4b5563;
+}
+
+[data-theme="dark"] .reset-input i {
+  color: #d1d5db;
+}
+
+[data-theme="dark"] .reset-input:hover {
+  background-color: #4b5563;
+  border-color: #f87171;
+}
+
+[data-theme="dark"] .reset-input:hover i {
+  color: #f87171;
+}
+
+/* #resetBtn utama (icon refresh) */
+[data-theme="dark"] #resetBtn {
+  background-color: #111827;
+  color: #f3f4f6;
+  border: 1px solid #374151;
+}
+[data-theme="dark"] #resetBtn:hover {
+  background-color: #60a5fa;
+  color: #fff;
+  border-color: #60a5fa;
+}
+
+[data-theme="dark"] #resetBtn {
+  background-color: #1f2937;
+  color: #f3f4f6;
+  border-color: #374151;
+}
+
+[data-theme="dark"] #resetBtn:hover {
+  background-color: #60a5fa;
+  color: #fff;
+}
+
+[data-theme="dark"] .table-siswa {
+  color: #e5e7eb;
+  background-color: #1f2937;
+}
+
+[data-theme="dark"] .table-siswa thead {
+  background-color: #374151 !important;
+  color: #f3f4f6;
+}
+
+[data-theme="dark"] .table-siswa tbody tr:hover {
+  background-color: #2d3748 !important;
+}
+
+[data-theme="dark"] .badge-laki {
+  background-color: #3b82f6;
+  color: #fff;
+  border-color: transparent;
+}
+
+[data-theme="dark"] .badge-perempuan {
+  background-color: #f472b6;
+  color: #fff;
+  border-color: transparent;
+}
+
+[data-theme="dark"] .btn-action {
+  background-color: #1f2937;
+  border-color: #374151;
+  color: #f3f4f6;
+}
+
+[data-theme="dark"] .btn-action.edit:hover {
+  background-color: #facc15;
+  color: #111827;
+}
+
+[data-theme="dark"] .btn-action.delete:hover {
+  background-color: #ef4444;
+  color: #fff;
+}
+
+/* ==== RESPONSIVE MOBILE ==== */
+@media (max-width: 768px) {
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .filter-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .filter-group > * {
+    flex: 1 1 100%;
+  }
+}
+
+/* ==== RINGKASAN (SUMMARY BADGES) — DARK MODE ==== */
+[data-theme="dark"] .card-body .text-muted,
+[data-theme="dark"] .card-body span.text-muted {
+  color: #94a3b8 !important;
+}
+
+/* Total (bg-primary) sudah cukup kontras, biarkan default */
+
+/* Rombel & Belum Lengkap (bg-warning-subtle) */
+[data-theme="dark"] .badge.bg-warning-subtle {
+  background-color: rgba(251, 191, 36, 0.18) !important;
+  color: #fcd34d !important;
+  border-color: rgba(251, 191, 36, 0.35) !important;
+}
+
+/* Jenis Kelamin Laki-laki (bg-info-subtle) */
+[data-theme="dark"] .badge.bg-info-subtle {
+  background-color: rgba(96, 165, 250, 0.18) !important;
+  color: #93c5fd !important;
+  border-color: rgba(96, 165, 250, 0.35) !important;
+}
+
+/* Lengkap (bg-success-subtle) */
+[data-theme="dark"] .badge.bg-success-subtle {
+  background-color: rgba(52, 211, 153, 0.18) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(52, 211, 153, 0.35) !important;
+}
+
+/* Perempuan (inline style pink) — override lewat selector spesifik */
+[data-theme="dark"] .card-body .badge[style*="fff0f6"] {
+  background-color: rgba(244, 114, 182, 0.18) !important;
+  color: #f9a8d4 !important;
+  border-color: rgba(244, 114, 182, 0.35) !important;
+}

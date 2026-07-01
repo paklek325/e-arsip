@@ -1,0 +1,174 @@
+<div class="filter-bar shadow-sm">
+    <div class="row g-3 align-items-center w-100">
+
+        {{-- SEARCH --}}
+        <div class="col-xl-6 col-lg-6 col-md-12">
+            <div class="input-group search-group">
+
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    class="form-control"
+                    placeholder="Cari No Surat, Keterangan, Jenis, Perihal, Instansi, Pengirim, Penerima..."
+                    autocomplete="off">
+
+                <button
+                    type="button"
+                    id="resetSearch"
+                    class="btn btn-light border-start-0 d-none"
+                    title="Hapus Pencarian">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+
+            </div>
+        </div>
+
+        {{-- JENIS SURAT --}}
+        <div class="col-xl-3 col-lg-3 col-md-6">
+            <div class="position-relative">
+
+                <select id="jenis" class="form-select pe-5">
+                    <option value="">Jenis Surat</option>
+                    <option value="Masuk">Surat Masuk</option>
+                    <option value="Keluar">Surat Keluar</option>
+                </select>
+
+                <button
+                    type="button"
+                    id="resetJenis"
+                    class="filter-clear-btn d-none"
+                    title="Reset Filter">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+
+            </div>
+        </div>
+
+        {{-- SORT --}}
+        <div class="col-xl-3 col-lg-3 col-md-6">
+            <div class="position-relative">
+
+                <select id="sort" class="form-select pe-5">
+                    <option value="tanggal_terbaru">Tanggal Terbaru</option>
+                    <option value="tanggal_terlama">Tanggal Terlama</option>
+                    <option value="a-z">No Surat A-Z</option>
+                    <option value="z-a">No Surat Z-A</option>
+                </select>
+
+                <button
+                    type="button"
+                    id="resetSort"
+                    class="filter-clear-btn d-none"
+                    title="Reset Sort">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const search = document.getElementById('searchInput');
+    const resetSearch = document.getElementById('resetSearch');
+
+    function updateResetSearchButton() {
+        resetSearch?.classList.toggle(
+            'd-none',
+            !search.value.trim()
+        );
+    }
+
+    search?.addEventListener('input', () => {
+        updateResetSearchButton();
+    });
+
+    resetSearch?.addEventListener('click', () => {
+
+        search.value = '';
+        updateResetSearchButton();
+
+        search.dispatchEvent(new Event('input'));
+
+        if (typeof loadTable === 'function') {
+            loadTable();
+        }
+
+        search.focus();
+    });
+
+    updateResetSearchButton();
+
+    const jenis = document.getElementById('jenis');
+    const sort = document.getElementById('sort');
+
+    const resetJenis = document.getElementById('resetJenis');
+    const resetSort = document.getElementById('resetSort');
+
+    const params = new URLSearchParams(window.location.search);
+    const jenisSurat = params.get('jenis_surat');
+
+    if (jenisSurat && jenis) {
+        jenis.value =
+            jenisSurat.charAt(0).toUpperCase() +
+            jenisSurat.slice(1).toLowerCase();
+    }
+
+    function updateResetButtons() {
+
+        resetJenis?.classList.toggle(
+            'd-none',
+            !jenis.value
+        );
+
+        resetSort?.classList.toggle(
+            'd-none',
+            sort.selectedIndex === 0
+        );
+    }
+
+    jenis?.addEventListener('change', () => {
+        updateResetButtons();
+    });
+
+    sort?.addEventListener('change', () => {
+        updateResetButtons();
+    });
+
+    resetJenis?.addEventListener('click', () => {
+
+        jenis.value = '';
+        jenis.dispatchEvent(new Event('change'));
+
+        if (typeof loadTable === 'function') {
+            loadTable();
+        }
+
+    });
+
+    resetSort?.addEventListener('click', () => {
+
+        sort.selectedIndex = 0;
+        sort.dispatchEvent(new Event('change'));
+
+        if (typeof loadTable === 'function') {
+            loadTable();
+        }
+
+    });
+
+    updateResetButtons();
+
+});
+</script>
+
+
+
+
