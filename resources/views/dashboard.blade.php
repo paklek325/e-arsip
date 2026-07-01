@@ -267,8 +267,8 @@
                         <div class="d-flex align-items-center gap-1 ms-auto">
                             <label for="filterTahunPesertaDidik" class="small text-muted mb-0">Tahun</label>
                             <input type="number" id="filterTahunPesertaDidik" class="form-control form-control-sm"
-                                   min="{{ $tahunPesertaDidikMin ?? now()->year }}"
-                                   max="{{ $tahunPesertaDidikMax ?? now()->year }}"
+                                   min="{{ now()->year - 10 }}"
+                                   max="{{ now()->year }}"
                                    placeholder="Semua">
                         </div>
                     </div>
