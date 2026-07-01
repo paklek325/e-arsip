@@ -44,7 +44,6 @@
 </style>
 @endpush
 @push('scripts')
-<script src="{{ asset('js/user.js') }}" defer></script>
 @endpush
 
 

@@ -307,7 +307,7 @@
 
 @push('scripts')
 
-<script src="{{ asset('js/laporan.js') }}"></script>
+
 
 @endpush
 
