@@ -66,81 +66,51 @@ class Surat extends Model
     |--------------------------------------------------------------------------
     | Relasi Master Kode (via kode_surat - teks, untuk tampilan & pencarian)
     |--------------------------------------------------------------------------
+    | Dipakai untuk Surat Masuk (kode bebas) maupun Surat Keluar.
+    | ON UPDATE CASCADE di trigger menjaga konsistensinya.
+    |--------------------------------------------------------------------------
     */
 
     public function kode(): BelongsTo
     {
-        return $this->belongsTo(
-
-            Kode::class,
-
-            'kode_surat',
-
-            'kode'
-
-        );
+        return $this->belongsTo(Kode::class, 'kode_surat', 'kode');
     }
 
     /*
     |--------------------------------------------------------------------------
     | Relasi Master Kode (via id_kode - FOREIGN KEY asli)
     |--------------------------------------------------------------------------
-    | Ini relasi yang benar-benar ditegakkan di level database (terlihat
-    | sebagai garis relasi di diagram ERD). kode_surat (teks) tetap
-    | dipakai untuk tampilan/pencarian & mendukung kode bebas Surat Masuk,
-    | sedangkan id_kode adalah rujukan resmi ke baris master kode.
+    | Relasi yang benar-benar ditegakkan di level database (FK constraint).
+    | Selalu terisi untuk Surat Keluar, opsional (NULL) untuk Surat Masuk
+    | yang memakai kode bebas dari instansi pengirim.
     |--------------------------------------------------------------------------
     */
 
     public function kodeMaster(): BelongsTo
     {
-        return $this->belongsTo(
-
-            Kode::class,
-
-            'id_kode',
-
-            'id_kode'
-
-        );
+        return $this->belongsTo(Kode::class, 'id_kode', 'id_kode');
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Pembuat Surat
+    | Pembuat Surat (FK: surat.id_user -> users.id_user)
     |--------------------------------------------------------------------------
     */
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(
-
-            User::class,
-
-            'id_user',
-
-            'id_user'
-
-        );
+        return $this->belongsTo(User::class, 'id_user', 'id_user');
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Editor Terakhir
+    | Editor Terakhir (FK: surat.updated_by -> users.id_user)
     |--------------------------------------------------------------------------
     */
 
     public function editor(): BelongsTo
     {
-        return $this->belongsTo(
-
-            User::class,
-
-            'updated_by',
-
-            'id_user'
-
-        );
+        return $this->belongsTo(User::class, 'updated_by', 'id_user');
     }
 
     /*
