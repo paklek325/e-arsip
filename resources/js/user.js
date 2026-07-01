@@ -104,7 +104,7 @@
         // Gunakan URL object + searchParams.set agar query digabung dengan benar.
         const urlObj = new URL(url, window.location.origin);
         const formParams = new URLSearchParams(
-            new FormData(filterForm || new FormData())
+            filterForm ? new FormData(filterForm) : new FormData()
         );
         formParams.forEach((value, key) => urlObj.searchParams.set(key, value));
         urlObj.searchParams.set("ajax", "1");
@@ -113,6 +113,7 @@
         try {
             const res = await fetch(urlObj.toString(), {
                 headers: { "X-Requested-With": "XMLHttpRequest" },
+                credentials: "same-origin"
             });
             const html = await res.text();
             tableContainer.innerHTML = html;

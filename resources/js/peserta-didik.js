@@ -212,6 +212,7 @@ if (window.PesertaDidikApp) {
                 const url = query ? `${baseUrl}?${query}` : baseUrl;
                 const res = await fetch(url, {
                     headers: { "X-Requested-With": "XMLHttpRequest" },
+                    credentials: "same-origin"
                 });
                 if (!res.ok) throw new Error("Gagal memuat tabel");
                 wrapper.innerHTML = await res.text();

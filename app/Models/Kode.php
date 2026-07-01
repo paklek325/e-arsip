@@ -54,4 +54,19 @@ class Kode extends Model
             'id_kode'
         );
     }
+
+    protected static function booted()
+    {
+        static::updated(function ($kode) {
+            // Jika kolom 'kode' berubah nilainya
+            if ($kode->isDirty('kode')) {
+                $originalKode = $kode->getOriginal('kode');
+                $newKode = $kode->kode;
+                
+                // Update semua surat yang menggunakan kode lama menjadi kode baru
+                // Kita gunakan method update pada query builder untuk update massal
+                Surat::where('kode_surat', $originalKode)->update(['kode_surat' => $newKode]);
+            }
+        });
+    }
 }

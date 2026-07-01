@@ -202,7 +202,11 @@
             $maxRombelCount = max($maxRombelCount, count($tahunData['rombel'] ?? []));
         }
 
-        $donutColors = array_slice($donutPalette, 0, max($maxRombelCount, 1));
+        $donutColors = [];
+        $maxR = max($maxRombelCount, 1);
+        for ($i = 0; $i < $maxR; $i++) {
+            $donutColors[] = $donutPalette[$i % count($donutPalette)];
+        }
     @endphp
 
     <div class="row g-3 mb-4">
@@ -714,11 +718,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (chartPesertaDidik) {
-            chartPesertaDidik.data.labels                      = d.labels;
-            chartPesertaDidik.data.datasets[0].data            = isEmpty ? [1] : d.data;
-            chartPesertaDidik.data.datasets[0].backgroundColor = isEmpty
-                ? [isDark() ? '#27324b' : '#e5e7eb']
-                : colors;
+            chartPesertaDidik.data.labels = d.labels || [];
+            if (chartPesertaDidik.data.datasets && chartPesertaDidik.data.datasets[0]) {
+                chartPesertaDidik.data.datasets[0].data = isEmpty ? [1] : d.data;
+                chartPesertaDidik.data.datasets[0].backgroundColor = isEmpty
+                    ? [isDark() ? '#27324b' : '#e5e7eb']
+                    : colors;
+                chartPesertaDidik.data.datasets[0].hoverOffset = isEmpty ? 0 : 12;
+            }
             chartPesertaDidik.update();
         } else {
             chartPesertaDidik = new Chart(ctxPesertaDidik, {
@@ -750,22 +757,24 @@ document.addEventListener('DOMContentLoaded', function () {
                                     const data = chart.data;
                                     const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
                                     const genderMap = pesertaDidikGenderMap || {};
-                                    return data.labels.map((label, i) => {
-                                        const val  = data.datasets[0].data[i];
-                                        const pct  = total > 0 ? Math.round((val / total) * 100) : 0;
-                                        const g    = genderMap[label];
-                                        const genderText = g ? ` (L:${g.laki} P:${g.perempuan})` : '';
-                                        return {
-                                            text       : `Rombel ${label}: ${val}${genderText} — ${pct}%`,
-                                            fillStyle  : data.datasets[0].backgroundColor[i],
-                                            strokeStyle: data.datasets[0].backgroundColor[i],
-                                            lineWidth  : 0,
-                                            pointStyle : 'circle',
-                                            fontColor  : legendColor(),
-                                            index      : i,
-                                            hidden     : false,
-                                        };
-                                    });
+                                return (data.labels || []).map((label, i) => {
+                                    const dataset = data.datasets[0];
+                                    if (!dataset || !dataset.data) return {};
+                                    const val  = dataset.data[i] || 0;
+                                    const pct  = total > 0 ? Math.round((val / total) * 100) : 0;
+                                    const g    = genderMap[label];
+                                    const genderText = g ? ` (L:${g.laki} P:${g.perempuan})` : '';
+                                    return {
+                                        text       : `Rombel ${label}: ${val}${genderText} - ${pct}%`,
+                                        fillStyle  : dataset.backgroundColor?.[i] || '#e5e7eb',
+                                        strokeStyle: dataset.backgroundColor?.[i] || '#e5e7eb',
+                                        lineWidth  : 0,
+                                        pointStyle : 'circle',
+                                        fontColor  : legendColor(),
+                                        index      : i,
+                                        hidden     : false,
+                                    };
+                                });
                                 }
                             }
                         },
@@ -773,6 +782,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             ...tooltipPlugin(),
                             callbacks: {
                                 label: ctx => {
+                                    if (!ctx.dataset || !ctx.dataset.data) return '';
                                     const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
                                     const pct   = total > 0 ? Math.round((ctx.parsed / total) * 100) : 0;
                                     const g     = (pesertaDidikGenderMap || {})[ctx.label];
@@ -914,15 +924,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 chartPesertaDidik.options.plugins.legend.labels.color = legendColor();
                 // generateLabels perlu tahu warna baru — trigger via callback override
                 const origGen = chartPesertaDidik.options.plugins.legend.labels.generateLabels;
-                chartPesertaDidik.options.plugins.legend.labels.generateLabels = function(chart) {
-                    const items = origGen(chart);
-                    const col = legendColor();
-                    items.forEach(item => { item.fontColor = col; });
-                    return items;
-                };
+                if (!origGen._isWrapped) {
+                    chartPesertaDidik.options.plugins.legend.labels.generateLabels = function(chart) {
+                        const items = origGen.call(this, chart);
+                        const col = legendColor();
+                        if (items && Array.isArray(items)) {
+                            items.forEach(item => { item.fontColor = col; });
+                        }
+                        return items || [];
+                    };
+                    chartPesertaDidik.options.plugins.legend.labels.generateLabels._isWrapped = true;
+                }
             }
             if (chartPesertaDidik.options.plugins?.tooltip) {
-                Object.assign(chartPesertaDidik.options.tooltip, tooltipPlugin());
+                Object.assign(chartPesertaDidik.options.plugins.tooltip, tooltipPlugin());
             }
             chartPesertaDidik.update('none');
         }
