@@ -113,6 +113,15 @@ class Surat extends Model
         return $this->belongsTo(User::class, 'updated_by', 'id_user');
     }
 
+    /**
+     * Relasi ke Laporan Rekap (opsional)
+     * Sebuah surat bisa saja dikaitkan/digabungkan ke dalam satu laporan rekap (contoh: Laporan Bulanan).
+     */
+    public function laporanRekap(): BelongsTo
+    {
+        return $this->belongsTo(LaporanRekap::class, 'id_rekap', 'id_rekap');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Accessor
