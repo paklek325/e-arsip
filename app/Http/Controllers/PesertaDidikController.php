@@ -170,7 +170,7 @@ class PesertaDidikController extends Controller
             ->whereDate('tanggal_lahir', $tanggal);
 
         if ($excludeId) {
-            $query->where('id', '!=', $excludeId);
+            $query->where('id_peserta_didik', '!=', $excludeId);
         }
 
         return response()->json(['exists' => $query->exists()]);
@@ -600,7 +600,7 @@ PROMPT
         $fieldsParam = $request->get('fields');
 
         Log::info("=== DOWNLOAD SELECTED START ===");
-        Log::info("PesertaDidik ID: {$peserta_didik->id} - {$peserta_didik->nama_peserta_didik}");
+        Log::info("PesertaDidik ID: {$peserta_didik->id_peserta_didik} - {$peserta_didik->nama_peserta_didik}");
         Log::info("Fields Parameter: " . $fieldsParam);
 
         if (!$fieldsParam) {
