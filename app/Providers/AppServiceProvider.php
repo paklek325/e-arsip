@@ -20,7 +20,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Force HTTPS for all URLs (behind Cloudflare proxy)
+        \URL::forceScheme('https');
+
         Paginator::useBootstrapFive();
     }
 }
