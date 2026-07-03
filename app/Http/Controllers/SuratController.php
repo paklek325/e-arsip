@@ -48,8 +48,15 @@ class SuratController extends Controller
     /* ======================================================
  | 1. INDEX
  ====================================================== */
-    public function index(Request $request)
+    public function index(Request $request, ?string $lockJenis = null)
     {
+        // Halaman "Surat Masuk"/"Surat Keluar" adalah clone halaman Surat
+        // yang dikunci ke satu jenis. Paksa filter jenis agar tidak bisa
+        // ditembus lewat query string.
+        if ($lockJenis) {
+            $request->merge(['jenis' => $lockJenis]);
+        }
+
         $query = Surat::with([
             'kode',
             'user',
@@ -263,7 +270,7 @@ class SuratController extends Controller
         }
 
         $surat = $query
-            ->paginate(10)
+            ->paginate(20)
             ->appends($request->query());
 
         $kode = Kode::orderBy('kode')->get();
@@ -280,9 +287,23 @@ class SuratController extends Controller
             'surat.index',
             compact(
                 'surat',
-                'kode'
+                'kode',
+                'lockJenis'
             )
         );
+    }
+
+    /* ======================================================
+ | 1b. INDEX KHUSUS SURAT MASUK / KELUAR (clone terkunci)
+ ====================================================== */
+    public function masuk(Request $request)
+    {
+        return $this->index($request, 'Masuk');
+    }
+
+    public function keluar(Request $request)
+    {
+        return $this->index($request, 'Keluar');
     }
     /* ======================================================
  | 2. SHOW

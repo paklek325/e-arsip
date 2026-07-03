@@ -1,1666 +1,1236 @@
 /* ================================================================
- * surat.js  –  Modul manajemen surat (IIFE + namespace guard)
+ * peserta-didik.js  –  Modul manajemen peserta_didik (IIFE + namespace guard)
  *
- * Guard dilakukan dengan:
- *  1. Seluruh kode dibungkus IIFE `(() => { "use strict"; ... })()`
- *     → semua `let`/`const`/`function` bersifat lokal, tidak bocor ke global.
- *  2. Variabel lokal `$` dan `$$` TIDAK di-expose ke window sehingga
- *     tidak menimpa jQuery atau helper milik modul lain.
- *  3. API publik (loadTable, viewSurat, editSurat) di-expose di bawah
- *     satu namespace `window.SuratApp` sehingga tidak bentrok dengan
- *     fungsi bernama sama di file JS lain.
- *  4. Guard `if (!window.SuratApp)` mencegah inisialisasi ganda kalau
- *     file ini di-load lebih dari sekali.
+ * Perbaikan sinkronisasi:
+ *  - Filter dan pagination selalu selaras dengan URL (pushState / replaceState)
+ *  - Popstate menangani back/forward
+ *  - Pagination tidak mereset halaman ke 1
+ *  - Tombol reset di header (#resetBtn) juga berfungsi
+ *  - baseUrl diambil dari data-base-url wrapper (wajib diisi)
  * ================================================================ */
-if (window.SuratApp) {
-    console.warn("[surat.js] SuratApp sudah terdaftar, skip re-init.");
+if (window.PesertaDidikApp) {
+    console.warn(
+        "[peserta-didik.js] PesertaDidikApp sudah terdaftar, skip re-init."
+    );
 } else {
     (() => {
         "use strict";
 
-        /* ========================
-         * SCOPE GUARD — hanya jalan di halaman surat
-         * BUGFIX: sebelumnya guard ini cek `#tableContainer`, padahal ID itu
-         * JUGA dipakai di halaman User (dan kemungkinan halaman lain).
-         * Akibatnya surat.js tetap jalan di halaman /user, ikut fetch ke
-         * /surat, lalu menimpa tabel User dengan tabel Surat.
-         * Sekarang dicek pakai elemen unik milik halaman Surat saja,
-         * sama seperti pola "#page-user" di user.js.
-         * ======================== */
-        if (!document.querySelector("#page-surat")) return;
-
-        const tableContainer = document.querySelector("#tableContainer");
-        if (!tableContainer) return;
-
-        /* ========================
-         * GLOBAL UTILITIES
-         * ======================== */
-        const CSRF =
-            document
-                .querySelector('meta[name="csrf-token"]')
-                ?.getAttribute("content") || "";
-
-        // $ dan $$ sengaja TIDAK di-expose ke window agar tidak bentrok dengan
-        // jQuery ($) atau helper serupa milik modul JS lain.
-        const $ = (sel) => document.querySelector(sel);
-        const $$ = (sel) => Array.from(document.querySelectorAll(sel));
-
-        /**
-         * Ambil instance bootstrap.Modal yang sudah ada untuk elemen ini,
-         * atau buat baru kalau belum ada.
-         * BUGFIX: kode lama selalu memanggil `new bootstrap.Modal(el)` setiap
-         * modal dibuka. Ini menimpa instance lama di Data store milik elemen
-         * TANPA men-dispose-nya, sehingga event listener lama (show/hide,
-         * backdrop, dsb.) tetap menempel dan menumpuk. Ketika modal dibuka-
-         * tutup berkali-kali (mis. detail surat/siswa dibuka lagi setelah
-         * ditutup), listener lama yang sudah "yatim" itu bentrok dengan
-         * instance baru dan menyebabkan:
-         *   Uncaught TypeError: this._config is undefined
-         *       at _initializeBackDrop (bootstrap.bundle.min.js)
-         * Solusinya: selalu pakai getOrCreateInstance agar hanya ada SATU
-         * instance Modal per elemen sepanjang hidup halaman.
-         */
-        function getOrCreateModal(elOrSelector) {
-            const el =
-                typeof elOrSelector === "string"
-                    ? $(elOrSelector)
-                    : elOrSelector;
-            if (!el || typeof bootstrap === "undefined" || !bootstrap.Modal)
-                return null;
-            return bootstrap.Modal.getOrCreateInstance(el);
-        }
-
-        // ID surat yang sedang dibuka di modal detail
-        let currentSuratId = null;
-
-        // Tangkap URL params dari laporan sebelum dibersihkan (baca sinkron saat modul dijalankan)
-        const _initUrl = new URLSearchParams(window.location.search);
-        let lapParams = {
-            bulan: _initUrl.get("bulan") || null,
-            tahun: _initUrl.get("tahun") || null,
-            jenis_surat: _initUrl.get("jenis_surat") || null,
-        };
-
-        // Baca param ?tanggal=YYYY-MM dari URL (navigasi dari chat) dan set ke input #tanggal
-        let _initTanggal = _initUrl.get("tanggal") || null;
-        if (_initTanggal) {
-            document.addEventListener("DOMContentLoaded", () => {
-                const tanggalEl = document.getElementById("tanggal");
-                if (tanggalEl) tanggalEl.value = _initTanggal;
-            });
-        }
-
-        // Suntik CSS toast modern sekali saja (dipakai bersama semua tipe toast)
-        function injectToastStyles() {
-            if (document.getElementById("appToastStyles")) return;
-            const style = document.createElement("style");
-            style.id = "appToastStyles";
-            style.textContent = `
-                .app-toast{
-                    display:flex; align-items:flex-start; gap:12px;
-                    min-width:320px; max-width:380px;
-                    padding:14px 16px; margin-bottom:10px;
-                    border:0; border-radius:16px; color:#fff;
-                    box-shadow:0 12px 28px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.08);
-                    position:relative; overflow:hidden;
-                    opacity:0; transform:translateX(40px) scale(.96);
-                    transition:opacity .45s cubic-bezier(.21,1.02,.73,1),
-                               transform .45s cubic-bezier(.21,1.02,.73,1);
-                }
-                .app-toast.app-toast-in{ opacity:1; transform:translateX(0) scale(1); }
-                .app-toast.app-toast-out{ opacity:0; transform:translateX(40px) scale(.96); }
-                .app-toast-success{ background:linear-gradient(135deg,#16a34a,#22c55e); }
-                .app-toast-error{ background:linear-gradient(135deg,#dc2626,#ef4444); }
-                .app-toast-warning{ background:linear-gradient(135deg,#d97706,#f59e0b); }
-                .app-toast-info{ background:linear-gradient(135deg,#2563eb,#3b82f6); }
-                .app-toast-icon{
-                    flex-shrink:0; width:34px; height:34px; border-radius:50%;
-                    background:rgba(255,255,255,.22);
-                    display:flex; align-items:center; justify-content:center;
-                    font-size:17px; margin-top:1px;
-                }
-                .app-toast-body{ flex:1; font-size:.9rem; font-weight:600;
-                    line-height:1.35; padding-top:4px; }
-                .app-toast-close{
-                    flex-shrink:0; background:transparent; border:0; color:#fff;
-                    opacity:.85; font-size:1rem; line-height:1; padding:2px;
-                    margin-top:2px; cursor:pointer;
-                }
-                .app-toast-close:hover{ opacity:1; }
-                .app-toast-progress{
-                    position:absolute; left:0; bottom:0; height:3px; width:100%;
-                    background:rgba(255,255,255,.55); transform-origin:left;
-                    animation:appToastShrink 3.5s linear forwards;
-                }
-                @keyframes appToastShrink{ from{transform:scaleX(1);} to{transform:scaleX(0);} }
-            `;
-            document.head.appendChild(style);
-        }
-
-        const toast = (message, type = "info") => {
-            injectToastStyles();
-
-            let container = document.getElementById("customToastContainer");
-            if (!container) {
-                container = document.createElement("div");
-                container.id = "customToastContainer";
-                container.className =
-                    "position-fixed top-0 end-0 p-3 d-flex flex-column align-items-end";
-                container.style.zIndex = "2000";
-                document.body.appendChild(container);
-            }
-
-            const map = {
-                success: ["app-toast-success", "bi-check-circle-fill"],
-                error: ["app-toast-error", "bi-x-circle-fill"],
-                warning: ["app-toast-warning", "bi-exclamation-triangle-fill"],
-                info: ["app-toast-info", "bi-info-circle-fill"],
-            };
-            const [variant, icon] = map[type] || map.info;
-
-            const toastEl = document.createElement("div");
-            toastEl.className = `app-toast ${variant}`;
-            toastEl.setAttribute("role", "alert");
-            toastEl.setAttribute("aria-live", "assertive");
-            toastEl.setAttribute("aria-atomic", "true");
-            toastEl.innerHTML = `
-                <div class="app-toast-icon"><i class="bi ${icon}"></i></div>
-                <div class="app-toast-body">${message}</div>
-                <button type="button" class="app-toast-close" aria-label="Tutup">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-                <div class="app-toast-progress"></div>
-            `;
-
-            container.appendChild(toastEl);
-
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    toastEl.classList.add("app-toast-in");
-                });
-            });
-
-            const remove = () => {
-                toastEl.classList.remove("app-toast-in");
-                toastEl.classList.add("app-toast-out");
-                setTimeout(() => {
-                    toastEl.remove();
-                    if (!container.children.length) container.remove();
-                }, 450);
-            };
-
-            toastEl
-                .querySelector(".app-toast-close")
-                ?.addEventListener("click", remove);
-
-            setTimeout(remove, 3500);
-        };
-
-        const debounce = (fn, delay = 400) => {
-            let t;
-            return function (...args) {
-                clearTimeout(t);
-                t = setTimeout(() => fn.apply(this, args), delay);
-            };
-        };
-
-        async function safeFetch(url, options = {}) {
-            const headers = {
-                "X-Requested-With": "XMLHttpRequest",
-                ...(options.method && options.method !== "GET"
-                    ? { "X-CSRF-TOKEN": CSRF }
-                    : {}),
-                ...options.headers,
-            };
-
-            const res = await fetch(url, { ...options, headers });
-            if (!res.ok) {
-                let msg = res.statusText;
-                try {
-                    const errorBody = await res.json();
-                    msg = errorBody.message || msg;
-                } catch (_) {}
-                throw new Error(msg || `HTTP Error: ${res.status}`);
-            }
-            return res;
-        }
-
-        /* ========== INLINE ALERT DI DALAM MODAL ========== */
-        function showFormAlert(alertSelector, message, type = "warning") {
-            const alertEl = $(alertSelector);
-            if (!alertEl) {
-                toast(message, type);
-                return;
-            }
-            alertEl.className = `alert alert-${type} mb-3`;
-            alertEl.textContent = message;
-            alertEl.classList.remove("d-none");
-        }
-
-        function hideFormAlert(alertSelector) {
-            const alertEl = $(alertSelector);
-            if (alertEl) {
-                alertEl.classList.add("d-none");
-                alertEl.textContent = "";
-            }
-        }
-
-        /* ========================
-         * VALIDASI FILE (frontend)
-         * ======================== */
-
-        function validateFileInputs() {
-            return true;
-        }
-
-        /* ========================
-         * DATE HELPERS (d/m/Y)
-         * ======================== */
-
-        function formatDateDMY(dateStr) {
-            if (!dateStr) return "-";
-            const normalized =
-                dateStr.trim().length > 10
-                    ? dateStr.replace(" ", "T")
-                    : dateStr;
-
-            const d = new Date(normalized);
-            if (Number.isNaN(d.getTime())) return "-";
-
-            const day = String(d.getDate()).padStart(2, "0");
-            const month = String(d.getMonth() + 1).padStart(2, "0");
-            const year = d.getFullYear();
-            return `${day}/${month}/${year}`;
-        }
-
-        function formatDateTimeDMY(dateStr) {
-            if (!dateStr) return "-";
-            const normalized =
-                dateStr.trim().length > 10
-                    ? dateStr.replace(" ", "T")
-                    : dateStr;
-            const d = new Date(normalized);
-            if (Number.isNaN(d.getTime())) return "-";
-
-            const day = String(d.getDate()).padStart(2, "0");
-            const month = String(d.getMonth() + 1).padStart(2, "0");
-            const year = d.getFullYear();
-            const hours = String(d.getHours()).padStart(2, "0");
-            const minutes = String(d.getMinutes()).padStart(2, "0");
-
-            return `${day}/${month}/${year} ${hours}:${minutes}`;
-        }
-
-        /* ========================
-         * HELPERS
-         * ======================== */
-
-        function getFileIcon(name) {
-            const ext = name.split(".").pop().toLowerCase();
-            const map = {
-                pdf: "bi bi-file-earmark-pdf text-danger",
-                doc: "bi bi-file-earmark-word text-primary",
-                docx: "bi bi-file-earmark-word text-primary",
-                xls: "bi bi-file-earmark-excel text-success",
-                xlsx: "bi bi-file-earmark-excel text-success",
-                jpg: "bi bi-file-image text-warning",
-                jpeg: "bi bi-file-image text-warning",
-                png: "bi bi-file-image text-warning",
-            };
-            return map[ext] || "bi bi-file-earmark text-muted";
-        }
-
-        // ambil nama file dari URL (fallback kalau gagal: "lampiran")
-        function getFilenameFromUrl(url, fallback = "lampiran") {
-            try {
-                const u = new URL(url, window.location.origin);
-                const parts = u.pathname.split("/");
-                const last = parts.pop() || parts.pop();
-                return last || fallback;
-            } catch (e) {
-                return fallback;
-            }
-        }
-
-        async function fetchKodeList() {
-            try {
-                const res = await safeFetch("/surat/kode-surat-keluar", {
-                    headers: { Accept: "application/json" },
-                });
-                const data = await res.json();
-
-                if (!Array.isArray(data)) return [];
-
-                return data.map((k) => ({
-                    kode: k.kode,
-                    description: k.description || "",
-                }));
-            } catch (err) {
-                console.error("Gagal memuat daftar kode surat:", err);
-                toast("Gagal memuat daftar kode surat", "error");
-                return [];
-            }
-        }
-
-        // ===== CEK DUPLIKAT SURAT (no_surat + instansi + tanggal_surat) =====
-        async function checkDuplicateSurat({
-            no_surat,
-            instansi,
-            tanggal_surat,
-            exclude_id = "",
-        }) {
-            if (!no_surat || !instansi || !tanggal_surat) {
-                return false;
-            }
-
-            try {
-                const params = new URLSearchParams({
-                    no_surat,
-                    instansi,
-                    tanggal_surat,
-                });
-
-                if (exclude_id) params.append("exclude_id", exclude_id);
-
-                const url = `/surat/cek-duplikat?${params.toString()}`;
-
-                const res = await safeFetch(url, {
-                    headers: { Accept: "application/json" },
-                });
-
-                const data = await res.json();
-
-                if (typeof data?.exists === "boolean") {
-                    return data.exists;
-                } else {
-                    toast(
-                        "Respon cek duplikat tidak valid dari server.",
-                        "error"
-                    );
-                    return false;
-                }
-            } catch (err) {
-                console.error("Gagal cek duplikat surat:", err);
-                toast("Gagal mengecek duplikat surat.", "error");
-                return false;
-            }
-        }
-
-        function addTodayButton(inputSelector) {
-            const input = $(inputSelector);
-            if (!input || input.dataset.hasTodayBtn) return;
-
-            input.dataset.hasTodayBtn = "1";
-
-            let inputGroup = input.closest(".input-group");
-            if (!inputGroup) return;
-
-            const existingButton = inputGroup.querySelector(".btn-today-date");
-            if (existingButton) return;
-
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "btn btn-outline-secondary btn-today-date";
-            btn.textContent = "Hari Ini";
-
-            btn.addEventListener("click", () => {
-                const now = new Date();
-                const yyyy = now.getFullYear();
-                const mm = String(now.getMonth() + 1).padStart(2, "0");
-                const dd = String(now.getDate()).padStart(2, "0");
-                input.value = `${yyyy}-${mm}-${dd}`;
-                input.dispatchEvent(new Event("change"));
-            });
-
-            inputGroup.appendChild(btn);
-        }
-
-        /* ========================
-         * TABLE + FILTER
-         * ======================== */
-
-        let searchDebounceTimer = null;
-
-        function buildFilterParams() {
-            const params = new URLSearchParams();
-            const searchVal = $("#searchInput")?.value?.trim() || "";
-            const jenisVal = $("#jenis")?.value || "";
-            const tanggalVal = $("#tanggal")?.value || _initTanggal || "";
-            const sortVal = $("#sort")?.value || "";
-
-            if (tanggalVal) {
-                if (/^\d{4}(?:-\d{2}(?:-\d{2})?)?$/.test(tanggalVal)) {
-                    params.append("tanggal", tanggalVal);
-                }
-            }
-            if (searchVal) params.append("search", searchVal);
-            if (jenisVal) params.append("jenis", jenisVal);
-            if (sortVal) params.append("sort", sortVal);
-
-            // Baca bulan, tahun, jenis_surat dari lapParams (ditangkap saat modul dimuat, dari navigasi Laporan)
-            if (lapParams.bulan && !params.has("bulan")) {
-                params.append("bulan", lapParams.bulan);
-            }
-            if (lapParams.tahun && !params.has("tahun")) {
-                params.append("tahun", lapParams.tahun);
-            }
-            if (lapParams.jenis_surat && !params.has("jenis") && !jenisVal) {
-                params.append("jenis", lapParams.jenis_surat);
-            }
-
-            return params.toString();
-        }
-
-        async function loadTable(url = "/surat") {
-            try {
-                const q = buildFilterParams();
-                const fetchUrl = url.split("?")[0] + (q ? `?${q}` : "");
-
-                const res = await safeFetch(fetchUrl, {
-                    headers: { Accept: "text/html" },
-                });
-                const html = await res.text();
-                const container = $("#tableContainer");
-                if (container) {
-                    container.innerHTML = html;
-                    bindPaginationLinks();
-                    rebindResetButtons();
-                    rebindRowActionButtons();
-                }
-            } catch (err) {
-                console.error(err);
-                const container = $("#tableContainer");
-                if (container) {
-                    container.innerHTML = `<div class="alert alert-danger">Gagal memuat tabel. ${
-                        err.message || ""
-                    }</div>`;
-                }
-            }
-        }
-
-        function rebindRowActionButtons() {
-            // Scope ke tableContainer agar tidak menangkap tombol milik modul lain
-            // (mis. btn-view / btn-edit milik siswa.js)
-            const scope = tableContainer;
-
-            scope.querySelectorAll(".btn-view").forEach((b) => {
-                const clone = b.cloneNode(true);
-                b.parentNode.replaceChild(clone, b);
-                clone.addEventListener("click", (ev) => {
-                    ev.preventDefault();
-                    viewSurat(clone.dataset.id);
-                });
-            });
-
-            scope.querySelectorAll(".btn-edit").forEach((b) => {
-                const clone = b.cloneNode(true);
-                b.parentNode.replaceChild(clone, b);
-                clone.addEventListener("click", (ev) => {
-                    ev.preventDefault();
-                    editSurat(clone.dataset.id);
-                });
-            });
-
-            scope.querySelectorAll(".btn-delete").forEach((b) => {
-                const clone = b.cloneNode(true);
-                b.parentNode.replaceChild(clone, b);
-                clone.addEventListener("click", (ev) => {
-                    ev.preventDefault();
-                    const id = clone.dataset.id;
-                    $("#deleteSuratId").value = id;
-                    const row = clone.closest("tr");
-                    const noSuratText = row
-                        ? row
-                              .querySelector("td:nth-child(2)")
-                              ?.textContent?.trim()
-                        : id;
-                    const noSuratEl = $("#delete_no_surat_text");
-                    if (noSuratEl) noSuratEl.textContent = noSuratText || id;
-                    const deleteModal = getOrCreateModal("#deleteSuratModal");
-                    if (deleteModal) {
-                        deleteModal.show();
-                    } else {
-                        console.warn("Bootstrap Modal not available.");
-                    }
-                });
-            });
-        }
-
-        function initFilters() {
-            const searchInputEl = $("#searchInput");
-            if (searchInputEl) {
-                searchInputEl.addEventListener("input", () => {
-                    clearTimeout(searchDebounceTimer);
-                    searchDebounceTimer = setTimeout(() => loadTable(), 400);
-                });
-            }
-
-            ["#jenis", "#tanggal", "#sort"].forEach((s) =>
-                $(s)?.addEventListener("change", () => loadTable())
+        // ── scope guard: modul ini hanya jalan kalau wrapper ada di halaman ──
+        const wrapper = document.querySelector("#wrapper-table-peserta_didik");
+        if (!wrapper) return;
+
+        const $ = (sel, ctx = document) => ctx.querySelector(sel);
+        const $$ = (sel, ctx = document) =>
+            Array.from(ctx.querySelectorAll(sel));
+
+        // WAJIB: set data-base-url pada wrapper di HTML
+        const baseUrl = wrapper.dataset.baseUrl;
+        if (!baseUrl) {
+            console.error(
+                "[peserta-didik.js] data-base-url tidak ditemukan pada wrapper. " +
+                    "Pastikan ada: <div id='wrapper-table-peserta_didik' data-base-url='{{ route('peserta-didik.index') }}'>"
             );
-
-            const resetAll = $("#resetBtn");
-            if (resetAll) {
-                resetAll.addEventListener("click", (e) => {
-                    e.preventDefault();
-
-                    const sortEl = $("#sort");
-                    const defaultSort =
-                        sortEl?.dataset.default || "tanggal_terbaru";
-
-                    ["#searchInput", "#jenis", "#tanggal", "#sort"].forEach(
-                        (sel) => {
-                            const el = $(sel);
-                            if (!el) return;
-                            el.value = el.id === "sort" ? defaultSort : "";
-                        }
-                    );
-
-                    lapParams = { bulan: null, tahun: null, jenis_surat: null };
-                    _initTanggal = null;
-                    loadTable();
-                });
-            }
-
-            rebindResetButtons();
+            return;
         }
 
-        function rebindResetButtons() {
-            $$("button.reset-input").forEach((btn) => {
-                const clone = btn.cloneNode(true);
-                btn.parentNode.replaceChild(clone, btn);
-                clone.addEventListener("click", (e) => {
-                    e.preventDefault();
-                    const target = $(clone.dataset.target);
-                    if (!target) return;
+        const token = $('meta[name="csrf-token"]')?.getAttribute("content");
 
-                    let newVal = "";
+        // ============================================================
+        // TOAST
+        // ============================================================
+        function toast(message, type = "info") {
+            const existing = document.getElementById(
+                "PesertaDidikToastContainer"
+            );
+            if (existing) existing.remove();
 
-                    if (target.dataset.default) newVal = target.dataset.default;
-                    else if (target.id === "sort") newVal = "tanggal_terbaru";
+            const container = document.createElement("div");
+            container.id = "PesertaDidikToastContainer";
+            container.className = "position-fixed top-0 end-0 p-3";
+            container.style.zIndex = "2100";
 
-                    target.value = newVal;
+            const map = {
+                success: ["bg-success", "✅"],
+                error: ["bg-danger", "❌"],
+                warning: ["bg-warning text-dark", "⚠️"],
+                info: ["bg-primary", "ℹ️"],
+            };
+            const [bg, icon] = map[type] || map.info;
 
-                    if (target.id === "searchInput") {
-                        loadTable();
-                    } else {
-                        target.dispatchEvent(new Event("change"));
-                    }
-                });
-            });
+            container.innerHTML = `
+            <div class="toast align-items-center text-white ${bg} border-0 shadow-sm"
+                role="alert" aria-live="assertive" aria-atomic="true"
+                style="min-width:280px;opacity:0;transform:translateY(-10px);transition:all .4s ease;">
+                <div class="d-flex">
+                    <div class="toast-body fw-semibold">${icon} ${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>`;
+
+            document.body.appendChild(container);
+            const toastEl = container.querySelector(".toast");
+            setTimeout(() => {
+                toastEl.style.opacity = "1";
+                toastEl.style.transform = "translateY(0)";
+            }, 50);
+            setTimeout(() => {
+                toastEl.style.opacity = "0";
+                toastEl.style.transform = "translateY(-10px)";
+                setTimeout(() => container.remove(), 500);
+            }, 3500);
         }
 
-        function bindPaginationLinks() {
-            // Scope ke tableContainer agar tidak tangkap pagination milik tabel lain
-            tableContainer.querySelectorAll(".pagination a").forEach((a) => {
-                const clone = a.cloneNode(true);
-                a.parentNode.replaceChild(clone, a);
-                clone.addEventListener("click", (e) => {
-                    e.preventDefault();
-                    if (clone.href) loadTable(clone.href);
-                });
-            });
-        }
-
-        /* =========================================================
-         * 1. TAMBAH SURAT
-         * ========================================================= */
-
-        async function setupAddKodeSurat(initialValue = "") {
-            const jenisAdd = $("#jenis_surat_add");
-            const kodeContainer = $("#kode-container-add");
-            if (!jenisAdd || !kodeContainer) return;
-
-            async function renderKodeInput() {
-                const val = (jenisAdd.value || "").trim().toLowerCase();
-
-                if (!val) {
-                    kodeContainer.innerHTML = `
-                    <label class="form-label">Kode Surat</label>
-                    <input type="text"
-                            id="kode_surat_add"
-                            name="kode_surat"
-                            class="form-control"
-                            placeholder="Pilih jenis surat terlebih dahulu"
-                            disabled>
-                    <small class="text-muted">
-                        Pilih jenis surat terlebih dahulu. Wajib diisi hanya untuk surat "Keluar".
-                    </small>
-                `;
-                    return;
-                }
-
-                if (val === "keluar") {
-                    kodeContainer.innerHTML = `
-                    <label class="form-label">Kode Surat</label>
-                    <select id="kode_surat_add" name="kode_surat" class="form-select" required>
-                        <option value="">Memuat daftar kode...</option>
-                    </select>
-                    <small class="text-muted">Pilih kode surat yang sudah terdaftar di master kode.</small>
-                `;
-
-                    const kodeSelect = $("#kode_surat_add");
-                    if (!kodeSelect) return;
-
-                    kodeSelect.disabled = true;
-
-                    const kodeList = await fetchKodeList();
-
-                    kodeSelect.innerHTML =
-                        `<option value="">-- Pilih Kode Surat --</option>` +
-                        kodeList
-                            .map(
-                                (k) =>
-                                    `<option value="${k.kode}">${k.kode} - ${
-                                        k.description || "-"
-                                    }</option>`
-                            )
-                            .join("");
-
-                    if (initialValue) {
-                        kodeSelect.value = initialValue;
-                    }
-
-                    kodeSelect.disabled = false;
-                    return;
-                }
-
-                kodeContainer.innerHTML = `
-                <label class="form-label">Kode Surat</label>
-                <input type="text"
-                            id="kode_surat_add"
-                            name="kode_surat"
-                            class="form-control"
-                            placeholder="Masukkan kode surat (optional)"
-                            value="${initialValue}">
-                <small class="text-muted">
-                    Opsional untuk surat masuk, wajib hanya jika jenis surat adalah "Keluar".
-                </small>
-            `;
-            }
-
-            jenisAdd.removeEventListener("change", jenisAdd._kodeHandler);
-            jenisAdd._kodeHandler = renderKodeInput;
-            jenisAdd.addEventListener("change", jenisAdd._kodeHandler);
-
-            await renderKodeInput();
-        }
-
-        function setupAddSuratForm() {
-            const addForm = $("#addSuratForm");
-            addForm?.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const fd = new FormData(addForm);
-                const submitBtn = addForm.querySelector("[type='submit']");
-                const orig = submitBtn?.innerHTML;
-
-                validateFileInputs();
-                hideFormAlert("#addSuratAlert");
-
-                const no_surat = fd.get("no_surat")?.toString().trim() || "";
-                const instansi = fd.get("instansi")?.toString().trim() || "";
-                const tanggal_surat =
-                    fd.get("tanggal_surat")?.toString().trim() || "";
-
-                try {
-                    const isDup = await checkDuplicateSurat({
-                        no_surat,
-                        instansi,
-                        tanggal_surat,
-                    });
-
-                    if (isDup) {
-                        showFormAlert(
-                            "#addSuratAlert",
-                            "Data dengan nomor surat, instansi, dan tanggal yang sama sudah ada.",
-                            "warning"
-                        );
-                        $("#add_no_surat")?.focus();
-                        return;
-                    }
-
-                    if (submitBtn) {
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...`;
-                    }
-
-                    const res = await safeFetch("/surat", {
-                        method: "POST",
-                        body: fd,
-                    });
-                    const data = await res.json();
-
-                    if (data?.success) {
-                        toast(
-                            data.message || "Surat berhasil ditambahkan",
-                            "success"
-                        );
-                        bootstrap.Modal.getInstance(
-                            $("#addSuratModal")
-                        )?.hide();
-                        addForm.reset();
-                        const fileInput =
-                            addForm.querySelector('input[type="file"]');
-                        if (fileInput) fileInput.value = "";
-                        hideFormAlert("#addSuratAlert");
-                        loadTable();
-                    } else {
-                        let msg =
-                            data?.message ||
-                            "Gagal menyimpan surat. Periksa input Anda.";
-
-                        if (
-                            data?.errors &&
-                            data.errors.no_surat &&
-                            data.errors.no_surat.length
-                        ) {
-                            msg = data.errors.no_surat[0];
-                        }
-
-                        showFormAlert("#addSuratAlert", msg, "danger");
-                    }
-                } catch (err) {
-                    console.error("Error Tambah Surat:", err);
-                    showFormAlert(
-                        "#addSuratAlert",
-                        `Terjadi kesalahan: ${err.message || "Server error"}`,
-                        "danger"
-                    );
-                } finally {
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = orig;
-                    }
-                }
-            });
-
-            const addModalEl = $("#addSuratModal");
-            if (addModalEl) {
-                addModalEl.addEventListener("show.bs.modal", async () => {
-                    const f = $("#addSuratForm");
-                    if (f) {
-                        f.reset();
-                        const fileInput = f.querySelector('input[type="file"]');
-                        if (fileInput) fileInput.value = "";
-                    }
-                    hideFormAlert("#addSuratAlert");
-                    await setupAddKodeSurat();
-                    addTodayButton("#add_tanggal");
-                });
-            }
-        }
-
-        /* =========================================================
-         * 2. EDIT SURAT
-         * ========================================================= */
-
-        async function setupEditKodeSurat(s = {}, originalData = null) {
-            const cont = $("#kode-container-edit");
-            if (!cont) return;
-
-            // ── Cegah race condition: batalkan render sebelumnya yang masih berjalan ──
-            if (cont._kodeRendering) {
-                cont._kodeAborted = true;
-            }
-            cont._kodeRendering = true;
-            cont._kodeAborted = false;
-
-            // Lepas event handler lama sebelum pasang yang baru
-            const editJenis = $("#edit_jenis");
-            if (editJenis && editJenis._kodeHandler) {
-                editJenis.removeEventListener("change", editJenis._kodeHandler);
-                editJenis._kodeHandler = null;
-            }
-
-            const jenis = (
-                s?.jenis_surat ||
-                editJenis?.value ||
-                ""
-            ).toLowerCase();
-
-            if (jenis === "keluar") {
-                const currentKode = s?.kode_surat || "";
-
-                cont.innerHTML = `
-            <label class="form-label">Kode Surat</label>
-            <select
-                id="kode_input_edit"
-                name="kode_surat"
-                class="form-select"
-                required>
-                <option value="">Memuat kode...</option>
-            </select>
-            <small class="text-muted">Pilih kode surat untuk surat keluar.</small>
-        `;
-
-                const sel = $("#kode_input_edit");
-                if (!sel) {
-                    cont._kodeRendering = false;
-                    return;
-                }
-
-                sel.disabled = true;
-
-                const kodeList = await fetchKodeList();
-
-                // Batalkan jika sudah di-override oleh render berikutnya
-                if (cont._kodeAborted) {
-                    cont._kodeRendering = false;
-                    return;
-                }
-
-                sel.innerHTML =
-                    `<option value="">-- Pilih Kode Surat --</option>` +
-                    kodeList
-                        .map(
-                            (k) => `
-                <option
-                    value="${k.kode}"
-                    ${k.kode === currentKode ? "selected" : ""}>
-                    ${k.kode} - ${k.description || "-"}
-                </option>
-            `
-                        )
-                        .join("");
-
-                sel.disabled = false;
-            } else {
-                // Untuk surat MASUK:
-                // - Jika data asli dari server memang Masuk → tampilkan kode_surat lama
-                // - Jika user baru saja ganti dari Keluar ke Masuk → kosongkan (jangan bocorkan kode dropdown)
-                let manualKode = "";
-
-                const sourceData = originalData || s;
-                if (
-                    sourceData?.jenis_surat &&
-                    sourceData.jenis_surat.toLowerCase() === "masuk"
-                ) {
-                    manualKode = sourceData?.kode_surat || "";
-                }
-                // Jika originalData ada tapi jenis aslinya Keluar, manualKode tetap "" ✓
-
-                cont.innerHTML = `
-            <label class="form-label">Kode Surat</label>
-            <input
-                type="text"
-                id="kode_input_edit"
-                name="kode_surat"
-                class="form-control"
-                value="${manualKode}"
-                placeholder="Masukkan kode surat (opsional)">
-            <small class="text-muted">
-                Kode surat dapat diisi manual untuk surat masuk.
-            </small>
-        `;
-            }
-
-            cont._kodeRendering = false;
-
-            // Pasang event handler baru, teruskan originalData agar selalu tahu data asli server
-            if (editJenis) {
-                editJenis._kodeHandler = async function () {
-                    await setupEditKodeSurat(
-                        { jenis_surat: this.value },
-                        originalData || s // pertahankan data asli server
-                    );
-                };
-                editJenis.addEventListener("change", editJenis._kodeHandler);
-            }
-        }
-
-        async function editSurat(id) {
+        // ============================================================
+        // ALERT FORM
+        // ============================================================
+        function showFormAlert(selector, message) {
+            const el = $(selector);
+            if (!el) return;
+            el.textContent = message;
+            el.classList.remove("d-none");
+            el.style.display = "block";
             try {
-                const res = await safeFetch(`/surat/${id}`);
-                const j = await res.json();
-                if (!j?.success)
-                    return toast("Gagal memuat data surat", "error");
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+            } catch {}
+        }
 
-                const s = j.surat;
-                const editForm = $("#editSuratForm");
+        function hideFormAlert(selector) {
+            const el = $(selector);
+            if (!el) return;
+            el.textContent = "";
+            el.classList.add("d-none");
+            el.style.display = "none";
+        }
 
-                hideFormAlert("#editSuratAlert");
+        // ============================================================
+        // CEK DUPLIKAT
+        // ============================================================
+        async function cekDuplikatPesertaDidik(
+            nama,
+            tanggal,
+            excludeId = null
+        ) {
+            if (!nama || !tanggal) return false;
+            const params = new URLSearchParams({
+                nama_peserta_didik: nama,
+                tanggal_lahir: tanggal,
+            });
+            if (excludeId) params.append("exclude_id", excludeId);
+            try {
+                const res = await fetch(`${baseUrl}/cek-duplikat?${params}`, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                });
+                const j = await res.json().catch(() => ({}));
+                return j.exists === true;
+            } catch {
+                return false;
+            }
+        }
 
-                if (editForm) {
-                    editForm
-                        .querySelectorAll('input[name="hapus_file[]"]')
-                        .forEach((input) => input.remove());
+        // ============================================================
+        // DEBOUNCE
+        // ============================================================
+        function debounce(fn, delay = 400) {
+            let t;
+            return (...args) => {
+                clearTimeout(t);
+                t = setTimeout(() => fn(...args), delay);
+            };
+        }
 
-                    editForm.querySelectorAll(".file-item").forEach((item) => {
-                        item.classList.remove(
-                            "bg-danger-subtle",
-                            "text-decoration-line-through"
-                        );
-                        const button = item.querySelector(
-                            ".btn-delete-old-file"
-                        );
-                        if (button) {
-                            button.classList.remove("btn-danger");
-                            button.classList.add("btn-outline-danger");
-                            const icon = button.querySelector("i");
-                            if (icon) icon.className = "bi bi-trash";
-                            button.title = "Tandai untuk dihapus";
-                        }
-                    });
+        // ============================================================
+        // FILTER BAR — elemen
+        // ============================================================
+        const filterForm = $(".filter-bar form");
+        const searchInput = $("#searchInput");
+        const rombelSelect = $("#rombel");
+        const statusSelect = $("#statusFilter");
+        const sortAngkatanSelect = $("#sortAngkatan");
+        const sortDataSelect = $("#sortData");
+        const resetAllBtn = $("#resetAllBtn"); // tombol di dalam filter
+        const resetBtnHeader = document.getElementById("resetBtn"); // tombol di header (opsional)
 
-                    const fileInput =
-                        editForm.querySelector('input[type="file"]');
-                    if (fileInput) fileInput.value = "";
-                }
+        // ============================================================
+        // KUMPULKAN NILAI FILTER SAAT INI dari elemen (tanpa page)
+        // ============================================================
+        function getCurrentFilters() {
+            const params = {};
+            const q = searchInput?.value?.trim();
+            if (q) params.search = q;
+            if (rombelSelect?.value) params.rombel = rombelSelect.value;
+            if (statusSelect?.value) params.status = statusSelect.value;
+            if (sortAngkatanSelect?.value)
+                params.sort_angkatan = sortAngkatanSelect.value;
+            if (sortDataSelect?.value) params.sort_data = sortDataSelect.value;
+            return params;
+        }
 
-                $("#edit_id").value = s.id ?? "";
-                $("#edit_no_surat").value = s.no_surat || "";
-                $("#edit_jenis").value = s.jenis_surat || "";
-                // Pakai tanggal_surat_raw (format Y-m-d) karena input type="date"
-                // hanya menerima format ISO, bukan format tampilan "d F Y".
-                $("#edit_tanggal").value = s.tanggal_surat_raw || "";
-                $("#edit_pengirim").value = s.pengirim || "";
-                $("#edit_penerima").value = s.penerima || "";
-                $("#edit_perihal").value = s.perihal || "";
+        // ============================================================
+        // APPLY FILTERS → update URL + load tabel
+        // ============================================================
+        function applyFilters(
+            pushHistory = true,
+            resetPage = true,
+            pageOverride = null
+        ) {
+            const params = getCurrentFilters();
 
-                const instansiInput = $("#edit_instansi");
-                if (instansiInput) {
-                    instansiInput.value = s.instansi || "";
-                }
+            if (resetPage) {
+                params.page = 1;
+            } else if (pageOverride !== null) {
+                params.page = parseInt(pageOverride);
+            } else {
+                // jika tidak reset dan tidak ada override, ambil page dari URL saat ini
+                const currentPage = new URLSearchParams(
+                    window.location.search
+                ).get("page");
+                if (currentPage) params.page = parseInt(currentPage);
+            }
 
-                await setupEditKodeSurat(s);
+            if (pushHistory) {
+                const newUrl = new URL(
+                    window.location.pathname,
+                    window.location.origin
+                );
+                newUrl.search = new URLSearchParams(params).toString();
+                window.history.pushState(null, "", newUrl.href);
+            }
+            loadTablePesertaDidik(params);
+        }
 
-                const fileContainer = $("#edit_file_list");
-                if (fileContainer) {
-                    fileContainer.innerHTML = "";
-
-                    if (Array.isArray(s.files) && s.files.length) {
-                        s.files.forEach((file) => {
-                            const fileItem = document.createElement("div");
-                            fileItem.className =
-                                "d-flex align-items-center justify-content-between p-2 border rounded file-item mb-2";
-                            fileItem.dataset.path = file.path;
-
-                            fileItem.innerHTML = `
-                            <span>
-                                <i class="${getFileIcon(
-                                    file.name
-                                )} me-2 fs-5"></i>
-                                <a href="${
-                                    file.url
-                                }" target="_blank" class="text-decoration-none">${
-                                file.name
-                            }</a>
-                            </span>
-                            <button type="button" class="btn btn-sm btn-outline-danger btn-delete-old-file" 
-                                data-path="${
-                                    file.path
-                                }" title="Tandai untuk dihapus">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        `;
-                            fileContainer.appendChild(fileItem);
-                        });
-                    } else {
-                        fileContainer.innerHTML = `<p class="text-muted small mb-0">Belum ada file terlampir</p>`;
-                    }
-                }
-
-                addTodayButton("#edit_tanggal");
-                getOrCreateModal("#editSuratModal")?.show();
+        // ============================================================
+        // LOAD TABLE (AJAX)
+        // ============================================================
+        async function loadTablePesertaDidik(params = {}) {
+            const query = new URLSearchParams(params).toString();
+            try {
+                wrapper.innerHTML = `<div class="text-center p-4">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div></div>`;
+                const url = query ? `${baseUrl}?${query}` : baseUrl;
+                const res = await fetch(url, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                    credentials: "same-origin"
+                });
+                if (!res.ok) throw new Error("Gagal memuat tabel");
+                wrapper.innerHTML = await res.text();
+                bindRowActions();
             } catch (err) {
                 console.error(err);
-                toast("Gagal memuat data edit", "error");
+                wrapper.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat tabel peserta_didik.</div>`;
             }
         }
 
-        function setupEditSuratForm() {
-            const editForm = $("#editSuratForm");
-            editForm?.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const fd = new FormData(editForm);
-                const id = fd.get("id") || $("#edit_id")?.value;
-                if (!id) return toast("ID surat tidak ditemukan", "error");
-
-                validateFileInputs();
-                hideFormAlert("#editSuratAlert");
-
-                const submitBtn = editForm.querySelector("[type='submit']");
-                const orig = submitBtn?.innerHTML;
-
-                const no_surat = fd.get("no_surat")?.toString().trim() || "";
-                const instansi = fd.get("instansi")?.toString().trim() || "";
-                const tanggal_surat =
-                    fd.get("tanggal_surat")?.toString().trim() || "";
-
-                try {
-                    const isDup = await checkDuplicateSurat({
-                        no_surat,
-                        instansi,
-                        tanggal_surat,
-                        exclude_id: id,
-                    });
-
-                    if (isDup) {
-                        showFormAlert(
-                            "#editSuratAlert",
-                            "Data dengan nomor surat, instansi, dan tanggal yang sama sudah ada.",
-                            "warning"
-                        );
-                        $("#edit_no_surat")?.focus();
-                        return;
-                    }
-
-                    if (submitBtn) {
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...`;
-                    }
-
-                    const jenisSurat = fd.get("jenis_surat");
-
-                    // Selalu sinkronkan kode_surat dari elemen yang sedang tampil di DOM,
-                    // baik surat Masuk (input manual) maupun Keluar (select dropdown).
-                    // Ini mencegah nilai lama dari elemen yang sudah di-replace ikut terkirim.
-                    const kodeAktif =
-                        document.getElementById("kode_input_edit")?.value || "";
-                    fd.delete("kode_surat");
-                    fd.append("kode_surat", kodeAktif);
-
-                    fd.append("_method", "PUT");
-
-                    const res = await safeFetch(`/surat/${id}`, {
-                        method: "POST",
-                        body: fd,
-                    });
-                    const data = await res.json();
-
-                    if (data?.success) {
-                        toast(
-                            data.message || "Surat berhasil diperbarui",
-                            "success"
-                        );
-
-                        setTimeout(() => {
-                            bootstrap.Modal.getInstance(
-                                $("#editSuratModal")
-                            )?.hide();
-                            hideFormAlert("#editSuratAlert");
-                            loadTable();
-                        }, 400);
-                    } else {
-                        let msg =
-                            data?.message ||
-                            "Gagal memperbarui surat. Periksa input Anda.";
-
-                        if (
-                            data?.errors &&
-                            data.errors.no_surat &&
-                            data.errors.no_surat.length
-                        ) {
-                            msg = data.errors.no_surat[0];
-                        }
-
-                        showFormAlert("#editSuratAlert", msg, "danger");
-                    }
-                } catch (err) {
-                    console.error("Error Edit Surat:", err);
-                    showFormAlert(
-                        "#editSuratAlert",
-                        `Terjadi kesalahan: ${err.message || "Server error"}`,
-                        "danger"
+        // ============================================================
+        // INISIALISASI FILTER BAR
+        // ============================================================
+        if (filterForm) {
+            // Pencarian dengan debounce 400ms
+            if (searchInput) {
+                const debouncedSearch = debounce(
+                    () => applyFilters(true, true),
+                    400
+                );
+                searchInput.addEventListener("input", () => {
+                    const resetSearch = document.getElementById("resetSearch");
+                    resetSearch?.classList.toggle(
+                        "d-none",
+                        !searchInput.value.trim()
                     );
-                } finally {
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = orig;
-                    }
-                }
-            });
-        }
+                    debouncedSearch();
+                });
+            }
 
-        /* =========================================================
-         * 3. HAPUS FILE & HAPUS SURAT
-         * ========================================================= */
+            // Tombol X reset search
+            const resetSearchBtn = document.getElementById("resetSearch");
+            if (resetSearchBtn) {
+                resetSearchBtn.addEventListener("click", () => {
+                    if (searchInput) searchInput.value = "";
+                    resetSearchBtn.classList.add("d-none");
+                    applyFilters(true, true);
+                    searchInput?.focus();
+                });
+            }
 
-        function setupDeleteFileHandler() {
-            document.addEventListener("click", function (e) {
-                const button = e.target.closest(".btn-delete-old-file");
-                if (!button) return;
-
-                e.preventDefault();
-                const filePath = button.dataset.path;
-                const fileItem = button.closest(".file-item");
-                const form = $("#editSuratForm");
-
-                if (!filePath || !fileItem || !form) return;
-
-                let hiddenInput = form.querySelector(
-                    `input[name="hapus_file[]"][value="${filePath}"]`
+            // Dropdown — langsung apply saat berubah
+            if (rombelSelect)
+                rombelSelect.addEventListener("change", () =>
+                    applyFilters(true, true)
+                );
+            if (statusSelect)
+                statusSelect.addEventListener("change", () =>
+                    applyFilters(true, true)
                 );
 
-                const name = fileItem.querySelector("a")?.textContent || "";
+            if (sortAngkatanSelect) {
+                sortAngkatanSelect.addEventListener("change", () => {
+                    if (sortAngkatanSelect.value && sortDataSelect)
+                        sortDataSelect.selectedIndex = 0;
+                    applyFilters(true, true);
+                });
+            }
 
-                if (fileItem.classList.contains("bg-danger-subtle")) {
-                    fileItem.classList.remove(
-                        "bg-danger-subtle",
-                        "text-decoration-line-through"
-                    );
-                    button.classList.remove("btn-danger");
-                    button.classList.add("btn-outline-danger");
-                    const icon = button.querySelector("i");
-                    if (icon) icon.className = "bi bi-trash";
-                    button.title = "Tandai untuk dihapus";
-                    if (hiddenInput) hiddenInput.remove();
-                    toast(`Penghapusan "${name}" dibatalkan.`, "info");
-                } else {
-                    fileItem.classList.add(
-                        "bg-danger-subtle",
-                        "text-decoration-line-through"
-                    );
-                    button.classList.remove("btn-outline-danger");
-                    button.classList.add("btn-danger");
-                    const icon = button.querySelector("i");
-                    if (icon) icon.className = "bi bi-arrow-counterclockwise";
-                    button.title = "Batalkan Penghapusan";
+            if (sortDataSelect) {
+                sortDataSelect.addEventListener("change", () => {
+                    if (sortDataSelect.value && sortAngkatanSelect)
+                        sortAngkatanSelect.selectedIndex = 0;
+                    applyFilters(true, true);
+                });
+            }
 
-                    const input = document.createElement("input");
-                    input.type = "hidden";
-                    input.name = "hapus_file[]";
-                    input.value = filePath;
-                    form.appendChild(input);
-
-                    toast(
-                        `"${name}" ditandai untuk dihapus saat disimpan.`,
-                        "warning"
-                    );
-                }
-            });
-        }
-
-        function setupDeleteSurat() {
-            const form = $("#deleteSuratForm");
-            form?.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const id = $("#deleteSuratId")?.value;
-                if (!id) return toast("ID surat tidak ditemukan", "error");
-
-                const submitBtn = form.querySelector("[type='submit']");
-                const orig = submitBtn?.innerHTML;
-
-                try {
-                    if (submitBtn) {
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Menghapus...`;
-                    }
-
-                    const res = await safeFetch(`/surat/${id}`, {
-                        method: "DELETE",
-                    });
-                    const data = await res.json();
-
-                    if (data?.success) {
-                        toast(
-                            data.message || "Surat berhasil dihapus",
-                            "success"
-                        );
-                        bootstrap.Modal.getInstance(
-                            $("#deleteSuratModal")
-                        )?.hide();
-                        loadTable();
+            // Tombol reset per-input (×)
+            $$(".reset-input-and-submit").forEach((btn) => {
+                btn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    const target = $(this.dataset.target);
+                    if (!target) return;
+                    if (target.tagName === "SELECT") {
+                        target.selectedIndex = 0;
                     } else {
-                        toast(
-                            data?.message || "Gagal menghapus surat",
-                            "error"
-                        );
+                        target.value = "";
+                        document
+                            .getElementById("resetSearch")
+                            ?.classList.add("d-none");
                     }
-                } catch (err) {
-                    console.error("Error Hapus Surat:", err);
-                    toast(
-                        `Terjadi kesalahan: ${err.message || "Server error"}`,
-                        "error"
-                    );
-                } finally {
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = orig;
-                    }
-                }
-            });
-        }
-
-        /* =========================================================
-         * 4. DETAIL SURAT + PREVIEW/PRINT + DOWNLOAD MULTIPLE
-         * ========================================================= */
-
-        function updateSelectedInfo() {
-            const all = $$("#view_file .file-select-check");
-            const checked = all.filter((c) => c.checked);
-            const lampiranCount = $("#lampiran_count");
-
-            if (lampiranCount) {
-                lampiranCount.textContent = `${all.length} file, ${checked.length} dipilih`;
-            }
-
-            const btnPrint = $("#btnPrintSelected");
-            const btnDownloadSelected = $("#btnDownloadSelected");
-
-            if (btnPrint) {
-                btnPrint.disabled = checked.length !== 1;
-            }
-            if (btnDownloadSelected) {
-                btnDownloadSelected.disabled = checked.length === 0;
-            }
-        }
-
-        // Helper untuk request ZIP ke backend
-        function submitZipDownload(paths) {
-            if (!paths.length) {
-                toast("Tidak ada file lampiran yang bisa diunduh.", "warning");
-                return;
-            }
-            if (!currentSuratId) {
-                toast("ID surat tidak diketahui.", "error");
-                return;
-            }
-
-            const form = document.createElement("form");
-            form.method = "POST";
-            form.action = "/surat/download-multiple"; // route ke SuratController@downloadMultiple
-            form.style.display = "none";
-
-            // CSRF
-            const token = document
-                .querySelector('meta[name="csrf-token"]')
-                ?.getAttribute("content");
-            if (token) {
-                const tokenInput = document.createElement("input");
-                tokenInput.type = "hidden";
-                tokenInput.name = "_token";
-                tokenInput.value = token;
-                form.appendChild(tokenInput);
-            }
-
-            // surat_id → untuk penamaan ZIP di controller
-            const idInput = document.createElement("input");
-            idInput.type = "hidden";
-            idInput.name = "surat_id";
-            idInput.value = currentSuratId;
-            form.appendChild(idInput);
-
-            // paths[]
-            paths.forEach((p) => {
-                const input = document.createElement("input");
-                input.type = "hidden";
-                input.name = "paths[]";
-                input.value = p;
-                form.appendChild(input);
-            });
-
-            document.body.appendChild(form);
-            form.submit();
-            setTimeout(() => form.remove(), 2000);
-        }
-
-        async function viewSurat(id) {
-            try {
-                currentSuratId = id;
-
-                const res = await safeFetch(`/surat/${id}`);
-                const j = await res.json();
-                if (!j?.success)
-                    return toast("Gagal memuat detail surat", "error");
-
-                const s = j.surat;
-
-                /* ===============================
-                 * INFORMASI SURAT
-                 * =============================== */
-
-                $("#view_no_surat").textContent = s.no_surat || "-";
-
-                $("#view_kode").textContent = s.kode_keterangan
-                    ? `${s.kode_surat} - ${s.kode_keterangan}`
-                    : s.kode_surat || "-";
-
-                const jenisEl = $("#view_jenis");
-
-                if (jenisEl) {
-                    jenisEl.innerHTML =
-                        s.jenis_surat === "Masuk"
-                            ? `<span class="badge bg-info">
-                    <i class="bi bi-box-arrow-in-down me-1"></i>
-                    Masuk
-               </span>`
-                            : `<span class="badge bg-success">
-                    <i class="bi bi-box-arrow-up-right me-1"></i>
-                    Keluar
-               </span>`;
-                }
-
-                $("#view_tanggal").textContent = s.tanggal_surat || "-";
-
-                $("#view_instansi").textContent = s.instansi || "-";
-
-                $("#view_pengirim").textContent = s.pengirim || "-";
-
-                $("#view_penerima").textContent = s.penerima || "-";
-
-                $("#view_perihal").textContent = s.perihal || "-";
-
-                $("#view_keterangan").textContent = s.keterangan || "-";
-                const fileContainer = $("#view_file");
-
-                /* ===============================
-                 * INFORMASI ARSIP
-                 * =============================== */
-
-                $("#view_created_by").textContent = s.created_by || "-";
-
-                $("#view_created_at").textContent = s.created_at || "-";
-
-                $("#view_updated_by").textContent = s.updated_by || "-";
-
-                $("#view_updated_at").textContent = s.updated_at || "-";
-
-                const status = $("#view_status");
-
-                if (status) {
-                    if (s.status === "Pernah Diubah") {
-                        status.innerHTML = `
-            <span class="badge bg-warning text-dark">
-                <i class="bi bi-pencil-square me-1"></i>
-                Pernah Diubah
-            </span>
-        `;
-                    } else {
-                        status.innerHTML = `
-            <span class="badge bg-success">
-                <i class="bi bi-check-circle me-1"></i>
-                Belum Pernah Diubah
-            </span>
-        `;
-                    }
-                }
-
-                if (fileContainer) {
-                    fileContainer.innerHTML = "";
-                    if (Array.isArray(s.files) && s.files.length) {
-                        s.files.forEach((file) => {
-                            const item = document.createElement("div");
-                            item.className =
-                                "list-group-item d-flex justify-content-between align-items-center";
-
-                            // 🔽 tombol download per-file pakai btn-direct-download (bukan target="_blank")
-                            item.innerHTML = `
-                            <div class="d-flex align-items-center">
-                                <input type="checkbox"
-                                       class="form-check-input me-2 file-select-check"
-                                       data-path="${file.path}"
-                                       data-url="${file.url}">
-                                <i class="${getFileIcon(
-                                    file.name
-                                )} me-2 fs-5"></i>
-                                <span class="text-break">${file.name}</span>
-                            </div>
-                            <div class="btn-group btn-group-sm">
-                                <button type="button"
-                                        class="btn btn-outline-primary btn-preview-file"
-                                        data-url="${file.url}"
-                                        title="Pratinjau">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                <a href="${file.url}"
-                                   class="btn btn-outline-success btn-direct-download"
-                                   data-filename="${file.name}"
-                                   title="Download">
-                                    <i class="bi bi-download"></i>
-                                </a>
-                            </div>
-                        `;
-                            fileContainer.appendChild(item);
-                        });
-                    } else {
-                        fileContainer.innerHTML = `
-                        <div class="list-group-item text-muted small">
-                            Belum ada file terlampir.
-                        </div>`;
-                    }
-                }
-
-                updateSelectedInfo();
-
-                getOrCreateModal("#viewSuratModal")?.show();
-            } catch (err) {
-                console.error(err);
-                toast("Gagal menampilkan surat", "error");
-            }
-        }
-
-        function openPreview(url) {
-            if (!url) return;
-
-            const body = $("#filePreviewBody");
-            const spinner = $("#file-loading-spinner");
-            const downloadLink = $("#previewDownloadLink");
-
-            if (spinner) spinner.style.display = "flex";
-            if (body) body.innerHTML = "";
-
-            if (downloadLink) {
-                downloadLink.href = url;
-                const filename = getFilenameFromUrl(url, "lampiran");
-                downloadLink.setAttribute("download", filename);
-                // Update label nama file di header preview modal
-                const filenameLabel = $("#preview_filename_label");
-                if (filenameLabel) filenameLabel.textContent = filename;
-            }
-
-            const ext = url.split(".").pop().toLowerCase();
-            let content;
-
-            const hideSpinner = () => {
-                if (spinner) spinner.style.display = "none";
-            };
-
-            if (["pdf"].includes(ext)) {
-                content = document.createElement("iframe");
-                content.className = "w-100";
-                content.style.minHeight = "80vh";
-                // BUGFIX: pasang handler SEBELUM set src. Kalau dipasang
-                // sesudah, dan file sudah ada di cache browser, event
-                // load/error bisa selesai lebih dulu sebelum handler
-                // terpasang -> spinner "buffering" selamanya.
-                content.onload = hideSpinner;
-                content.onerror = hideSpinner;
-                content.src = url;
-            } else if (["jpg", "jpeg", "png"].includes(ext)) {
-                content = document.createElement("img");
-                content.className = "img-fluid";
-                content.onload = hideSpinner;
-                content.onerror = hideSpinner;
-                content.src = url;
-            } else {
-                // BUGFIX: konten fallback ini cuma <div>, tidak pernah
-                // memicu event load/error, jadi spinner harus disembunyikan
-                // langsung di sini, bukan menunggu content.onload.
-                content = document.createElement("div");
-                content.className = "p-3";
-                content.innerHTML = `
-                <p class="mb-1">Pratinjau langsung tidak tersedia.</p>
-                <a href="${url}" target="_blank">Klik di sini untuk membuka / mengunduh file.</a>
-            `;
-                hideSpinner();
-            }
-
-            if (body) body.appendChild(content);
-
-            getOrCreateModal("#filePreviewModal")?.show();
-        }
-
-        function setupPreviewHandlers() {
-            // perubahan ceklis di area lampiran
-            $("#viewSuratModal")?.addEventListener("change", (e) => {
-                if (e.target.closest(".file-select-check")) {
-                    updateSelectedInfo();
-                }
-            });
-
-            // preview per-file (tombol mata)
-            document.addEventListener("click", (e) => {
-                const previewBtn = e.target.closest(".btn-preview-file");
-                if (!previewBtn) return;
-                const url = previewBtn.dataset.url;
-                if (!url) return;
-                openPreview(url);
-            });
-
-            // download per-file (icon download di list)
-            document.addEventListener("click", (e) => {
-                const btn = e.target.closest(".btn-direct-download");
-                if (!btn) return;
-
-                e.preventDefault();
-
-                const url = btn.getAttribute("href");
-                if (!url) {
-                    toast("URL file tidak ditemukan.", "error");
-                    return;
-                }
-
-                let filename = btn.dataset.filename || "lampiran";
-                if (!filename) {
-                    filename = getFilenameFromUrl(url, "lampiran");
-                }
-
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-            });
-
-            // tombol Print Terpilih
-            $("#btnPrintSelected")?.addEventListener("click", (e) => {
-                e.preventDefault();
-                const checks = $$("#view_file .file-select-check:checked");
-                if (checks.length !== 1) {
-                    toast(
-                        "Pilih tepat satu file yang akan diprint.",
-                        "warning"
-                    );
-                    return;
-                }
-                const url = checks[0].dataset.url;
-                if (!url) return;
-
-                const w = window.open(url, "_blank");
-                if (w) {
-                    w.addEventListener("load", () => {
-                        try {
-                            w.print();
-                        } catch (_) {}
-                    });
-                }
-            });
-
-            // tombol Download Terpilih
-            $("#btnDownloadSelected")?.addEventListener("click", (e) => {
-                e.preventDefault();
-                const checks = $$("#view_file .file-select-check:checked");
-                if (!checks.length) {
-                    toast("Pilih minimal satu file lampiran.", "warning");
-                    return;
-                }
-
-                // kalau cuma 1 → paksa download file itu
-                if (checks.length === 1) {
-                    const chk = checks[0];
-                    const url = chk.dataset.url;
-                    if (!url) {
-                        toast("URL file tidak ditemukan.", "error");
-                        return;
-                    }
-
-                    let filename = "lampiran";
-                    const item = chk.closest(".list-group-item");
-                    const nameSpan = item?.querySelector(".text-break");
-                    if (nameSpan && nameSpan.textContent.trim()) {
-                        filename = nameSpan.textContent.trim();
-                    } else {
-                        filename = getFilenameFromUrl(url, filename);
-                    }
-
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-
-                    return;
-                }
-
-                // lebih dari 1 → ZIP
-                const paths = checks
-                    .map((chk) => chk.dataset.path)
-                    .filter((p) => typeof p === "string" && p.length > 0);
-
-                submitZipDownload(paths);
-            });
-
-            // tombol Download Semua
-            $("#btnDownloadAll")?.addEventListener("click", (e) => {
-                e.preventDefault();
-                const allChecks = $$("#view_file .file-select-check");
-
-                if (!allChecks.length) {
-                    toast("Tidak ada file lampiran.", "warning");
-                    return;
-                }
-
-                const paths = allChecks
-                    .map((chk) => chk.dataset.path)
-                    .filter((p) => typeof p === "string" && p.length > 0);
-
-                submitZipDownload(paths);
-            });
-        }
-
-        /* =========================================================
-         * INIT
-         * ========================================================= */
-
-        document.addEventListener("DOMContentLoaded", () => {
-            ["resetJenis", "resetSort"].forEach((id) => {
-                document.getElementById(id)?.addEventListener("click", () => {
-                    lapParams = { bulan: null, tahun: null, jenis_surat: null };
-                    // Jika yang direset adalah jenis, reset juga dropdown-nya
-                    if (id === "resetJenis") {
-                        const jenisEl = document.getElementById("jenis");
-                        if (jenisEl) jenisEl.value = "";
-                    }
-                    loadTable();
+                    applyFilters(true, true);
                 });
             });
+
+            $$(".reset-sort-and-submit").forEach((btn) => {
+                btn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    const target = $(this.dataset.target);
+                    if (!target) return;
+                    target.selectedIndex = 0;
+                    applyFilters(true, true);
+                });
+            });
+
+            // Tombol Reset Semua (di dalam filter)
+            if (resetAllBtn) {
+                resetAllBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    if (searchInput) searchInput.value = "";
+                    if (rombelSelect) rombelSelect.selectedIndex = 0;
+                    if (statusSelect) statusSelect.selectedIndex = 0;
+                    if (sortAngkatanSelect)
+                        sortAngkatanSelect.selectedIndex = 0;
+                    if (sortDataSelect) sortDataSelect.selectedIndex = 0;
+                    document
+                        .getElementById("resetSearch")
+                        ?.classList.add("d-none");
+                    applyFilters(true, true);
+                    searchInput?.focus();
+                });
+            }
+
+            // Tombol Reset di header (#resetBtn) – jika ada
+            if (resetBtnHeader) {
+                resetBtnHeader.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    if (searchInput) searchInput.value = "";
+                    if (rombelSelect) rombelSelect.selectedIndex = 0;
+                    if (statusSelect) statusSelect.selectedIndex = 0;
+                    if (sortAngkatanSelect)
+                        sortAngkatanSelect.selectedIndex = 0;
+                    if (sortDataSelect) sortDataSelect.selectedIndex = 0;
+                    document
+                        .getElementById("resetSearch")
+                        ?.classList.add("d-none");
+                    applyFilters(true, true);
+                    searchInput?.focus();
+                });
+            }
+
+            // Cegah submit form biasa
+            filterForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                applyFilters(true, true);
+            });
+        }
+
+        // ============================================================
+        // POPSTATE — sinkronisasi saat back/forward
+        // ============================================================
+        window.addEventListener("popstate", () => {
+            const params = new URLSearchParams(window.location.search);
+            // Set nilai elemen sesuai URL
+            if (searchInput) searchInput.value = params.get("search") || "";
+            if (rombelSelect) rombelSelect.value = params.get("rombel") || "";
+            if (statusSelect) statusSelect.value = params.get("status") || "";
+            if (sortAngkatanSelect)
+                sortAngkatanSelect.value = params.get("sort_angkatan") || "";
+            if (sortDataSelect)
+                sortDataSelect.value = params.get("sort_data") || "";
+
+            // Tampilkan/sembunyikan tombol reset search
+            const resetSearch = document.getElementById("resetSearch");
+            if (resetSearch) {
+                resetSearch.classList.toggle(
+                    "d-none",
+                    !searchInput?.value?.trim()
+                );
+            }
+
+            // Ambil filter + page dari URL
+            const filters = getCurrentFilters();
+            const page = params.get("page");
+            if (page) filters.page = parseInt(page);
+            loadTablePesertaDidik(filters);
         });
 
-        document.addEventListener("DOMContentLoaded", () => {
-            initFilters();
-            loadTable();
-            rebindRowActionButtons();
+        // ============================================================
+        // (Sisanya: download, edit, detail, tambah, update, hapus, dll.)
+        // ============================================================
+        // ... [semua fungsi download, preview, edit, detail, tambah, update, hapus, refreshEditDownloadAll, bindRowActions, dll. tetap sama seperti di kode asli Anda] ...
+        // Saya akan salin dari kode sebelumnya (karena tidak ada perubahan di bagian ini).
+        // ============================================================
 
-            setupAddSuratForm();
-            setupEditSuratForm();
-            setupDeleteFileHandler();
-            setupDeleteSurat();
-            setupPreviewHandlers();
+        // ============================================================
+        // DOWNLOAD ALL FILES (ZIP)
+        // ============================================================
+        function downloadAllFiles(id) {
+            if (!id) return toast("ID peserta_didik tidak valid.", "error");
+            const a = document.createElement("a");
+            a.href = `${baseUrl}/${id}/download-all`;
+            a.download = "";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            toast("Memulai unduhan semua file...", "info");
+        }
 
-            addTodayButton("#edit_tanggal");
+        // ============================================================
+        // DOWNLOAD SELECTED FILES (ZIP)
+        // ============================================================
+        function downloadSelectedFiles() {
+            const modalEl = $("#modalDetailPesertaDidik");
+            const id = modalEl?.dataset.pesertaDidikId;
+            if (!id) return toast("ID peserta_didik tidak valid.", "error");
 
-            // Expose API publik di bawah namespace SuratApp supaya tidak
-            // bentrok dengan fungsi bernama sama di file JS lain.
-            // Gunakan: SuratApp.loadTable(), SuratApp.viewSurat(id), SuratApp.editSurat(id)
-            window.SuratApp = {
-                loadTable,
-                loadSuratTable: loadTable, // alias untuk backward-compat
-                viewSurat,
-                editSurat,
-            };
+            const selected = $$(".file-select-checkbox:checked")
+                .map((cb) => cb.dataset.field)
+                .filter(Boolean);
+
+            if (!selected.length)
+                return toast("Pilih minimal satu file.", "error");
+
+            const params = new URLSearchParams();
+            params.append("fields", selected.join(","));
+
+            const a = document.createElement("a");
+            a.href = `${baseUrl}/${id}/download-selected?${params}`;
+            a.download = "";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            toast("Memulai unduhan file terpilih...", "info");
+        }
+
+        // ============================================================
+        // DOWNLOAD SINGLE FILE
+        // ============================================================
+        function openDownload(id, field) {
+            const a = document.createElement("a");
+            a.href = `${baseUrl}/${id}/download/${field}?download=true`;
+            a.download = "";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        // ============================================================
+        // PREVIEW FILE
+        // ============================================================
+        async function previewFile(id, field) {
+            try {
+                const res = await fetch(`${baseUrl}/${id}`, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                });
+                const j = await res.json().catch(() => ({}));
+                const fileUrl = j?.data?.[`${field}_url`];
+                if (!j?.success || !fileUrl)
+                    return toast("File tidak ditemukan.", "error");
+
+                const modalEl = $("#modalPreviewFile");
+                const viewer = $("#preview-container");
+                viewer.innerHTML = "";
+                modalEl.dataset.pesertaDidikId = id;
+                modalEl.dataset.field = field;
+
+                if (/\.pdf$/i.test(fileUrl)) {
+                    viewer.innerHTML = `<embed src="${fileUrl}" type="application/pdf" width="100%" height="600px" style="border:none;border-radius:8px;" />`;
+                } else if (/\.(jpe?g|png|gif|webp)$/i.test(fileUrl)) {
+                    viewer.innerHTML = `<img src="${fileUrl}" alt="Preview" class="img-fluid rounded shadow-sm w-100">`;
+                } else {
+                    viewer.innerHTML = `<div class="alert alert-info mt-3">File tidak dapat dipratinjau. Gunakan tombol <strong>Unduh File</strong>.</div>`;
+                }
+
+                new bootstrap.Modal(modalEl).show();
+            } catch (err) {
+                console.error(err);
+                toast("Gagal memuat file.", "error");
+            }
+        }
+
+        $("#btnUnduhPreview")?.addEventListener("click", () => {
+            const modalEl = $("#modalPreviewFile");
+            const id = modalEl?.dataset.pesertaDidikId;
+            const field = modalEl?.dataset.field;
+            if (!id || !field) return toast("File tidak valid.", "error");
+            openDownload(id, field);
         });
-    })(); // ⬅️ penutup IIFE utama
-} // ⬅️ penutup guard `if (!window.SuratApp)`
+
+        // ============================================================
+        // REFRESH EDIT DOWNLOAD ALL
+        // ============================================================
+        function refreshEditDownloadAll() {
+            const id = $("#edit_id")?.value || "";
+            const fileFields = [
+                "file_ppdb",
+                "file_kk",
+                "file_akte",
+                "file_ktp",
+                "file_kts",
+                "file_foto",
+                "file_ijazah_smp",
+                "file_ijazah_sma",
+            ];
+
+            let total = 0;
+
+            fileFields.forEach((field) => {
+                const check = $(`#edit_check_${field}`);
+                const input = $(`#edit_${field}`);
+                const parent = input?.parentElement;
+                if (!check || !input || !parent) return;
+
+                const serverFile = input.dataset?.serverFile === "1";
+                const markedDelete = input.dataset?.markDelete === "1";
+                const hasNewFile = input.files && input.files.length > 0;
+
+                if (serverFile && !markedDelete) total++;
+                if (hasNewFile) total++;
+
+                // Wrapper tombol download
+                let existingWrapper = parent.querySelector(
+                    ".__dynamic-download-wrapper"
+                );
+                if (serverFile && !markedDelete) {
+                    if (!existingWrapper) {
+                        const wrap = document.createElement("div");
+                        wrap.className = "__dynamic-download-wrapper";
+                        wrap.innerHTML = `<div class="d-grid gap-2 mt-2">
+                        <div class="btn btn-sm btn-outline-secondary w-100 btn-download-single" role="button">
+                            <i class="bi bi-download"></i> Download File
+                        </div></div>`;
+                        parent.appendChild(wrap);
+                        wrap.querySelector(".btn-download-single").onclick =
+                            () => openDownload(id, field);
+                    }
+                } else {
+                    existingWrapper?.remove();
+                }
+
+                // Tombol ganti file
+                let existingGanti = parent.querySelector(".btn-ganti-single");
+                if (serverFile && !markedDelete) {
+                    if (!existingGanti) {
+                        const gbt = document.createElement("button");
+                        gbt.type = "button";
+                        gbt.className =
+                            "btn btn-sm btn-outline-primary mt-2 w-100 btn-ganti-single";
+                        gbt.innerHTML = `<i class="bi bi-pencil"></i> Ganti File`;
+                        gbt.onclick = () => {
+                            input.classList.remove("d-none");
+                            input.disabled = false;
+                            input.dataset.replace = "1";
+                            input.dataset.markDelete = "0";
+                            check.checked = true;
+                            refreshEditDownloadAll();
+                        };
+                        parent.appendChild(gbt);
+                    }
+                } else {
+                    existingGanti?.remove();
+                }
+
+                let badge = parent.querySelector(".file-new-badge");
+                if (hasNewFile) {
+                    if (!badge) {
+                        const b = document.createElement("div");
+                        b.className = "small text-success file-new-badge mt-2";
+                        b.textContent =
+                            "✓ File siap diunggah (akan menggantikan file lama saat submit)";
+                        parent.appendChild(b);
+                    }
+                } else {
+                    badge?.remove();
+                }
+
+                let delNote = parent.querySelector(".file-delete-note");
+                if (input.dataset.markDelete === "1") {
+                    if (!delNote) {
+                        const n = document.createElement("div");
+                        n.className = "small text-danger file-delete-note mt-2";
+                        n.textContent =
+                            "⚠️ File lama akan dihapus saat menyimpan perubahan.";
+                        parent.appendChild(n);
+                    }
+                } else {
+                    delNote?.remove();
+                }
+            });
+
+            const downloadAllContainer = $("#edit-download-all-container");
+            if (!downloadAllContainer) return;
+            downloadAllContainer.innerHTML =
+                fileFields.length && total > 0
+                    ? `<button type="button" class="btn btn-success w-100" id="__pesertaDidikEditDlAll">
+                <i class="bi bi-file-earmark-zip"></i> Unduh Semua (${total} File)
+               </button>`
+                    : `<button type="button" class="btn btn-secondary w-100" disabled>
+                <i class="bi bi-file-earmark-zip"></i> Tidak Ada File Untuk Diunduh
+               </button>`;
+
+            document
+                .getElementById("__pesertaDidikEditDlAll")
+                ?.addEventListener("click", () =>
+                    downloadAllFiles($("#edit_id")?.value || "")
+                );
+        }
+
+        // ============================================================
+        // EDIT SISWA
+        // ============================================================
+        async function editPesertaDidik(id) {
+            if (!id) return toast("ID peserta_didik tidak valid.", "error");
+            try {
+                const res = await fetch(`${baseUrl}/${id}`, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                });
+                const j = await res.json().catch(() => ({}));
+                if (!j?.success || !j?.data)
+                    return toast("Gagal memuat data peserta_didik", "error");
+
+                const s = j.data;
+                const fileFields = [
+                    "file_ppdb",
+                    "file_kk",
+                    "file_akte",
+                    "file_ktp",
+                    "file_kts",
+                    "file_foto",
+                    "file_ijazah_smp",
+                    "file_ijazah_sma",
+                ];
+
+                const pesertaDidikId = s.id_peserta_didik || id;
+                const idEl = $("#edit_id");
+                if (idEl) idEl.value = pesertaDidikId ?? "";
+
+                hideFormAlert("#alertEditPesertaDidik");
+
+                [
+                    "nama_peserta_didik",
+                    "alamat",
+                    "tahun_angkatan",
+                    "tempat_lahir",
+                    "tanggal_lahir",
+                    "jenis_kelamin",
+                    "rombel",
+                ].forEach((f) => {
+                    const el = $(`#edit_${f}`);
+                    if (el) el.value = s[f] ?? "";
+                });
+
+                fileFields.forEach((field) => {
+                    const check = $(`#edit_check_${field}`);
+                    const input = $(`#edit_${field}`);
+                    const parent = input?.parentElement;
+                    if (!check || !input || !parent) return;
+
+                    $$(
+                        ".__dynamic-download-wrapper,.btn-ganti-single,.file-new-badge,.file-delete-note",
+                        parent
+                    ).forEach((n) => n.remove());
+
+                    const url = s[`${field}_url`] || null;
+                    input.dataset.serverFile = url ? "1" : "0";
+                    input.dataset.markDelete = "0";
+                    input.dataset.replace = "0";
+                    try {
+                        input.value = "";
+                    } catch {}
+                    input.classList.add("d-none");
+                    input.disabled = true;
+                    check.checked = !!url;
+
+                    check.onchange = () => {
+                        if (check.checked) {
+                            input.dataset.markDelete = "0";
+                            if (input.dataset.serverFile !== "1") {
+                                input.classList.remove("d-none");
+                                input.disabled = false;
+                            } else {
+                                input.classList.add("d-none");
+                                input.disabled = true;
+                            }
+                        } else {
+                            if (input.dataset.serverFile === "1")
+                                input.dataset.markDelete = "1";
+                            else input.dataset.markDelete = "0";
+                            input.dataset.replace = "0";
+                            input.classList.add("d-none");
+                            try {
+                                input.value = "";
+                            } catch {}
+                            input.disabled = true;
+                        }
+                        refreshEditDownloadAll();
+                    };
+
+                    input.onchange = () => {
+                        if (input.files && input.files.length > 0) {
+                            input.dataset.replace = "1";
+                            input.dataset.markDelete = "0";
+                            check.checked = true;
+                        } else {
+                            input.dataset.replace = "0";
+                        }
+                        refreshEditDownloadAll();
+                    };
+                });
+
+                refreshEditDownloadAll();
+
+                const modalEl = $("#modalEditPesertaDidik");
+                new bootstrap.Modal(modalEl).show();
+
+                modalEl.addEventListener(
+                    "hidden.bs.modal",
+                    () => {
+                        $$(".file-new-badge,.file-delete-note").forEach((n) =>
+                            n.remove()
+                        );
+                    },
+                    { once: true }
+                );
+            } catch (err) {
+                console.error(err);
+                toast(
+                    "Terjadi kesalahan saat memuat data peserta_didik",
+                    "error"
+                );
+            }
+        }
+
+        // ============================================================
+        // DETAIL SISWA
+        // ============================================================
+        async function detailPesertaDidik(id) {
+            if (!id) return toast("ID peserta_didik tidak valid.", "error");
+            try {
+                const res = await fetch(`${baseUrl}/${id}`, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                });
+                const j = await res.json().catch(() => ({}));
+                if (!j?.success || !j?.data)
+                    return toast("Gagal memuat detail peserta_didik", "error");
+
+                const s = j.data;
+                let fileCount = 0;
+
+                [
+                    "nama_peserta_didik",
+                    "jenis_kelamin",
+                    "tahun_angkatan",
+                    "tempat_lahir",
+                    "tanggal_lahir",
+                    "rombel",
+                    "alamat",
+                ].forEach((f) => {
+                    const el = $(`#detail_${f}`);
+                    if (el) el.textContent = s[f] || "-";
+                });
+
+                const fileFields = [
+                    "file_ppdb",
+                    "file_kk",
+                    "file_akte",
+                    "file_ktp",
+                    "file_kts",
+                    "file_foto",
+                    "file_ijazah_smp",
+                    "file_ijazah_sma",
+                ];
+
+                fileFields.forEach((field) => {
+                    const btn = $(`#detail_${field}`);
+                    const none = $(`#detail_${field}_none`);
+                    const checkbox = $(`#detail_select_${field}`);
+                    const url = s[`${field}_url`];
+
+                    if (btn && none) {
+                        if (url) {
+                            fileCount++;
+                            btn.classList.remove("d-none");
+                            none.classList.add("d-none");
+                            btn.innerHTML = `
+                          <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-sm btn-info text-white" data-peserta-didik-preview="${id}" data-field="${field}">
+                              <i class="bi bi-eye"></i> Lihat
+                            </button>
+                            <button type="button" class="btn btn-sm btn-primary" data-peserta-didik-download="${id}" data-field="${field}">
+                              <i class="bi bi-download"></i> Unduh
+                            </button>
+                          </div>`;
+                            if (checkbox) {
+                                checkbox.disabled = false;
+                                checkbox.checked = false;
+                                checkbox
+                                    .closest(".form-check")
+                                    ?.classList.remove("d-none");
+                            }
+                        } else {
+                            btn.classList.add("d-none");
+                            none.classList.remove("d-none");
+                            none.innerHTML = `<span class="text-danger fw-semibold">Belum Ada File</span>`;
+                            if (checkbox) {
+                                checkbox.checked = false;
+                                checkbox.disabled = true;
+                                checkbox
+                                    .closest(".form-check")
+                                    ?.classList.add("d-none");
+                            }
+                        }
+                    }
+                });
+
+                const dlAllContainer = $("#detail-download-all-container");
+                if (dlAllContainer) {
+                    dlAllContainer.innerHTML =
+                        fileCount > 0
+                            ? `<button type="button" class="btn btn-success w-100" id="__pesertaDidikDetailDlAll">
+                        <i class="bi bi-file-earmark-zip"></i> Unduh Semua (${fileCount} File)
+                       </button>`
+                            : `<button type="button" class="btn btn-secondary w-100" disabled>
+                        <i class="bi bi-file-earmark-zip"></i> Tidak Ada File Untuk Diunduh
+                       </button>`;
+                    document
+                        .getElementById("__pesertaDidikDetailDlAll")
+                        ?.addEventListener("click", () => downloadAllFiles(id));
+                }
+
+                const dlSelContainer = $("#detail-download-selected-container");
+                if (dlSelContainer) {
+                    dlSelContainer.innerHTML =
+                        fileCount > 0
+                            ? `<button type="button" class="btn btn-warning w-100" id="__pesertaDidikDetailDlSel">
+                        <i class="bi bi-file-earmark-zip"></i> Unduh Terpilih (Centang di bawah)
+                       </button>`
+                            : `<button type="button" class="btn btn-secondary w-100" disabled>
+                        <i class="bi bi-file-earmark-zip"></i> Tidak Ada File Untuk Diunduh
+                       </button>`;
+                    document
+                        .getElementById("__pesertaDidikDetailDlSel")
+                        ?.addEventListener("click", () =>
+                            downloadSelectedFiles()
+                        );
+                }
+
+                const modalEl = $("#modalDetailPesertaDidik");
+                if (modalEl) {
+                    modalEl.dataset.pesertaDidikId = id;
+                    new bootstrap.Modal(modalEl).show();
+                }
+            } catch (err) {
+                console.error(err);
+                toast(
+                    "Terjadi kesalahan saat memuat detail peserta_didik",
+                    "error"
+                );
+            }
+        }
+
+        // ============================================================
+        // TAMBAH SISWA
+        // ============================================================
+        const modalTambah = $("#modalTambahPesertaDidik");
+        const formTambah = $("#formTambahPesertaDidik");
+
+        if (modalTambah && formTambah) {
+            modalTambah.addEventListener("show.bs.modal", () => {
+                formTambah.reset();
+                hideFormAlert("#alertTambahPesertaDidik");
+                $$("input[type=file]", formTambah).forEach((f) => {
+                    f.value = "";
+                    f.disabled = true;
+                });
+                $$(".file-input", formTambah).forEach((i) =>
+                    i.classList.add("d-none")
+                );
+                $$(".file-check", formTambah).forEach(
+                    (c) => (c.checked = false)
+                );
+            });
+
+            formTambah.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                hideFormAlert("#alertTambahPesertaDidik");
+
+                const nama = $("#add_nama_peserta_didik")?.value?.trim();
+                const tanggal = $("#add_tanggal_lahir")?.value;
+                const isDup = await cekDuplikatPesertaDidik(nama, tanggal);
+
+                if (isDup) {
+                    showFormAlert(
+                        "#alertTambahPesertaDidik",
+                        "❌ Data peserta_didik dengan nama dan tanggal lahir tersebut sudah ada."
+                    );
+                    return;
+                }
+
+                try {
+                    const res = await fetch(baseUrl, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": token,
+                            "X-Requested-With": "XMLHttpRequest",
+                        },
+                        body: new FormData(e.target),
+                    });
+                    const j = await res.json().catch(() => ({}));
+                    toast(
+                        j.message || "✅ Peserta didik berhasil ditambahkan",
+                        j.success ? "success" : "error"
+                    );
+                    bootstrap.Modal.getInstance(modalTambah)?.hide();
+                    await loadTablePesertaDidik(getCurrentFilters());
+                } catch (err) {
+                    console.error(err);
+                    toast("Terjadi kesalahan server.", "error");
+                }
+            });
+        }
+
+        // ============================================================
+        // UPDATE SISWA
+        // ============================================================
+        const formEdit = $("#formEditPesertaDidik");
+        if (formEdit) {
+            formEdit.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                hideFormAlert("#alertEditPesertaDidik");
+
+                const idInput = $("#edit_id");
+                const id = idInput?.value;
+                if (!id)
+                    return toast("ID peserta_didik tidak ditemukan.", "error");
+
+                const nama = $("#edit_nama_peserta_didik")?.value?.trim();
+                const tanggal = $("#edit_tanggal_lahir")?.value;
+                const isDup = await cekDuplikatPesertaDidik(nama, tanggal, id);
+
+                if (isDup) {
+                    showFormAlert(
+                        "#alertEditPesertaDidik",
+                        "❌ Data peserta_didik dengan nama dan tanggal lahir tersebut sudah ada."
+                    );
+                    return;
+                }
+
+                if (idInput) idInput.disabled = true;
+
+                const formData = new FormData(formEdit);
+                formData.append("_method", "PUT");
+
+                [
+                    "file_ppdb",
+                    "file_kk",
+                    "file_akte",
+                    "file_ktp",
+                    "file_kts",
+                    "file_foto",
+                    "file_ijazah_smp",
+                    "file_ijazah_sma",
+                ].forEach((field) => {
+                    const input = $(`#edit_${field}`);
+                    if (input?.dataset.markDelete === "1")
+                        formData.append(`${field}_delete`, "1");
+                });
+
+                try {
+                    const res = await fetch(`${baseUrl}/${id}`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": token,
+                            "X-Requested-With": "XMLHttpRequest",
+                        },
+                        body: formData,
+                    });
+                    const j = await res.json().catch(() => ({}));
+                    toast(
+                        j.message || "✅ Data diperbarui",
+                        j.success ? "success" : "error"
+                    );
+                    bootstrap.Modal.getInstance(
+                        $("#modalEditPesertaDidik")
+                    )?.hide();
+                    await loadTablePesertaDidik(getCurrentFilters());
+                } catch (err) {
+                    console.error(err);
+                    toast("Terjadi kesalahan saat update.", "error");
+                } finally {
+                    if (idInput) idInput.disabled = false;
+                }
+            });
+        }
+
+        // ============================================================
+        // HAPUS SISWA
+        // ============================================================
+        $("#formHapusPesertaDidik")?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = $("#hapus_id")?.value;
+            if (!id) return toast("ID tidak ditemukan.", "error");
+
+            try {
+                const res = await fetch(`${baseUrl}/${id}`, {
+                    method: "DELETE",
+                    headers: {
+                        "X-CSRF-TOKEN": token,
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                });
+                const j = await res.json().catch(() => ({}));
+                toast(
+                    j.message || "✅ Data dihapus",
+                    j.success ? "success" : "error"
+                );
+                bootstrap.Modal.getInstance(
+                    $("#modalHapusPesertaDidik")
+                )?.hide();
+                await loadTablePesertaDidik(getCurrentFilters());
+            } catch (err) {
+                console.error(err);
+                toast(
+                    "Terjadi kesalahan saat menghapus peserta_didik",
+                    "error"
+                );
+            }
+        });
+
+        // ============================================================
+        // GLOBAL FILE CHECK
+        // ============================================================
+        $$(".file-check").forEach((cb) => {
+            cb.addEventListener("change", function () {
+                const target = $(this.dataset.target);
+                if (!target) return;
+                if (this.checked) {
+                    target.classList.remove("d-none");
+                    target.disabled = false;
+                } else {
+                    if (target.closest("#modalTambahPesertaDidik")) {
+                        target.classList.add("d-none");
+                        target.disabled = true;
+                        if (target.type === "file") target.value = "";
+                    }
+                }
+            });
+        });
+
+        // ============================================================
+        // BIND ROW ACTIONS (dipanggil ulang setiap load tabel AJAX)
+        // ============================================================
+        function bindRowActions() {
+            wrapper.querySelectorAll(".btn-edit-peserta-didik").forEach((b) => {
+                b.onclick = () => editPesertaDidik(b.dataset.id);
+            });
+            wrapper
+                .querySelectorAll(".btn-delete-peserta-didik")
+                .forEach((b) => {
+                    b.onclick = () => {
+                        const hapusId = $("#hapus_id");
+                        if (hapusId) hapusId.value = b.dataset.id;
+                        const nama = b
+                            .closest("tr")
+                            ?.querySelector(".nama-peserta-didik")
+                            ?.textContent?.trim();
+                        const hapusNama = $("#hapus_nama_peserta_didik");
+                        if (nama && hapusNama) hapusNama.textContent = nama;
+                        new bootstrap.Modal(
+                            $("#modalHapusPesertaDidik")
+                        ).show();
+                    };
+                });
+            wrapper.querySelectorAll(".btn-view-peserta-didik").forEach((b) => {
+                b.onclick = () => detailPesertaDidik(b.dataset.id);
+            });
+
+            // ── Pagination ──
+            wrapper.querySelectorAll(".pagination a").forEach((link) => {
+                link.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    const url = new URL(this.href);
+                    const page = url.searchParams.get("page");
+                    if (page) {
+                        // Ambil filter saat ini, lalu tambahkan page
+                        const filters = getCurrentFilters();
+                        filters.page = parseInt(page);
+
+                        // Update URL dengan pushState (biar back/forward works)
+                        const newUrl = new URL(
+                            window.location.pathname,
+                            window.location.origin
+                        );
+                        newUrl.search = new URLSearchParams(filters).toString();
+                        window.history.pushState(null, "", newUrl.href);
+
+                        // Muat tabel
+                        loadTablePesertaDidik(filters);
+                    }
+                });
+            });
+
+            // ── Preview & Download file ──
+            document
+                .querySelectorAll("[data-peserta-didik-preview]")
+                .forEach((btn) => {
+                    btn.onclick = () =>
+                        previewFile(
+                            btn.dataset.pesertaDidikPreview,
+                            btn.dataset.field
+                        );
+                });
+            document
+                .querySelectorAll("[data-peserta-didik-download]")
+                .forEach((btn) => {
+                    btn.onclick = () =>
+                        openDownload(
+                            btn.dataset.pesertaDidikDownload,
+                            btn.dataset.field
+                        );
+                });
+
+            if (window.bootstrap?.Tooltip) {
+                wrapper
+                    .querySelectorAll('[data-bs-toggle="tooltip"]')
+                    .forEach((el) => {
+                        bootstrap.Tooltip.getInstance(el)?.dispose();
+                        new bootstrap.Tooltip(el);
+                    });
+            }
+        }
+
+        // ============================================================
+        // SANITASI INPUT (alphanumeric)
+        // Selaras dengan form Surat: teks hanya huruf/angka/spasi.
+        // - nama & tempat lahir : huruf, angka, spasi
+        // - tahun angkatan       : + / - (mis. "2025/2026")
+        // - alamat               : + . , / - (alamat lazim)
+        // Guard realtime; validasi sebenarnya tetap di backend
+        // (Store/UpdatePesertaDidikRequest).
+        // ============================================================
+        const RE_TEXT_STRIP = /[^A-Za-z0-9 ]+/g;
+        const RE_YEAR_STRIP = /[^A-Za-z0-9 \/-]+/g;
+        const RE_ADDR_STRIP = /[^A-Za-z0-9 .,\/-]+/g;
+
+        const PD_TEXT_FIELDS = new Set([
+            "nama_peserta_didik",
+            "tempat_lahir",
+        ]);
+
+        function sanitizePesertaField(el) {
+            if (!el || (el.tagName !== "INPUT" && el.tagName !== "TEXTAREA")) {
+                return;
+            }
+
+            const name = el.name;
+            let re = null;
+            if (PD_TEXT_FIELDS.has(name)) re = RE_TEXT_STRIP;
+            else if (name === "tahun_angkatan") re = RE_YEAR_STRIP;
+            else if (name === "alamat") re = RE_ADDR_STRIP;
+            if (!re) return;
+
+            const before = el.value;
+            const after = before.replace(re, "");
+            if (before === after) return;
+
+            const start = el.selectionStart ?? after.length;
+            const removed = before.length - after.length;
+            el.value = after;
+            const pos = Math.max(0, start - removed);
+            try {
+                el.setSelectionRange(pos, pos);
+            } catch (_) {}
+        }
+
+        function setupPesertaAlphanumericGuards() {
+            ["#formTambahPesertaDidik", "#formEditPesertaDidik"].forEach(
+                (sel) => {
+                    const form = $(sel);
+                    if (!form) return;
+                    form.addEventListener("input", (e) =>
+                        sanitizePesertaField(e.target)
+                    );
+                }
+            );
+        }
+
+        // ============================================================
+        // EXPOSE API PUBLIK
+        // ============================================================
+        window.PesertaDidikApp = {
+            loadTable: loadTablePesertaDidik,
+            editPesertaDidik,
+            detailPesertaDidik,
+            downloadAllFiles,
+            downloadSelectedFiles,
+            openDownload,
+            previewFile,
+        };
+
+        // ============================================================
+        // INIT — reset filter setiap kali halaman dimuat/di-refresh
+        // (Catatan: dahulu filter dipulihkan dari query string URL,
+        //  sekarang sengaja di-reset agar setiap refresh halaman
+        //  selalu menampilkan data tanpa filter aktif.)
+        // ============================================================
+        function initPesertaDidikPage() {
+            // Pasang pembatas input alphanumeric pada form tambah & edit
+            setupPesertaAlphanumericGuards();
+
+            // Kosongkan semua input filter
+            if (searchInput) searchInput.value = "";
+            if (rombelSelect) rombelSelect.selectedIndex = 0;
+            if (statusSelect) statusSelect.selectedIndex = 0;
+            if (sortAngkatanSelect) sortAngkatanSelect.selectedIndex = 0;
+            if (sortDataSelect) sortDataSelect.selectedIndex = 0;
+
+            const resetSearch = document.getElementById("resetSearch");
+            resetSearch?.classList.add("d-none");
+
+            // Bersihkan query string di URL (tanpa filter/page)
+            const cleanUrl = new URL(
+                window.location.pathname,
+                window.location.origin
+            );
+            window.history.replaceState(null, "", cleanUrl.href);
+
+            // Muat tabel tanpa filter (page 1)
+            loadTablePesertaDidik({});
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initPesertaDidikPage);
+        } else {
+            // Script dimuat setelah DOMContentLoaded sudah terjadi
+            // (mis. saat dibundel sebagai module/defer) — jalankan langsung.
+            initPesertaDidikPage();
+        }
+    })();
+}

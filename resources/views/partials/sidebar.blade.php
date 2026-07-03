@@ -43,17 +43,10 @@
                     </a>
                 </li>
 
-                {{-- SECTION: ARSIP --}}
+                {{-- SECTION: MASTER --}}
                 <li class="pc-item pc-caption mt-1">
                     <i class="bi bi-archive" aria-hidden="true"></i>
-                    <span>Arsip</span>
-                </li>
-
-                <li @class(['pc-item', 'active' => request()->routeIs('surat.*')])>
-                    <a href="{{ route('surat.index') }}" class="pc-link d-flex align-items-center gap-2" @if(request()->routeIs('surat.*')) aria-current="page" @endif>
-                        <i class="bi bi-envelope" aria-hidden="true"></i>
-                        <span>Surat</span>
-                    </a>
+                    <span>Master</span>
                 </li>
 
                 <li @class(['pc-item', 'active' => request()->routeIs('peserta-didik.*')])>
@@ -63,11 +56,37 @@
                     </a>
                 </li>
 
-                {{-- ✅ BARU: LAPORAN REKAPITULASI --}}
+                <li @class(['pc-item', 'active' => request()->routeIs('surat.index')])>
+                    <a href="{{ route('surat.index') }}" class="pc-link d-flex align-items-center gap-2" @if(request()->routeIs('surat.index')) aria-current="page" @endif>
+                        <i class="bi bi-envelope" aria-hidden="true"></i>
+                        <span>Surat</span>
+                    </a>
+                </li>
+
+                <li @class(['pc-item', 'active' => request()->routeIs('surat.masuk')])>
+                    <a href="{{ route('surat.masuk') }}" class="pc-link d-flex align-items-center gap-2" @if(request()->routeIs('surat.masuk')) aria-current="page" @endif>
+                        <i class="bi bi-box-arrow-in-down" aria-hidden="true"></i>
+                        <span>Surat Masuk</span>
+                    </a>
+                </li>
+
+                <li @class(['pc-item', 'active' => request()->routeIs('surat.keluar')])>
+                    <a href="{{ route('surat.keluar') }}" class="pc-link d-flex align-items-center gap-2" @if(request()->routeIs('surat.keluar')) aria-current="page" @endif>
+                        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                        <span>Surat Keluar</span>
+                    </a>
+                </li>
+
+                {{-- SECTION: LAPORAN --}}
+                <li class="pc-item pc-caption mt-1">
+                    <i class="bi bi-bar-chart" aria-hidden="true"></i>
+                    <span>Laporan</span>
+                </li>
+
                 <li @class(['pc-item', 'active' => request()->is('laporan*')])>
                     <a href="{{ route('laporan.filter') }}" class="pc-link d-flex align-items-center gap-2" @if(request()->is('laporan*')) aria-current="page" @endif>
-                        <i class="bi bi-bar-chart" aria-hidden="true"></i>
-                        <span>Laporan Rekap</span>
+                        <i class="bi bi-clipboard-data" aria-hidden="true"></i>
+                        <span>Rekap</span>
                     </a>
                 </li>
 
@@ -91,4 +110,4 @@
             </ul>
         </div>
     </div>
-    @include('partials.footer')
+</nav>

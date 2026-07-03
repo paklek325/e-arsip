@@ -11,6 +11,45 @@ use Illuminate\Support\Facades\Log; // Ditambahkan untuk debugging (opsional)
 
 class UserController extends Controller
 {
+    /**
+     * Ambil id_role Kepala Staf (role yang hanya boleh dimiliki satu user).
+     */
+    private function kepalaStafRoleId(): ?int
+    {
+        return Role::where('name', 'Kepala Staf')->value('id_role');
+    }
+
+    /**
+     * Pastikan tidak ada lebih dari satu Kepala Staf.
+     * Mengembalikan JsonResponse error bila melanggar, atau null bila lolos.
+     *
+     * @param  int|null  $ignoreUserId  id_user yang diabaikan (untuk update)
+     */
+    private function guardSingleKepalaStaf($requestRoleId, ?int $ignoreUserId = null)
+    {
+        $kepalaRoleId = $this->kepalaStafRoleId();
+
+        if (!$kepalaRoleId || (int) $requestRoleId !== (int) $kepalaRoleId) {
+            return null; // bukan Kepala Staf, tidak perlu dibatasi
+        }
+
+        $exists = User::where('id_role', $kepalaRoleId)
+            ->when($ignoreUserId, fn ($q) => $q->where('id_user', '!=', $ignoreUserId))
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors'  => [
+                    'id_role' => ['Kepala Staf sudah ada. Aplikasi hanya boleh memiliki satu Kepala Staf.'],
+                ],
+            ], 422);
+        }
+
+        return null;
+    }
+
     // =========================
     // INDEX + SEARCH + AJAX TABLE
     // =========================
@@ -22,7 +61,14 @@ class UserController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $users = $query->orderBy('name', 'asc')->paginate(10);
+        // Prioritas urutan: Kepala Staf selalu di paling atas,
+        // baru diikuti urutan normal (nama A-Z).
+        $kepalaRoleId = $this->kepalaStafRoleId();
+
+        $users = $query
+            ->orderByRaw('CASE WHEN id_role = ? THEN 0 ELSE 1 END', [$kepalaRoleId])
+            ->orderBy('name', 'asc')
+            ->paginate(10);
         $roles = Role::orderBy('name')->get();
 
         if ($request->ajax()) {
@@ -95,6 +141,11 @@ class UserController extends Controller
                 'message' => 'Validasi gagal',
                 'errors'  => $errors,
             ], 422);
+        }
+
+        // Batasi hanya boleh ada satu Kepala Staf
+        if ($guard = $this->guardSingleKepalaStaf($request->id_role)) {
+            return $guard;
         }
 
         $validated = $validator->validated();
@@ -170,6 +221,11 @@ class UserController extends Controller
                 'message' => 'Validasi gagal',
                 'errors'  => $errors,
             ], 422);
+        }
+
+        // Batasi hanya boleh ada satu Kepala Staf (abaikan user yang sedang diedit)
+        if ($guard = $this->guardSingleKepalaStaf($request->id_role, $user->id_user)) {
+            return $guard;
         }
 
         $validated = $validator->validated();

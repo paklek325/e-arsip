@@ -19,6 +19,8 @@ class StoreSuratRequest extends FormRequest
                 'required',
                 'string',
                 'max:100',
+                // Alphanumeric + spasi + pemisah lazim nomor surat ( / - . )
+                'regex:/^[A-Za-z0-9 .\/-]+$/',
                 Rule::unique('surat', 'no_surat')
                     ->where(function ($q) {
                         $instansi = $this->input('instansi');
@@ -35,16 +37,19 @@ class StoreSuratRequest extends FormRequest
             ],
             'jenis_surat'   => 'required|in:Masuk,Keluar',
             'tanggal_surat' => 'required|date',
-            'perihal'       => 'required|string|max:255',
-            'instansi'      => 'required|string|max:255',
-            'pengirim'      => 'nullable|string|max:255',
-            'penerima'      => 'nullable|string|max:255',
+            // Field teks: hanya huruf, angka, dan spasi (tanpa simbol)
+            'perihal'       => ['required', 'string', 'max:255', 'regex:/^[A-Za-z0-9 ]+$/'],
+            'instansi'      => ['required', 'string', 'max:255', 'regex:/^[A-Za-z0-9 ]+$/'],
+            'pengirim'      => ['nullable', 'string', 'max:255', 'regex:/^[A-Za-z0-9 ]+$/'],
+            'penerima'      => ['nullable', 'string', 'max:255', 'regex:/^[A-Za-z0-9 ]+$/'],
 
             'kode_surat' => [
                 'required_if:jenis_surat,Keluar',
                 'nullable',
                 'string',
                 'max:10', // samakan dengan panjang kolom surat.kode_surat & kode.kode (varchar(10))
+                // Alphanumeric + spasi + pemisah ( / - . )
+                'regex:/^[A-Za-z0-9 .\/-]+$/',
                 Rule::when($this->jenis_surat === 'Keluar', [
                     'exists:kode,kode',
                 ]),
@@ -62,6 +67,13 @@ class StoreSuratRequest extends FormRequest
             'instansi.required'      => 'Instansi wajib diisi.',
             'kode_surat.required_if' => 'Kode surat wajib diisi untuk Surat Keluar.',
             'kode_surat.exists'      => 'Kode surat yang dipilih tidak valid. Pilih dari daftar kode yang tersedia.',
+
+            'no_surat.regex'   => 'Nomor surat hanya boleh berisi huruf, angka, spasi, dan tanda / - .',
+            'kode_surat.regex' => 'Kode surat hanya boleh berisi huruf, angka, spasi, dan tanda / - .',
+            'perihal.regex'    => 'Perihal hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
+            'instansi.regex'   => 'Instansi hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
+            'pengirim.regex'   => 'Pengirim hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
+            'penerima.regex'   => 'Penerima hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
         ];
     }
 }

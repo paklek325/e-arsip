@@ -32,10 +32,18 @@ Sinkron dengan SuratController & JS (preview + print + multi download)
 
           <div class="col-md-6">
             <label for="jenis_surat_add" class="form-label">Jenis Surat <span class="text-danger">*</span></label>
-            <select id="jenis_surat_add" name="jenis_surat" class="form-select" required>
-              <option value="">-- Pilih Jenis --</option>
-              <option value="Masuk">Masuk</option>
-              <option value="Keluar">Keluar</option>
+            {{-- Di halaman Surat Masuk/Keluar, jenis dikunci ke satu nilai
+                 (hanya satu opsi dirender). Select tetap enabled agar tetap
+                 ikut terkirim di FormData. --}}
+            <select id="jenis_surat_add" name="jenis_surat" class="form-select" required
+                    @if($lockJenis ?? null) aria-readonly="true" @endif>
+              @if($lockJenis ?? null)
+                <option value="{{ $lockJenis }}" selected>{{ $lockJenis }}</option>
+              @else
+                <option value="">-- Pilih Jenis --</option>
+                <option value="Masuk">Masuk</option>
+                <option value="Keluar">Keluar</option>
+              @endif
             </select>
           </div>
 
@@ -144,9 +152,15 @@ Sinkron dengan SuratController & JS (preview + print + multi download)
 
           <div class="col-md-6">
             <label for="edit_jenis" class="form-label">Jenis Surat <span class="text-danger">*</span></label>
-            <select id="edit_jenis" name="jenis_surat" class="form-select" required>
-              <option value="Masuk">Masuk</option>
-              <option value="Keluar">Keluar</option>
+            {{-- Terkunci saat di halaman Surat Masuk/Keluar (hanya satu opsi). --}}
+            <select id="edit_jenis" name="jenis_surat" class="form-select" required
+                    @if($lockJenis ?? null) aria-readonly="true" @endif>
+              @if($lockJenis ?? null)
+                <option value="{{ $lockJenis }}" selected>{{ $lockJenis }}</option>
+              @else
+                <option value="Masuk">Masuk</option>
+                <option value="Keluar">Keluar</option>
+              @endif
             </select>
           </div>
 

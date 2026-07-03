@@ -1622,6 +1622,60 @@ if (window.SuratApp) {
         }
 
         /* =========================================================
+         * SANITASI INPUT (alphanumeric)
+         * Field teks (perihal, instansi, pengirim, penerima) hanya boleh
+         * huruf/angka/spasi. Nomor & Kode Surat boleh tambahan / - .
+         * Guard ini realtime; validasi sebenarnya tetap di backend
+         * (StoreSuratRequest/UpdateSuratRequest).
+         * ========================================================= */
+
+        // Karakter yang TIDAK diizinkan (untuk dibuang saat mengetik).
+        const RE_TEXT_STRIP = /[^A-Za-z0-9 ]+/g; // huruf, angka, spasi
+        const RE_IDENT_STRIP = /[^A-Za-z0-9 .\/-]+/g; // + / - .
+
+        const IDENT_FIELDS = new Set(["no_surat", "kode_surat"]);
+        const TEXT_FIELDS = new Set([
+            "perihal",
+            "instansi",
+            "pengirim",
+            "penerima",
+        ]);
+
+        function sanitizeField(el) {
+            if (!el || (el.tagName !== "INPUT" && el.tagName !== "TEXTAREA")) {
+                return;
+            }
+
+            const name = el.name;
+            let re = null;
+            if (IDENT_FIELDS.has(name)) re = RE_IDENT_STRIP;
+            else if (TEXT_FIELDS.has(name)) re = RE_TEXT_STRIP;
+            if (!re) return;
+
+            const before = el.value;
+            const after = before.replace(re, "");
+            if (before === after) return;
+
+            // Pertahankan posisi kursor semirip mungkin setelah karakter dibuang.
+            const start = el.selectionStart ?? after.length;
+            const removed = before.length - after.length;
+            el.value = after;
+            const pos = Math.max(0, start - removed);
+            try {
+                el.setSelectionRange(pos, pos);
+            } catch (_) {}
+        }
+
+        function setupAlphanumericGuards() {
+            ["#addSuratForm", "#editSuratForm"].forEach((sel) => {
+                const form = $(sel);
+                if (!form) return;
+                // Delegasi: menangkap juga input Kode Surat yang dirender ulang.
+                form.addEventListener("input", (e) => sanitizeField(e.target));
+            });
+        }
+
+        /* =========================================================
          * INIT
          * ========================================================= */
 
@@ -1649,6 +1703,7 @@ if (window.SuratApp) {
             setupDeleteFileHandler();
             setupDeleteSurat();
             setupPreviewHandlers();
+            setupAlphanumericGuards();
 
             addTodayButton("#edit_tanggal");
 

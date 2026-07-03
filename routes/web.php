@@ -120,6 +120,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/', 'store')->name('store');
 
+        // Clone dari halaman Surat, tetapi terkunci hanya menampilkan
+        // jenis tertentu. Harus dideklarasikan SEBELUM wildcard /{surat}
+        // agar tidak tertangkap oleh route show.
+        Route::get('/filter/masuk', 'masuk')->name('masuk');
+        Route::get('/filter/keluar', 'keluar')->name('keluar');
+
         Route::get('/{surat}', 'show')->name('show');
         Route::put('/{surat}', 'update')->name('update');
         Route::delete('/{surat}', 'destroy')->name('destroy');

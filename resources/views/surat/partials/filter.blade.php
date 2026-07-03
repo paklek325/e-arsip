@@ -28,15 +28,20 @@
         </div>
 
         {{-- JENIS SURAT --}}
+        @php($lockJenis = $lockJenis ?? null)
         <div class="col-xl-3 col-lg-3 col-md-6">
             <div class="position-relative">
 
-                <select id="jenis" class="form-select pe-5">
+                {{-- Saat halaman terkunci (Surat Masuk/Keluar), dropdown ini
+                     dinonaktifkan dan nilainya dipaksa agar filter tidak bisa
+                     diubah. surat.js tetap membaca .value walau disabled. --}}
+                <select id="jenis" class="form-select pe-5" @disabled($lockJenis)>
                     <option value="">Jenis Surat</option>
-                    <option value="Masuk">Surat Masuk</option>
-                    <option value="Keluar">Surat Keluar</option>
+                    <option value="Masuk" @selected($lockJenis === 'Masuk')>Surat Masuk</option>
+                    <option value="Keluar" @selected($lockJenis === 'Keluar')>Surat Keluar</option>
                 </select>
 
+                @unless($lockJenis)
                 <button
                     type="button"
                     id="resetJenis"
@@ -44,6 +49,7 @@
                     title="Reset Filter">
                     <i class="bi bi-x-lg"></i>
                 </button>
+                @endunless
 
             </div>
         </div>
