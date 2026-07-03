@@ -487,7 +487,60 @@ Sinkron dengan SuratController & JS (preview + print + multi download)
     </div>
 </div>
 
+{{-- ===========================
+    MODAL PREVIEW FILE (gambar/dokumen lampiran)
+    Dipakai oleh openPreview() di resources/js/surat.js
+============================ --}}
+<div class="modal fade" id="filePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
 
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title text-truncate">
+                    <i class="bi bi-eye me-2"></i>
+                    <span id="preview_filename_label">Pratinjau File</span>
+                </h5>
 
+                <button class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
 
+            <div class="modal-body position-relative p-0" style="min-height: 200px;">
 
+                <div id="file-loading-spinner"
+                     class="d-flex justify-content-center align-items-center"
+                     style="min-height: 200px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Memuat...</span>
+                    </div>
+                </div>
+
+                <div id="filePreviewBody" class="text-center p-2"></div>
+
+            </div>
+
+            <div class="modal-footer bg-light">
+
+                <a id="previewDownloadLink"
+                   href="#"
+                   class="btn btn-success"
+                   target="_blank">
+
+                    <i class="bi bi-download me-1"></i>
+
+                    Download
+
+                </a>
+
+                <button class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                    Tutup
+
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+</div>

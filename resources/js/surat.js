@@ -45,6 +45,31 @@ if (window.SuratApp) {
         const $ = (sel) => document.querySelector(sel);
         const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
+        /**
+         * Ambil instance bootstrap.Modal yang sudah ada untuk elemen ini,
+         * atau buat baru kalau belum ada.
+         * BUGFIX: kode lama selalu memanggil `new bootstrap.Modal(el)` setiap
+         * modal dibuka. Ini menimpa instance lama di Data store milik elemen
+         * TANPA men-dispose-nya, sehingga event listener lama (show/hide,
+         * backdrop, dsb.) tetap menempel dan menumpuk. Ketika modal dibuka-
+         * tutup berkali-kali (mis. detail surat/siswa dibuka lagi setelah
+         * ditutup), listener lama yang sudah "yatim" itu bentrok dengan
+         * instance baru dan menyebabkan:
+         *   Uncaught TypeError: this._config is undefined
+         *       at _initializeBackDrop (bootstrap.bundle.min.js)
+         * Solusinya: selalu pakai getOrCreateInstance agar hanya ada SATU
+         * instance Modal per elemen sepanjang hidup halaman.
+         */
+        function getOrCreateModal(elOrSelector) {
+            const el =
+                typeof elOrSelector === "string"
+                    ? $(elOrSelector)
+                    : elOrSelector;
+            if (!el || typeof bootstrap === "undefined" || !bootstrap.Modal)
+                return null;
+            return bootstrap.Modal.getOrCreateInstance(el);
+        }
+
         // ID surat yang sedang dibuka di modal detail
         let currentSuratId = null;
 
@@ -65,50 +90,110 @@ if (window.SuratApp) {
             });
         }
 
-        const toast = (message, type = "info") => {
-            const existing = document.getElementById("customToastContainer");
-            if (existing) existing.remove();
+        // Suntik CSS toast modern sekali saja (dipakai bersama semua tipe toast)
+        function injectToastStyles() {
+            if (document.getElementById("appToastStyles")) return;
+            const style = document.createElement("style");
+            style.id = "appToastStyles";
+            style.textContent = `
+                .app-toast{
+                    display:flex; align-items:flex-start; gap:12px;
+                    min-width:320px; max-width:380px;
+                    padding:14px 16px; margin-bottom:10px;
+                    border:0; border-radius:16px; color:#fff;
+                    box-shadow:0 12px 28px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.08);
+                    position:relative; overflow:hidden;
+                    opacity:0; transform:translateX(40px) scale(.96);
+                    transition:opacity .45s cubic-bezier(.21,1.02,.73,1),
+                               transform .45s cubic-bezier(.21,1.02,.73,1);
+                }
+                .app-toast.app-toast-in{ opacity:1; transform:translateX(0) scale(1); }
+                .app-toast.app-toast-out{ opacity:0; transform:translateX(40px) scale(.96); }
+                .app-toast-success{ background:linear-gradient(135deg,#16a34a,#22c55e); }
+                .app-toast-error{ background:linear-gradient(135deg,#dc2626,#ef4444); }
+                .app-toast-warning{ background:linear-gradient(135deg,#d97706,#f59e0b); }
+                .app-toast-info{ background:linear-gradient(135deg,#2563eb,#3b82f6); }
+                .app-toast-icon{
+                    flex-shrink:0; width:34px; height:34px; border-radius:50%;
+                    background:rgba(255,255,255,.22);
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:17px; margin-top:1px;
+                }
+                .app-toast-body{ flex:1; font-size:.9rem; font-weight:600;
+                    line-height:1.35; padding-top:4px; }
+                .app-toast-close{
+                    flex-shrink:0; background:transparent; border:0; color:#fff;
+                    opacity:.85; font-size:1rem; line-height:1; padding:2px;
+                    margin-top:2px; cursor:pointer;
+                }
+                .app-toast-close:hover{ opacity:1; }
+                .app-toast-progress{
+                    position:absolute; left:0; bottom:0; height:3px; width:100%;
+                    background:rgba(255,255,255,.55); transform-origin:left;
+                    animation:appToastShrink 3.5s linear forwards;
+                }
+                @keyframes appToastShrink{ from{transform:scaleX(1);} to{transform:scaleX(0);} }
+            `;
+            document.head.appendChild(style);
+        }
 
-            const container = document.createElement("div");
-            container.id = "customToastContainer";
-            container.className = "position-fixed top-0 end-0 p-3";
-            container.style.zIndex = "2000";
+        const toast = (message, type = "info") => {
+            injectToastStyles();
+
+            let container = document.getElementById("customToastContainer");
+            if (!container) {
+                container = document.createElement("div");
+                container.id = "customToastContainer";
+                container.className =
+                    "position-fixed top-0 end-0 p-3 d-flex flex-column align-items-end";
+                container.style.zIndex = "2000";
+                document.body.appendChild(container);
+            }
 
             const map = {
-                success: ["bg-success", "✅"],
-                error: ["bg-danger", "❌"],
-                warning: ["bg-warning text-dark", "⚠️"],
-                info: ["bg-primary", "ℹ️"],
+                success: ["app-toast-success", "bi-check-circle-fill"],
+                error: ["app-toast-error", "bi-x-circle-fill"],
+                warning: ["app-toast-warning", "bi-exclamation-triangle-fill"],
+                info: ["app-toast-info", "bi-info-circle-fill"],
             };
-            const [bg, icon] = map[type] || map.info;
+            const [variant, icon] = map[type] || map.info;
 
-            container.innerHTML = `
-            <div class="toast align-items-center text-white ${bg} border-0 shadow-sm"
-                role="alert" aria-live="assertive" aria-atomic="true"
-                style="min-width:280px; opacity:0; transform:translateY(-10px); transition:all .4s ease;">
-                <div class="d-flex">
-                    <div class="toast-body fw-semibold">${icon} ${message}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                </div>
-            </div>`;
+            const toastEl = document.createElement("div");
+            toastEl.className = `app-toast ${variant}`;
+            toastEl.setAttribute("role", "alert");
+            toastEl.setAttribute("aria-live", "assertive");
+            toastEl.setAttribute("aria-atomic", "true");
+            toastEl.innerHTML = `
+                <div class="app-toast-icon"><i class="bi ${icon}"></i></div>
+                <div class="app-toast-body">${message}</div>
+                <button type="button" class="app-toast-close" aria-label="Tutup">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <div class="app-toast-progress"></div>
+            `;
 
-            document.body.appendChild(container);
-            const toastEl = container.querySelector(".toast");
+            container.appendChild(toastEl);
 
-            setTimeout(() => {
-                toastEl.style.opacity = "1";
-                toastEl.style.transform = "translateY(0)";
-            }, 50);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    toastEl.classList.add("app-toast-in");
+                });
+            });
 
-            toastEl.addEventListener("hidden.bs.toast", () =>
-                container.remove()
-            );
+            const remove = () => {
+                toastEl.classList.remove("app-toast-in");
+                toastEl.classList.add("app-toast-out");
+                setTimeout(() => {
+                    toastEl.remove();
+                    if (!container.children.length) container.remove();
+                }, 450);
+            };
 
-            setTimeout(() => {
-                toastEl.style.opacity = "0";
-                toastEl.style.transform = "translateY(-10px)";
-                setTimeout(() => container.remove(), 500);
-            }, 3500);
+            toastEl
+                .querySelector(".app-toast-close")
+                ?.addEventListener("click", remove);
+
+            setTimeout(remove, 3500);
         };
 
         const debounce = (fn, delay = 400) => {
@@ -431,8 +516,9 @@ if (window.SuratApp) {
                         : id;
                     const noSuratEl = $("#delete_no_surat_text");
                     if (noSuratEl) noSuratEl.textContent = noSuratText || id;
-                    if (typeof bootstrap !== "undefined" && bootstrap.Modal) {
-                        new bootstrap.Modal($("#deleteSuratModal")).show();
+                    const deleteModal = getOrCreateModal("#deleteSuratModal");
+                    if (deleteModal) {
+                        deleteModal.show();
                     } else {
                         console.warn("Bootstrap Modal not available.");
                     }
@@ -915,7 +1001,7 @@ if (window.SuratApp) {
                 }
 
                 addTodayButton("#edit_tanggal");
-                new bootstrap.Modal($("#editSuratModal")).show();
+                getOrCreateModal("#editSuratModal")?.show();
             } catch (err) {
                 console.error(err);
                 toast("Gagal memuat data edit", "error");
@@ -1337,7 +1423,7 @@ if (window.SuratApp) {
 
                 updateSelectedInfo();
 
-                new bootstrap.Modal($("#viewSuratModal")).show();
+                getOrCreateModal("#viewSuratModal")?.show();
             } catch (err) {
                 console.error(err);
                 toast("Gagal menampilkan surat", "error");
@@ -1366,31 +1452,43 @@ if (window.SuratApp) {
             const ext = url.split(".").pop().toLowerCase();
             let content;
 
+            const hideSpinner = () => {
+                if (spinner) spinner.style.display = "none";
+            };
+
             if (["pdf"].includes(ext)) {
                 content = document.createElement("iframe");
-                content.src = url;
                 content.className = "w-100";
                 content.style.minHeight = "80vh";
+                // BUGFIX: pasang handler SEBELUM set src. Kalau dipasang
+                // sesudah, dan file sudah ada di cache browser, event
+                // load/error bisa selesai lebih dulu sebelum handler
+                // terpasang -> spinner "buffering" selamanya.
+                content.onload = hideSpinner;
+                content.onerror = hideSpinner;
+                content.src = url;
             } else if (["jpg", "jpeg", "png"].includes(ext)) {
                 content = document.createElement("img");
-                content.src = url;
                 content.className = "img-fluid";
+                content.onload = hideSpinner;
+                content.onerror = hideSpinner;
+                content.src = url;
             } else {
+                // BUGFIX: konten fallback ini cuma <div>, tidak pernah
+                // memicu event load/error, jadi spinner harus disembunyikan
+                // langsung di sini, bukan menunggu content.onload.
                 content = document.createElement("div");
                 content.className = "p-3";
                 content.innerHTML = `
                 <p class="mb-1">Pratinjau langsung tidak tersedia.</p>
                 <a href="${url}" target="_blank">Klik di sini untuk membuka / mengunduh file.</a>
             `;
+                hideSpinner();
             }
-
-            content.onload = content.onerror = () => {
-                if (spinner) spinner.style.display = "none";
-            };
 
             if (body) body.appendChild(content);
 
-            new bootstrap.Modal($("#filePreviewModal")).show();
+            getOrCreateModal("#filePreviewModal")?.show();
         }
 
         function setupPreviewHandlers() {

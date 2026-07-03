@@ -416,7 +416,33 @@ class SuratController extends Controller
         ]);
     }
     /* ======================================================
- | 3. STORE
+ | 3. DESTROY
+ ====================================================== */
+    public function destroy(Surat $surat)
+    {
+        try {
+            // Hapus semua file lampiran fisik milik surat ini dari disk
+            foreach (($surat->file_surat ?? []) as $file) {
+                if (is_string($file) && $file !== '' && Storage::disk('public')->exists($file)) {
+                    Storage::disk('public')->delete($file);
+                }
+            }
+
+            $surat->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Surat berhasil dihapus',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus surat: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+    /* ======================================================
+ | 4. STORE
  ====================================================== */
     public function store(StoreSuratRequest $request)
     {

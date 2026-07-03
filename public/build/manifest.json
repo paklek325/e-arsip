@@ -1,0 +1,71 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-l0sNRNKZ.js",
+    "name": "app",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-HP72C_8i.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "css": [
+      "assets/app-BEpTWA9Q.css"
+    ]
+  },
+  "resources/js/chat.js": {
+    "file": "assets/chat-CanrcFd3.js",
+    "name": "chat",
+    "src": "resources/js/chat.js",
+    "isEntry": true
+  },
+  "resources/js/dashboard.js": {
+    "file": "assets/dashboard-DxDH_YED.js",
+    "name": "dashboard",
+    "src": "resources/js/dashboard.js",
+    "isEntry": true
+  },
+  "resources/js/kode.js": {
+    "file": "assets/kode-DTsXEnXH.js",
+    "name": "kode",
+    "src": "resources/js/kode.js",
+    "isEntry": true
+  },
+  "resources/js/laporan.js": {
+    "file": "assets/laporan-BNgCpWvp.js",
+    "name": "laporan",
+    "src": "resources/js/laporan.js",
+    "isEntry": true
+  },
+  "resources/js/peserta-didik.js": {
+    "file": "assets/peserta-didik-D2_fBHuN.js",
+    "name": "peserta-didik",
+    "src": "resources/js/peserta-didik.js",
+    "isEntry": true
+  },
+  "resources/js/responsif.js": {
+    "file": "assets/responsif-OM40NnW_.js",
+    "name": "responsif",
+    "src": "resources/js/responsif.js",
+    "isEntry": true
+  },
+  "resources/js/surat.js": {
+    "file": "assets/surat-D2_fBHuN.js",
+    "name": "surat",
+    "src": "resources/js/surat.js",
+    "isEntry": true
+  },
+  "resources/js/tampilan.js": {
+    "file": "assets/tampilan-CzV8lXZ4.js",
+    "name": "tampilan",
+    "src": "resources/js/tampilan.js",
+    "isEntry": true
+  },
+  "resources/js/user.js": {
+    "file": "assets/user-BrRUkzg5.js",
+    "name": "user",
+    "src": "resources/js/user.js",
+    "isEntry": true
+  }
+}
