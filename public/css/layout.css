@@ -442,13 +442,13 @@ body[data-theme-transition] * { transition: none !important; }
 
   .pc-container {
     margin-left: 0 !important;
-    padding: 65px 1rem 2rem;
+    padding: 58px 0.75rem 1.5rem;
     transition: all 0.3s ease;
   }
 
   .card {
     padding: 1rem;
-    margin: 0.75rem 0;
+    margin: 0.5rem 0;
     border-radius: 10px;
   }
 
@@ -463,6 +463,70 @@ body[data-theme-transition] * { transition: none !important; }
   .pc-header .user-info {
     display: none;
   }
+}
+
+/* =======================================================
+   📱 MOBILE SPACING & BUTTON FIX (≤576px)
+======================================================= */
+@media (max-width: 576px) {
+
+  /* Kurangi padding container */
+  .pc-container {
+    padding: 55px 0.6rem 1rem !important;
+  }
+
+  /* Breadcrumb lebih kompak */
+  .pc-breadcrumb-bar {
+    padding: 0 0 0.3rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Page header — kurangi jarak bawah */
+  .page-header {
+    padding: 0.6rem 0 !important;
+    border: none !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  /* Header row dengan tombol Tambah — wrap rapi */
+  .d-flex.justify-content-between.align-items-center.mb-4,
+  .d-flex.justify-content-between.align-items-start.mb-4 {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  /* Tombol Tambah — cegah wrap teks, ukuran wajar */
+  .btn.btn-primary,
+  .btn.btn-success,
+  .btn.btn-warning {
+    font-size: 0.82rem !important;
+    padding: 0.4rem 0.75rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* Title h4/h5 di header halaman */
+  h4.fw-bold, h5.fw-bold {
+    font-size: 1rem !important;
+  }
+
+  /* Card body lebih kompak — hanya yang tidak pakai p-0 atau p-* eksplisit */
+  .card-body:not([class*="p-0"]):not([class*="px-"]):not([class*="py-"]) {
+    padding: 0.75rem !important;
+  }
+
+  /* Filter bar di mobile */
+  .filter-bar {
+    padding: 0.6rem !important;
+    margin-bottom: 0.6rem !important;
+    border-radius: 10px !important;
+  }
+
+  /* Kurangi mb-4 dan mb-3 di mobile — kecuali di halaman laporan */
+  .mb-4:not(.stat-cards):not(.laporan-tahunan):not(.laporan-bulanan) {
+    margin-bottom: 0.75rem !important;
+  }
+  .mb-3:not(.stat-cards) { margin-bottom: 0.5rem !important; }
 }
 
 @media print {
@@ -880,4 +944,92 @@ body[data-theme-transition] * { transition: none !important; }
 [data-theme="dark"] .modal-footer {
   background-color: #172033 !important;
   border-top-color: #334155;
+}
+
+/* =======================================================
+   📱 MOBILE CARD-VIEW TABLE (≤576px)
+   responsif.js menambahkan data-label ke setiap <td>,
+   CSS ini yang mengubah tabel menjadi tampilan kartu.
+======================================================= */
+@media (max-width: 576px) {
+
+  /* Sembunyikan header tabel */
+  .table-responsive table thead {
+    display: none !important;
+  }
+
+  /* Ubah struktur tabel menjadi block */
+  .table-responsive table,
+  .table-responsive tbody,
+  .table-responsive tr,
+  .table-responsive td {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* Setiap baris jadi kartu */
+  .table-responsive tbody tr {
+    border: 1px solid var(--table-border, rgba(0,0,0,.1)) !important;
+    border-radius: 10px !important;
+    margin-bottom: 0.85rem !important;
+    padding: 0.4rem 0 !important;
+    background: var(--card-bg, #fff) !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,.07) !important;
+  }
+
+  /* Setiap sel jadi baris label : nilai */
+  .table-responsive td {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    padding: 0.45rem 0.85rem !important;
+    border: none !important;
+    border-bottom: 1px solid var(--table-border, rgba(0,0,0,.06)) !important;
+    text-align: right !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  .table-responsive td:last-child {
+    border-bottom: none !important;
+  }
+
+  /* Label kolom dari data-label */
+  .table-responsive td[data-label]::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--table-head-color, #6b7280);
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    margin-right: 0.6rem;
+    padding-top: 2px;
+    text-align: left;
+    min-width: 90px;
+  }
+
+  /* Override nowrap bawaan Bootstrap & table-custom */
+  .table-responsive table,
+  .table-responsive .table-custom th,
+  .table-responsive .table-custom td {
+    white-space: normal !important;
+  }
+
+  /* Tombol aksi tetap bisa dibaca */
+  .table-responsive td .d-flex {
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  /* Dark mode card-view */
+  [data-theme="dark"] .table-responsive tbody tr {
+    background: var(--card-bg, #1f2937) !important;
+    border-color: rgba(255,255,255,.08) !important;
+  }
+
+  [data-theme="dark"] .table-responsive td {
+    border-bottom-color: rgba(255,255,255,.05) !important;
+  }
 }

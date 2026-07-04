@@ -782,3 +782,30 @@
 
   #page-laporan .laporan-page-header { padding: .85rem 1rem; }
 }
+
+@media (max-width: 576px) {
+  /* Stat cards tetap sejajar 3 kolom di mobile kecil */
+  .stat-cards {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: .3rem !important;
+    padding: .5rem .5rem .3rem !important;
+    overflow-x: auto;
+  }
+  .stat-card {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    padding: .4rem .3rem !important;
+  }
+  .stat-card .stat-num   { font-size: 16px !important; }
+  .stat-card .stat-label { font-size: 8px !important; }
+
+  /* Laporan tabel di mobile — jangan pakai card-view karena ada tfoot total */
+  .table-wrapper.table-responsive table thead { display: table-header-group !important; }
+  .table-wrapper.table-responsive table,
+  .table-wrapper.table-responsive tbody,
+  .table-wrapper.table-responsive tr,
+  .table-wrapper.table-responsive td { display: revert !important; }
+  .table-wrapper.table-responsive td[data-label]::before { display: none !important; }
+  .table-wrapper.table-responsive { overflow-x: auto !important; }
+}

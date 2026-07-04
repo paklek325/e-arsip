@@ -123,6 +123,7 @@
 
     header.pc-header .theme-toggle-label input[type="checkbox"]:checked ~ .tt-thumb {
         left: 28px !important;
+        transform: translateY(-50%) !important;
         background: #263550 !important;
         box-shadow: 0 1px 5px rgba(0,0,0,.45), 0 0 8px rgba(129,140,248,.35) !important;
     }
@@ -146,6 +147,7 @@
     }
     [data-theme="dark"] header.pc-header .theme-toggle-label .tt-thumb {
         left: 28px !important;
+        transform: translateY(-50%) !important;
         background: #263550 !important;
         box-shadow: 0 1px 5px rgba(0,0,0,.45), 0 0 8px rgba(129,140,248,.35) !important;
     }

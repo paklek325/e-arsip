@@ -250,3 +250,28 @@
   background-color: #334155;
   color: #e2e8f0;
 }
+
+@media (max-width: 576px) {
+  /* Hilangkan nowrap di mobile agar card-view bekerja */
+  .table-custom,
+  .table-custom th,
+  .table-custom td {
+    white-space: normal !important;
+  }
+
+  /* Filter bar lebih ringkas */
+  .filter-bar {
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  #jenis,
+  #sort {
+    height: 44px;
+  }
+
+  .search-group .form-control,
+  #btnAiSearch {
+    height: 44px;
+  }
+}
