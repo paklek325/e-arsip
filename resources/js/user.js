@@ -1,3 +1,10 @@
+/**
+ * user.js
+ * ──────────────────────────────────────────────────────────
+ * MENU  : Master User (/user)
+ * FILE  : resources/js/user.js
+ * SCOPE : Halaman user saja (guard: #page-user)
+ */
 (() => {
     "use strict";
 
@@ -191,6 +198,7 @@
     // ===== Edit: load data (PERBAIKAN FOTO DEFAULT) =====
     async function openEditModal(id) {
         try {
+            croppedFileEdit = null;
             clearErrors("edit");
             const res = await fetch(`${baseUrl}/user/${id}`, {
                 headers: { "X-Requested-With": "XMLHttpRequest" },
@@ -230,9 +238,12 @@
 
             const img = $("#previewFotoEdit");
             if (img) {
-                img.src = data.foto;
-                img.dataset.current = data.foto;
-                img.dataset.default = data.foto;
+                const def = img.dataset.default; // jaga default placeholder dari HTML
+                const src = data.foto || def;
+                img.src = src;
+                img.onerror = function () { this.src = def; this.onerror = null; };
+                img.dataset.current = src;
+                // data-default tidak di-overwrite — tetap = placeholder default
             }
 
             const passwordInput = $("#edit_password");
@@ -245,7 +256,7 @@
             const fileInput = $("#edit_foto");
             if (fileInput) fileInput.value = "";
 
-            new bootstrap.Modal($("#editUserModal")).show();
+            bootstrap.Modal.getOrCreateInstance($("#editUserModal")).show();
         } catch (err) {
             console.error(err);
             toast("Gagal memuat data user", "error");
@@ -507,7 +518,7 @@
             input.type === "password" ? "bi bi-eye-slash" : "bi bi-eye";
     });
 
-    // ===== Reset modal ADD saat dibuka (OK) =====
+    // ===== Reset modal ADD saat dibuka =====
     const addModalEl = $("#addUserModal");
     if (addModalEl) {
         addModalEl.addEventListener("show.bs.modal", () => {
@@ -527,6 +538,27 @@
                 const icon = $(".togglePasswordAdd i");
                 if (icon) icon.className = "bi bi-eye-slash";
             }
+        });
+    }
+
+    // ===== Reset croppedFileEdit saat modal EDIT dibuka & ditutup =====
+    const editModalEl = $("#editUserModal");
+    if (editModalEl) {
+        // Saat modal edit dibuka: buang sisa crop dari sesi sebelumnya
+        editModalEl.addEventListener("show.bs.modal", () => {
+            croppedFileEdit = null;
+            const fi = $("#edit_foto");
+            if (fi) fi.value = "";
+        });
+
+        // Saat modal edit ditutup (dismiss/batal): pastikan state bersih
+        editModalEl.addEventListener("hidden.bs.modal", () => {
+            croppedFileEdit = null;
+            const fi  = $("#edit_foto");
+            const img = $("#previewFotoEdit");
+            if (fi) fi.value = "";
+            // Kembalikan foto ke foto yang sedang tersimpan di server
+            if (img && img.dataset.current) img.src = img.dataset.current;
         });
     }
 

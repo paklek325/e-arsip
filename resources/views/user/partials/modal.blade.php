@@ -91,7 +91,8 @@
                         <div class="foto-preview-wrapper mx-auto mb-2">
                             <img id="previewFotoEdit"
                                 src="{{ asset('assets/img/default_staf.png') }}"
-                                data-default="{{ asset('assets/img/default_staf.png') }}">
+                                data-default="{{ asset('assets/img/default_staf.png') }}"
+                                onerror="this.src='{{ asset('assets/img/default_staf.png') }}'; this.onerror=null;">
                         </div>
                         <input type="file" name="foto" id="edit_foto" class="form-control mt-2" accept="image/jpeg,image/png,image/jpg">
                         <small class="text-muted">Format JPG/PNG, maks. 4MB</small>

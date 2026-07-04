@@ -34,6 +34,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
+    // Profil user yang sedang login
+    Route::get('/profil', [UserController::class, 'profil'])->name('profil');
+    Route::put('/profil', [UserController::class, 'updateProfil'])->name('profil.update');
+
     // AI Chat Support
     Route::get('/chat/csrf-token', fn() => response()->json(['token' => csrf_token()]))->name('chat.csrf');
     Route::post('/chat/ask', [ChatController::class, 'ask'])->name('chat.ask')->middleware('throttle:30,1');

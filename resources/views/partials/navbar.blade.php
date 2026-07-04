@@ -1,235 +1,117 @@
-<style>
-    /* =========================================
-       NAVBAR THEME TOGGLE — Sun/Moon Switch
-       Diperbaiki: ukuran, posisi icon, dan
-       transisi agar halus di semua state.
-    ========================================= */
+<header class="pc-header">
+    <div class="header-wrapper">
 
-    /* === WRAPPER LABEL === */
-    header.pc-header .theme-toggle-label,
-    .theme-toggle-label {
-        all: revert;
-        box-sizing: border-box !important;
-        position: relative !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        width: 52px !important;
-        height: 28px !important;
-        min-width: 52px !important;
-        max-width: 52px !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        cursor: pointer !important;
-        line-height: 0 !important;
-        vertical-align: middle !important;
-    }
+        {{-- ── Kiri: Toggle Sidebar ─────────────────────────────────────── --}}
+        <div class="me-auto pc-mob-drp">
+            <ul class="list-unstyled">
 
-    /* === HIDDEN CHECKBOX === */
-    header.pc-header .theme-toggle-label input[type="checkbox"] {
-        position: absolute !important;
-        inset: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        opacity: 0 !important;
-        cursor: pointer !important;
-        z-index: 3 !important;
-        appearance: none !important;
-    }
+                {{-- Desktop: klik kiri untuk collapse/expand sidebar --}}
+                <li class="pc-h-item pc-sidebar-collapse">
+                    <a href="#" class="pc-head-link ms-0" id="sidebar-hide" aria-label="Toggle Sidebar">
+                        <i class="bi bi-list fs-5"></i>
+                    </a>
+                </li>
 
-    /* === TRACK (background pill) === */
-    header.pc-header .theme-toggle-label .tt-track {
-        box-sizing: border-box !important;
-        position: absolute !important;
-        top: 0 !important; left: 0 !important;
-        right: 0 !important; bottom: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border-radius: 999px !important;
-        overflow: hidden !important;
-        /* Light mode: warm white */
-        background: #f0f4ff !important;
-        border: 1.5px solid #c7d2fe !important;
-        box-shadow: inset 0 1px 3px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.06) !important;
-        transition: background .35s ease, border-color .35s ease, box-shadow .35s ease !important;
-        z-index: 1 !important;
-        display: block !important;
-    }
+                {{-- Mobile: klik untuk slide-in sidebar --}}
+                <li class="pc-h-item pc-sidebar-popup">
+                    <a href="#" class="pc-head-link ms-0" id="mobile-collapse" aria-label="Buka Menu">
+                        <i class="bi bi-list fs-5"></i>
+                    </a>
+                </li>
 
-    /* === THUMB (sliding circle) === */
-    /*
-       Track: 52px wide, border 1.5px each side → inner = 49px
-       Thumb: 20px, gap from edge: 3px
-       Left at rest  : 3px
-       Left at active: 49 - 20 - 3 = 26px  (stays fully inside track)
-    */
-    header.pc-header .theme-toggle-label .tt-thumb {
-        box-sizing: border-box !important;
-        position: absolute !important;
-        top: 50% !important;
-        left: 4px !important;
-        transform: translateY(-50%) !important;
-        width: 20px !important;
-        height: 20px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border-radius: 50% !important;
-        background: #fff !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        box-shadow: 0 1px 5px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.04) !important;
-        transition: left .35s cubic-bezier(.4,0,.2,1), background .35s ease, box-shadow .35s ease, transform .35s ease !important;
-        z-index: 2 !important;
-        overflow: hidden !important;
-    }
+            </ul>
+        </div>
 
-    /* === ICONS inside thumb === */
-    header.pc-header .theme-toggle-label .tt-thumb i {
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) scale(1) !important;
-        font-size: .72rem !important;
-        line-height: 1 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        transition: opacity .25s ease, transform .25s ease !important;
-    }
+        {{-- ── Kanan: Aksi header ───────────────────────────────────────── --}}
+        <div class="ms-auto">
+            <ul class="list-unstyled">
 
-    /* Sun — visible in light mode */
-    header.pc-header .theme-toggle-label .tt-icon-sun {
-        color: #f59e0b !important;
-        opacity: 1 !important;
-        transform: translate(-50%, -50%) scale(1) rotate(0deg) !important;
-    }
+                {{-- Dark / Light Mode Toggle --}}
+                <li class="pc-h-item px-2">
+                    <button id="theme-switch"
+                            type="button"
+                            aria-label="Ganti tema"
+                            title="Ganti tema">
+                        <i class="bi bi-sun-fill sun"></i>
+                        <i class="bi bi-moon-fill moon"></i>
+                        <span class="toggle-thumb"></span>
+                    </button>
+                </li>
 
-    /* Moon — hidden in light mode */
-    header.pc-header .theme-toggle-label .tt-icon-moon {
-        color: #a5b4fc !important;
-        opacity: 0 !important;
-        transform: translate(-50%, -50%) scale(.6) rotate(-30deg) !important;
-    }
-
-    /* ── DARK STATE (checkbox checked) ── */
-    header.pc-header .theme-toggle-label input[type="checkbox"]:checked ~ .tt-track {
-        background: #1e2d45 !important;
-        border-color: #334155 !important;
-        box-shadow: inset 0 1px 4px rgba(0,0,0,.4), 0 1px 4px rgba(0,0,0,.3) !important;
-    }
-
-    header.pc-header .theme-toggle-label input[type="checkbox"]:checked ~ .tt-thumb {
-        left: 28px !important;
-        transform: translateY(-50%) !important;
-        background: #263550 !important;
-        box-shadow: 0 1px 5px rgba(0,0,0,.45), 0 0 8px rgba(129,140,248,.35) !important;
-    }
-
-    /* Sun hides, Moon shows */
-    header.pc-header .theme-toggle-label input[type="checkbox"]:checked ~ .tt-thumb .tt-icon-sun {
-        opacity: 0 !important;
-        transform: translate(-50%, -50%) scale(.6) rotate(30deg) !important;
-    }
-    header.pc-header .theme-toggle-label input[type="checkbox"]:checked ~ .tt-thumb .tt-icon-moon {
-        opacity: 1 !important;
-        color: #a5b4fc !important;
-        transform: translate(-50%, -50%) scale(1) rotate(0deg) !important;
-    }
-
-    /* ── DATA-THEME FALLBACK (untuk sinkron dengan JS toggle) ── */
-    [data-theme="dark"] header.pc-header .theme-toggle-label .tt-track {
-        background: #1e2d45 !important;
-        border-color: #334155 !important;
-        box-shadow: inset 0 1px 4px rgba(0,0,0,.4), 0 1px 4px rgba(0,0,0,.3) !important;
-    }
-    [data-theme="dark"] header.pc-header .theme-toggle-label .tt-thumb {
-        left: 28px !important;
-        transform: translateY(-50%) !important;
-        background: #263550 !important;
-        box-shadow: 0 1px 5px rgba(0,0,0,.45), 0 0 8px rgba(129,140,248,.35) !important;
-    }
-    [data-theme="dark"] header.pc-header .theme-toggle-label .tt-icon-sun {
-        opacity: 0 !important;
-        transform: translate(-50%, -50%) scale(.6) rotate(30deg) !important;
-    }
-    [data-theme="dark"] header.pc-header .theme-toggle-label .tt-icon-moon {
-        opacity: 1 !important;
-        color: #a5b4fc !important;
-        transform: translate(-50%, -50%) scale(1) rotate(0deg) !important;
-    }
-
-    /* ── HOVER glow on track ── */
-    header.pc-header .theme-toggle-label:hover .tt-track {
-        border-color: #818cf8 !important;
-        box-shadow: inset 0 1px 3px rgba(0,0,0,.08), 0 0 0 3px rgba(129,140,248,.18) !important;
-    }
-    [data-theme="dark"] header.pc-header .theme-toggle-label:hover .tt-track {
-        border-color: #6366f1 !important;
-        box-shadow: inset 0 1px 4px rgba(0,0,0,.4), 0 0 0 3px rgba(99,102,241,.25) !important;
-    }
-
-    /* ── FOCUS ring for accessibility ── */
-    header.pc-header .theme-toggle-label input[type="checkbox"]:focus-visible ~ .tt-track {
-        outline: 2px solid #6366f1 !important;
-        outline-offset: 2px !important;
-    }
-</style>
-
-<header class="pc-header shadow-sm">
-    <div class="d-flex align-items-center gap-2">
-        <button id="sidebar-hide" type="button" aria-label="Toggle Sidebar">
-            <i class="bi bi-list"></i>
-        </button>
-        <a href="{{ url('/') }}" class="brand-text text-decoration-none">
-            📂 E-<span>Arsip</span>
-        </a>
-    </div>
-
-    <ul class="list-unstyled d-flex align-items-center mb-0 gap-3">
-        <li class="d-flex align-items-center">
-            <label class="theme-toggle-label" for="theme-toggle-cb" title="Ganti tema" aria-label="Toggle dark mode">
-                <input type="checkbox" id="theme-toggle-cb">
-                <span class="tt-track"></span>
-                <span class="tt-thumb">
-                    <i class="bi bi-sun-fill   tt-icon-sun"></i>
-                    <i class="bi bi-moon-stars-fill tt-icon-moon"></i>
-                </span>
-            </label>
-        </li>
-        @auth
-            <li class="d-flex align-items-center gap-2">
+                @auth
                 @php
                     $authUser = auth()->user();
                     $fotoUrl  = $authUser->foto
-                        ? asset('assets/foto_admin/' . $authUser->foto)
+                        ? asset('storage/foto_admin/' . $authUser->foto)
                         : asset('assets/img/default_staf.png');
+                    $roleName = ucwords($authUser->role->name ?? 'User');
                 @endphp
-                <img src="{{ $fotoUrl }}"
-                     onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
-                     alt="Foto {{ $authUser->name }}"
-                     style="width:34px;height:34px;object-fit:cover;object-position:center;
-                            border-radius:50%;border:2px solid rgba(99,102,241,.45);
-                            box-shadow:0 1px 4px rgba(0,0,0,.25);flex-shrink:0;">
-                <span class="fw-semibold text-nowrap d-none d-sm-inline"
-                      style="font-size:.875rem;">
-                    Hi, {{ $authUser->name }}
-                </span>
-            </li>
-            <li>
-                <form method="POST" action="{{ route('logout') }}" onsubmit="try{sessionStorage.removeItem('eac_user');sessionStorage.removeItem('eac_history');sessionStorage.removeItem('eac_messages_html');sessionStorage.removeItem('eac_panel_open');}catch(_){}">
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                        <i class="bi bi-box-arrow-right"></i> <span class="d-none d-sm-inline">Logout</span>
-                    </button>
-                </form>
-            </li>
-        @endauth
-    </ul>
+
+                {{-- User Profile Dropdown --}}
+                <li class="dropdown pc-h-item header-user-profile">
+                    <a class="pc-head-link dropdown-toggle arrow-none me-0"
+                       data-bs-toggle="dropdown"
+                       href="#"
+                       role="button"
+                       aria-haspopup="false"
+                       data-bs-auto-close="outside"
+                       aria-expanded="false">
+                        <img src="{{ $fotoUrl }}"
+                             onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
+                             alt="Foto {{ $authUser->name }}"
+                             class="user-avatar">
+                    </a>
+
+                    <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown p-0 overflow-hidden">
+
+                        {{-- Header dropdown: foto + nama + role + tombol logout --}}
+                        <div class="dropdown-header d-flex align-items-center gap-3"
+                             style="background: linear-gradient(135deg, #6C3EAB, #4F46E5); padding: 14px 16px;">
+                            <img src="{{ $fotoUrl }}"
+                                 onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
+                                 alt="{{ $authUser->name }}"
+                                 class="img-radius wid-35"
+                                 style="height:35px; object-fit:cover; object-position:center; flex-shrink:0;">
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h6 class="text-white mb-0 text-truncate">{{ $authUser->name }}</h6>
+                                <small class="text-white text-opacity-75">{{ $roleName }}</small>
+                            </div>
+                            {{-- Tombol Logout di sebelah foto --}}
+                            <form method="POST"
+                                  action="{{ route('logout') }}"
+                                  class="flex-shrink-0"
+                                  onsubmit="try{
+                                      ['eac_user','eac_history','eac_messages_html','eac_panel_open']
+                                      .forEach(k => sessionStorage.removeItem(k));
+                                  }catch(_){}">
+                                @csrf
+                                <button type="submit"
+                                        class="btn-logout-header"
+                                        title="Keluar">
+                                    <i class="bi bi-power"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                        {{-- Body: menu --}}
+                        <div class="dropdown-body">
+
+                            <a href="{{ route('profil') }}"
+                               class="dropdown-item">
+                                <span class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-person-gear fs-6 text-primary"></i>
+                                    <span>Profil Saya</span>
+                                </span>
+                                <i class="bi bi-chevron-right text-muted small"></i>
+                            </a>
+
+                        </div>
+                    </div>
+                </li>
+                @endauth
+
+            </ul>
+        </div>
+
+    </div>
 </header>
-
-
-
-

@@ -462,12 +462,30 @@ if (window.SuratApp) {
 
         function initFilters() {
             const searchInputEl = $("#searchInput");
+            const resetSearchEl  = $("#resetSearch");
+
+            function updateResetSearchButton() {
+                resetSearchEl?.classList.toggle("d-none", !searchInputEl?.value.trim());
+            }
+
             if (searchInputEl) {
                 searchInputEl.addEventListener("input", () => {
                     clearTimeout(searchDebounceTimer);
                     searchDebounceTimer = setTimeout(() => loadTable(), 400);
+                    updateResetSearchButton();
                 });
             }
+
+            resetSearchEl?.addEventListener("click", () => {
+                if (searchInputEl) {
+                    searchInputEl.value = "";
+                    updateResetSearchButton();
+                    searchInputEl.dispatchEvent(new Event("input"));
+                    searchInputEl.focus();
+                }
+            });
+
+            updateResetSearchButton();
 
             ["#jenis", "#tanggal", "#sort"].forEach((s) =>
                 $(s)?.addEventListener("change", () => loadTable())
@@ -495,6 +513,41 @@ if (window.SuratApp) {
                     loadTable();
                 });
             }
+
+            // Sync jenis dropdown dari URL param (mis. link dari dashboard)
+            const urlJenis = new URLSearchParams(window.location.search).get("jenis_surat");
+            const jenisEl  = $("#jenis");
+            if (urlJenis && jenisEl) {
+                jenisEl.value =
+                    urlJenis.charAt(0).toUpperCase() + urlJenis.slice(1).toLowerCase();
+            }
+
+            // Show/hide tombol reset jenis & sort
+            const sortEl       = $("#sort");
+            const resetJenisEl = $("#resetJenis");
+            const resetSortEl  = $("#resetSort");
+
+            function updateResetButtons() {
+                resetJenisEl?.classList.toggle("d-none", !jenisEl?.value);
+                resetSortEl?.classList.toggle("d-none", sortEl?.selectedIndex === 0);
+            }
+
+            jenisEl?.addEventListener("change", updateResetButtons);
+            sortEl?.addEventListener("change", updateResetButtons);
+
+            resetJenisEl?.addEventListener("click", () => {
+                if (jenisEl) jenisEl.value = "";
+                lapParams = { bulan: null, tahun: null, jenis_surat: null };
+                jenisEl?.dispatchEvent(new Event("change"));
+            });
+
+            resetSortEl?.addEventListener("click", () => {
+                if (sortEl) sortEl.selectedIndex = 0;
+                lapParams = { bulan: null, tahun: null, jenis_surat: null };
+                sortEl?.dispatchEvent(new Event("change"));
+            });
+
+            updateResetButtons();
 
             rebindResetButtons();
         }
@@ -1786,20 +1839,6 @@ if (window.SuratApp) {
         /* =========================================================
          * INIT
          * ========================================================= */
-
-        document.addEventListener("DOMContentLoaded", () => {
-            ["resetJenis", "resetSort"].forEach((id) => {
-                document.getElementById(id)?.addEventListener("click", () => {
-                    lapParams = { bulan: null, tahun: null, jenis_surat: null };
-                    // Jika yang direset adalah jenis, reset juga dropdown-nya
-                    if (id === "resetJenis") {
-                        const jenisEl = document.getElementById("jenis");
-                        if (jenisEl) jenisEl.value = "";
-                    }
-                    loadTable();
-                });
-            });
-        });
 
         document.addEventListener("DOMContentLoaded", () => {
             initFilters();

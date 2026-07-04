@@ -1,11 +1,11 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Laporan Rekapitulasi Surat')
 
 @section('breadcrumbs')
 <ol class="breadcrumb">
     <li class="breadcrumb-item">
-        <a href="{{ route('dashboard.index') }}"><i class="bi bi-house-door-fill"></i> Home</a>
+        <a href="{{ route('dashboard.index') }}"><i class="bi bi-house-door-fill"></i>Home</a>
     </li>
     <li class="breadcrumb-item">Arsip</li>
     <li class="breadcrumb-item active" aria-current="page">Laporan Rekap</li>
@@ -13,19 +13,14 @@
 @endsection
 
 @section('content')
-<div class="container-fluid py-3" id="page-laporan">
+<div class="py-2" id="page-laporan">
 
     {{-- Page Header --}}
-    <div class="laporan-page-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
 
         <div class="d-flex align-items-center gap-2">
-            <span class="icon-circle">
-                <i class="bi bi-file-earmark-bar-graph-fill"></i>
-            </span>
-            <div>
-                <h5 class="fw-bold mb-0">Laporan Rekapitulasi Surat</h5>
-                <small>Rekap surat masuk &amp; keluar berdasarkan periode &middot; E-Arsip SMA Babussalam</small>
-            </div>
+            <i class="bi bi-file-earmark-bar-graph-fill fs-5 text-primary"></i>
+            <h5 class="fw-bold text-primary mb-0">Laporan Rekapitulasi Surat</h5>
         </div>
 
         <div class="d-flex gap-2 flex-shrink-0">

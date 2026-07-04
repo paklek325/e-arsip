@@ -242,3 +242,7 @@
   .table-user tbody td { font-size: 0.82rem; padding: 0.6rem 0.5rem; }
   .user-avatar { width: 34px; height: 34px; }
 }
+
+/* ── Crop foto berbentuk lingkaran (CropperJS) ─────────────────────────── */
+#cropFotoModal .cropper-view-box,
+#cropFotoModal .cropper-face { border-radius: 50%; }

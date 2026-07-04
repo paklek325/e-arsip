@@ -1,3 +1,10 @@
+/**
+ * chat.js
+ * ──────────────────────────────────────────────────────────
+ * MENU  : Global (semua halaman — widget AI chat ARSY)
+ * FILE  : resources/js/chat.js
+ * SCOPE : Aktif jika #earsipchat-btn ada di DOM
+ */
 (() => {
     "use strict";
 

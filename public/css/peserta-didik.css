@@ -1,7 +1,10 @@
-/* =======================================================
-   SISWA.CSS
-   Desain modern & responsif dengan dukungan Dark Mode
-   ======================================================= */
+/* ══════════════════════════════════════════════════════════
+   peserta-didik.css — E-Arsip
+   ──────────────────────────────────────────────────────────
+   MENU  : Master Peserta Didik (/peserta-didik)
+   FILE  : public/css/peserta-didik.css
+   VIEWS : resources/views/peserta_didik/
+   ══════════════════════════════════════════════════════════ */
 
 /* filter-bar → dipindah ke layout.css */
 
@@ -367,4 +370,10 @@
   background-color: rgba(244, 114, 182, 0.18) !important;
   color: #f9a8d4 !important;
   border-color: rgba(244, 114, 182, 0.35) !important;
+}
+/* ── Animasi fade-in (modal/card) ──────────────────────────────────────── */
+.animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
 }

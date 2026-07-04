@@ -477,13 +477,18 @@ body[data-theme-transition] * { transition: none !important; }
 
   /* Breadcrumb lebih kompak */
   .pc-breadcrumb-bar {
-    padding: 0 0 0.3rem !important;
+    padding: 0 0 0.2rem !important;
     font-size: 0.75rem !important;
   }
 
-  /* Page header — kurangi jarak bawah */
+  /* Page header — kurangi jarak */
+  .pc-content .page-header {
+    min-height: auto !important;
+    padding: 0 !important;
+    margin-top: 0.3rem !important;
+  }
   .page-header {
-    padding: 0.6rem 0 !important;
+    padding: 0 !important;
     border: none !important;
     margin-bottom: 0.75rem !important;
   }
@@ -618,9 +623,6 @@ body[data-theme-transition] * { transition: none !important; }
 /* =======================================================
    🌙 DARK MODE TOGGLE SWITCH — .theme-toggle-label
 ======================================================= */
-
-/* Sembunyikan #theme-switch lama jika masih ada di DOM lain */
-#theme-switch { display: none !important; }
 
 .theme-toggle-label {
   position: relative;
@@ -1032,4 +1034,248 @@ body[data-theme-transition] * { transition: none !important; }
   [data-theme="dark"] .table-responsive td {
     border-bottom-color: rgba(255,255,255,.05) !important;
   }
+}
+
+/* ===== LOGO SWITCHER (light/dark) ===== */
+.logo-light { display: block; }
+.logo-dark  { display: none;  }
+[data-theme="dark"] .logo-light { display: none;  }
+[data-theme="dark"] .logo-dark  { display: block; }
+
+.navbar-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+/* ===== BREADCRUMB ===== */
+.pc-breadcrumb-bar { padding: 0 0 0.25rem; }
+.pc-breadcrumb-bar .breadcrumb {
+  font-size: 0.8rem;
+  margin-bottom: 0;
+  background: transparent;
+  padding: 0;
+}
+.pc-breadcrumb-bar .breadcrumb-item a {
+  text-decoration: none;
+  color: var(--pc-sidebar-color, #3b82f6);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.pc-breadcrumb-bar .breadcrumb-item a i {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.pc-breadcrumb-bar .breadcrumb-item a:hover { text-decoration: underline; }
+.pc-breadcrumb-bar .breadcrumb-item.active {
+  color: var(--bs-body-color);
+  font-weight: 500;
+}
+.pc-breadcrumb-bar .breadcrumb-item + .breadcrumb-item::before {
+  color: var(--bs-secondary-color, #8a8a8a);
+}
+
+/* Kurangi min-height bawaan template (55px) supaya gap breadcrumb→konten tidak terlalu jauh */
+.pc-content .page-header {
+  min-height: auto;
+  padding: 0;
+  margin-top: 0.4rem;
+}
+/* Template menambah padding-top:24px ke .row tepat setelah .page-header — hapus */
+.pc-container .page-header + .row {
+  padding-top: 0 !important;
+}
+
+/* ===== JUDUL HALAMAN (icon + h5 sejajar) ===================================
+   Icon Bootstrap (.bi) punya line-height berbeda dengan h5 (1.2).
+   Paksa keduanya line-height:1 + vertical-align:middle agar lurus. */
+.pc-content .d-flex.align-items-center > .bi,
+.pc-content .d-flex.align-items-center > h5,
+.pc-content .d-flex.align-items-center > h4 {
+  line-height: 1;
+  vertical-align: middle;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* ── Sidebar initial visibility ─────────────────────────────────────────── */
+.pc-sidebar { visibility: visible; }
+html { transition: background-color 0.3s, color 0.3s; }
+
+/* ── Theme Switch (Navbar) ───────────────────────────────────────────────── */
+header.pc-header #theme-switch {
+    position: relative; width: 58px; height: 30px;
+    border-radius: 50px; border: 1.5px solid rgba(0,0,0,0.1);
+    background: #e8edf5; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 7px; cursor: pointer;
+    transition: background .4s ease, border .4s ease, box-shadow .3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1); flex-shrink: 0;
+}
+header.pc-header #theme-switch:hover { box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+header.pc-header #theme-switch i { font-size: 1rem; transition: opacity .3s; position: relative; z-index: 2; }
+header.pc-header #theme-switch .sun  { color: #f59e0b; }
+header.pc-header #theme-switch .moon { color: #64748b; opacity: .35; }
+header.pc-header .toggle-thumb {
+    position: absolute; top: 3px; left: 3px;
+    width: 22px; height: 22px; background: #fff; border-radius: 50%;
+    z-index: 1; transition: left .4s cubic-bezier(.4,0,.2,1);
+    box-shadow: 0 1px 5px rgba(0,0,0,.2); pointer-events: none;
+}
+[data-theme="dark"] header.pc-header #theme-switch { background: #1e293b; border-color: rgba(255,255,255,.08); }
+[data-theme="dark"] header.pc-header #theme-switch .sun  { opacity: .3; }
+[data-theme="dark"] header.pc-header #theme-switch .moon { opacity: 1; color: #93c5fd; }
+[data-theme="dark"] header.pc-header .toggle-thumb { left: calc(100% - 25px); background: #334155; }
+
+/* ── User Profile Dropdown (Navbar) ──────────────────────────────────────── */
+.pc-header .header-user-profile .user-avatar {
+    width: 36px;
+    height: 36px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 50%;
+    border: 2px solid rgba(108, 62, 171, .35);
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    position: relative; /* naik di atas ::before overlay (z-index:1) */
+    z-index: 5;
+}
+.pc-header .dropdown-user-profile .img-radius {
+    width: 35px;
+    height: 35px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.4);
+    flex-shrink: 0;
+}
+[data-theme="dark"] .pc-header .dropdown-user-profile {
+    background: #1e1e2e;
+    border-color: rgba(255,255,255,.08);
+}
+[data-theme="dark"] .pc-header .dropdown-user-profile .dropdown-item {
+    color: #cbd5e1;
+}
+[data-theme="dark"] .pc-header .dropdown-user-profile .dropdown-item:hover {
+    background: rgba(255,255,255,.06);
+    color: #f1f5f9;
+}
+[data-theme="dark"] .pc-header .dropdown-user-profile .dropdown-divider {
+    border-color: rgba(255,255,255,.08);
+}
+
+/* ── Tombol Logout di Header Dropdown (sebelah foto) ─────────────────────── */
+.btn-logout-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    background: rgba(255,255,255,.15);
+    border: 1.5px solid rgba(255,255,255,.25);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all .2s ease;
+    color: #fff;
+    font-size: 1rem;
+    padding: 0;
+}
+.btn-logout-header:hover {
+    background: rgba(239,68,68,.85);
+    border-color: rgba(239,68,68,.6);
+    transform: rotate(15deg) scale(1.1);
+    box-shadow: 0 0 10px rgba(239,68,68,.5);
+}
+.btn-logout-header .bi {
+    line-height: 1;
+    transition: transform .2s ease;
+}
+
+/* ── Tombol Logout Navbar (lama — tidak dipakai, simpan untuk referensi) ──── */
+.btn-logout-navbar {
+    display: block;
+    width: 100%;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border: 1.5px solid #fca5a5;
+    border-radius: 10px;
+    padding: 0;
+    cursor: pointer;
+    transition: all .22s ease;
+    overflow: hidden;
+}
+.btn-logout-navbar:hover {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-color: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239,68,68,.35);
+}
+.btn-logout-inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+}
+.btn-logout-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: rgba(239,68,68,.15);
+    border-radius: 8px;
+    flex-shrink: 0;
+    transition: background .22s ease;
+}
+.btn-logout-icon .bi {
+    font-size: 1rem;
+    color: #dc2626;
+    transition: color .22s ease, transform .22s ease;
+}
+.btn-logout-text {
+    flex: 1;
+    font-size: .85rem;
+    font-weight: 600;
+    color: #dc2626;
+    text-align: left;
+    transition: color .22s ease;
+}
+.btn-logout-arrow {
+    font-size: .7rem;
+    color: #fca5a5;
+    transition: transform .22s ease, color .22s ease;
+}
+.btn-logout-navbar:hover .btn-logout-icon {
+    background: rgba(255,255,255,.2);
+}
+.btn-logout-navbar:hover .btn-logout-icon .bi,
+.btn-logout-navbar:hover .btn-logout-text {
+    color: #fff;
+}
+.btn-logout-navbar:hover .btn-logout-arrow {
+    color: rgba(255,255,255,.7);
+    transform: translateX(3px);
+}
+
+/* Dark mode */
+[data-theme="dark"] .btn-logout-navbar {
+    background: linear-gradient(135deg, rgba(239,68,68,.12) 0%, rgba(220,38,38,.08) 100%);
+    border-color: rgba(239,68,68,.3);
+}
+[data-theme="dark"] .btn-logout-navbar:hover {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-color: #ef4444;
+}
+[data-theme="dark"] .btn-logout-icon {
+    background: rgba(239,68,68,.18);
+}
+[data-theme="dark"] .btn-logout-icon .bi,
+[data-theme="dark"] .btn-logout-text {
+    color: #f87171;
+}
+[data-theme="dark"] .btn-logout-arrow {
+    color: rgba(248,113,113,.5);
+}
+[data-theme="dark"] .btn-logout-navbar:hover .btn-logout-icon .bi,
+[data-theme="dark"] .btn-logout-navbar:hover .btn-logout-text {
+    color: #fff;
 }

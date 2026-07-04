@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\PesertaDidik;
 use App\Models\Kode;
 use App\Models\Surat;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -24,70 +25,75 @@ class DashboardController extends Controller
         })->count();
 
         // ── Surat ────────────────────────────────────────────────────
-        // Ganti 'tanggal_surat' jika nama kolom tanggal surat di tabel berbeda
         $kolomTgl   = 'tanggal_surat';
         $tahunSurat = now()->year;
 
-        $totalSurat       = Surat::count();
-        $totalSuratMasuk  = Surat::where('jenis_surat', 'Masuk')->whereYear($kolomTgl, $tahunSurat)->count();
-        $totalSuratKeluar = Surat::where('jenis_surat', 'Keluar')->whereYear($kolomTgl, $tahunSurat)->count();
+        $totalSurat = Surat::count();
 
-        // ── Tren Surat Bulanan (tahun ini) — pakai tanggal surat ─────
+        // Count masuk & keluar tahun ini — 1 query
+        $suratCountTahunIni = Surat::whereYear($kolomTgl, $tahunSurat)
+            ->selectRaw("
+                SUM(CASE WHEN jenis_surat = 'Masuk' THEN 1 ELSE 0 END) as masuk,
+                SUM(CASE WHEN jenis_surat = 'Keluar' THEN 1 ELSE 0 END) as keluar
+            ")->first();
+        $totalSuratMasuk  = $suratCountTahunIni->masuk  ?? 0;
+        $totalSuratKeluar = $suratCountTahunIni->keluar ?? 0;
+
+        // Tren bulanan tahun ini — 1 GROUP BY query, bukan get()->each()
         $trenSuratMasuk  = array_fill(0, 12, 0);
         $trenSuratKeluar = array_fill(0, 12, 0);
 
         Surat::whereYear($kolomTgl, $tahunSurat)
-            ->get(['jenis_surat', $kolomTgl])
-            ->each(function ($surat) use (&$trenSuratMasuk, &$trenSuratKeluar, $kolomTgl) {
-                $bulanIndex = (int) \Carbon\Carbon::parse($surat->$kolomTgl)->format('n') - 1;
-                if ($surat->jenis_surat === 'Masuk') {
-                    $trenSuratMasuk[$bulanIndex]++;
-                } else {
-                    $trenSuratKeluar[$bulanIndex]++;
-                }
+            ->selectRaw("MONTH($kolomTgl) as bulan, jenis_surat, COUNT(*) as cnt")
+            ->groupBy('bulan', 'jenis_surat')
+            ->get()
+            ->each(function ($row) use (&$trenSuratMasuk, &$trenSuratKeluar) {
+                $idx = $row->bulan - 1;
+                if ($row->jenis_surat === 'Masuk') $trenSuratMasuk[$idx]  = $row->cnt;
+                else                               $trenSuratKeluar[$idx] = $row->cnt;
             });
 
-        // ── Tren Surat Bulanan (semua tahun) — pakai tanggal surat ───
+        // Tren bulanan semua tahun — 1 GROUP BY query
         $trenSuratMasukAll  = array_fill(0, 12, 0);
         $trenSuratKeluarAll = array_fill(0, 12, 0);
 
         Surat::whereNotNull($kolomTgl)
-            ->get(['jenis_surat', $kolomTgl])
-            ->each(function ($surat) use (&$trenSuratMasukAll, &$trenSuratKeluarAll, $kolomTgl) {
-                $bulanIndex = (int) \Carbon\Carbon::parse($surat->$kolomTgl)->format('n') - 1;
-                if ($surat->jenis_surat === 'Masuk') {
-                    $trenSuratMasukAll[$bulanIndex]++;
-                } else {
-                    $trenSuratKeluarAll[$bulanIndex]++;
-                }
+            ->selectRaw("MONTH($kolomTgl) as bulan, jenis_surat, COUNT(*) as cnt")
+            ->groupBy('bulan', 'jenis_surat')
+            ->get()
+            ->each(function ($row) use (&$trenSuratMasukAll, &$trenSuratKeluarAll) {
+                $idx = $row->bulan - 1;
+                if ($row->jenis_surat === 'Masuk') $trenSuratMasukAll[$idx]  = $row->cnt;
+                else                               $trenSuratKeluarAll[$idx] = $row->cnt;
             });
 
-        // ── Total Surat semua tahun (Masuk & Keluar) ─────────────────
-        $totalSuratMasukAll  = Surat::where('jenis_surat', 'Masuk')->count();
-        $totalSuratKeluarAll = Surat::where('jenis_surat', 'Keluar')->count();
+        // Count all-time masuk & keluar — 1 query
+        $suratCountAll = Surat::selectRaw("
+            SUM(CASE WHEN jenis_surat = 'Masuk' THEN 1 ELSE 0 END) as masuk,
+            SUM(CASE WHEN jenis_surat = 'Keluar' THEN 1 ELSE 0 END) as keluar
+        ")->first();
+        $totalSuratMasukAll  = $suratCountAll->masuk  ?? 0;
+        $totalSuratKeluarAll = $suratCountAll->keluar ?? 0;
 
-        // ── Surat dikelompokkan per tahun (untuk spinner filter tahun) ─
+        // Surat per tahun — 1 GROUP BY query
         $trenSuratPerTahun = [];
 
         Surat::whereNotNull($kolomTgl)
-            ->get(['jenis_surat', $kolomTgl])
-            ->each(function ($surat) use (&$trenSuratPerTahun, $kolomTgl) {
-                $tahun = (int) \Carbon\Carbon::parse($surat->$kolomTgl)->format('Y');
+            ->selectRaw("YEAR($kolomTgl) as tahun, jenis_surat, COUNT(*) as cnt")
+            ->groupBy('tahun', 'jenis_surat')
+            ->get()
+            ->each(function ($row) use (&$trenSuratPerTahun) {
+                $tahun = $row->tahun;
                 if (!isset($trenSuratPerTahun[$tahun])) {
                     $trenSuratPerTahun[$tahun] = ['masuk' => 0, 'keluar' => 0];
                 }
-                if ($surat->jenis_surat === 'Masuk') {
-                    $trenSuratPerTahun[$tahun]['masuk']++;
-                } else {
-                    $trenSuratPerTahun[$tahun]['keluar']++;
-                }
+                if ($row->jenis_surat === 'Masuk') $trenSuratPerTahun[$tahun]['masuk']  = $row->cnt;
+                else                               $trenSuratPerTahun[$tahun]['keluar'] = $row->cnt;
             });
 
         ksort($trenSuratPerTahun);
 
-        // ── PesertaDidik ────────────────────────────────────────────────────
-        // Cari angkatan yang mengandung tahun sekarang (misal "2026" atau "2026-2027")
-        // Jika tidak ada, fallback ke angkatan terbaru yang ada di DB.
+        // ── PesertaDidik ─────────────────────────────────────────────
         $tahunNow   = now()->year;
         $tahunAktif = PesertaDidik::where('tahun_angkatan', 'LIKE', "%{$tahunNow}%")
             ->orderByRaw("CAST(SUBSTRING_INDEX(tahun_angkatan, '-', 1) AS UNSIGNED) DESC")
@@ -95,7 +101,7 @@ class DashboardController extends Controller
         $tahunAktif = $tahunAktif ?? PesertaDidik::orderByRaw("CAST(SUBSTRING_INDEX(tahun_angkatan, '-', 1) AS UNSIGNED) DESC")
             ->value('tahun_angkatan') ?? $tahunNow;
 
-        $totalPesertaDidik  = PesertaDidik::where('tahun_angkatan', $tahunAktif)->count();
+        $totalPesertaDidik = PesertaDidik::where('tahun_angkatan', $tahunAktif)->count();
 
         $peserta_didikPerRombel = PesertaDidik::selectRaw('rombel, count(*) as total')
             ->where('tahun_angkatan', $tahunAktif)
@@ -105,11 +111,15 @@ class DashboardController extends Controller
             ->orderBy('rombel')
             ->pluck('total', 'rombel');
 
-        // Jenis kelamin — tahun aktif
-        $peserta_didikLaki      = PesertaDidik::where('tahun_angkatan', $tahunAktif)->where('jenis_kelamin', 'L')->count();
-        $peserta_didikPerempuan = PesertaDidik::where('tahun_angkatan', $tahunAktif)->where('jenis_kelamin', 'P')->count();
+        // Gender tahun aktif — 1 query
+        $pdGenderAktif = PesertaDidik::where('tahun_angkatan', $tahunAktif)
+            ->selectRaw("
+                SUM(CASE WHEN jenis_kelamin = 'L' THEN 1 ELSE 0 END) as laki,
+                SUM(CASE WHEN jenis_kelamin = 'P' THEN 1 ELSE 0 END) as perempuan
+            ")->first();
+        $peserta_didikLaki      = $pdGenderAktif->laki      ?? 0;
+        $peserta_didikPerempuan = $pdGenderAktif->perempuan ?? 0;
 
-        // ── PesertaDidik semua tahun ─────────────────────────────────────────
         $totalPesertaDidikAll = PesertaDidik::count();
 
         $peserta_didikPerRombelAll = PesertaDidik::selectRaw('rombel, count(*) as total')
@@ -119,90 +129,93 @@ class DashboardController extends Controller
             ->orderBy('rombel')
             ->pluck('total', 'rombel');
 
-        // Rincian L/P per rombel (semua tahun) — dipakai di keterangan/legend donut chart
+        // Gender per rombel semua tahun — 1 GROUP BY query, bukan get()->each()
         $peserta_didikPerRombelGenderAll = [];
 
         PesertaDidik::whereNotNull('rombel')
             ->where('rombel', '!=', '')
-            ->get(['rombel', 'jenis_kelamin'])
-            ->each(function ($peserta_didik) use (&$peserta_didikPerRombelGenderAll) {
-                $rombel = $peserta_didik->rombel;
+            ->selectRaw('rombel, jenis_kelamin, COUNT(*) as cnt')
+            ->groupBy('rombel', 'jenis_kelamin')
+            ->get()
+            ->each(function ($row) use (&$peserta_didikPerRombelGenderAll) {
+                $rombel = $row->rombel;
                 if (!isset($peserta_didikPerRombelGenderAll[$rombel])) {
                     $peserta_didikPerRombelGenderAll[$rombel] = ['laki' => 0, 'perempuan' => 0, 'total' => 0];
                 }
-                if ($peserta_didik->jenis_kelamin === 'L') {
-                    $peserta_didikPerRombelGenderAll[$rombel]['laki']++;
-                } elseif ($peserta_didik->jenis_kelamin === 'P') {
-                    $peserta_didikPerRombelGenderAll[$rombel]['perempuan']++;
-                }
-                $peserta_didikPerRombelGenderAll[$rombel]['total']++;
+                if ($row->jenis_kelamin === 'L')      $peserta_didikPerRombelGenderAll[$rombel]['laki']      = $row->cnt;
+                elseif ($row->jenis_kelamin === 'P')  $peserta_didikPerRombelGenderAll[$rombel]['perempuan'] = $row->cnt;
+                $peserta_didikPerRombelGenderAll[$rombel]['total'] += $row->cnt;
             });
 
         ksort($peserta_didikPerRombelGenderAll);
 
-        // Jenis kelamin — semua tahun
-        $peserta_didikLakiAll      = PesertaDidik::where('jenis_kelamin', 'L')->count();
-        $peserta_didikPerempuanAll = PesertaDidik::where('jenis_kelamin', 'P')->count();
+        // Gender semua tahun — 1 query
+        $pdGenderAll = PesertaDidik::selectRaw("
+            SUM(CASE WHEN jenis_kelamin = 'L' THEN 1 ELSE 0 END) as laki,
+            SUM(CASE WHEN jenis_kelamin = 'P' THEN 1 ELSE 0 END) as perempuan
+        ")->first();
+        $peserta_didikLakiAll      = $pdGenderAll->laki      ?? 0;
+        $peserta_didikPerempuanAll = $pdGenderAll->perempuan ?? 0;
 
-        // ── PesertaDidik dikelompokkan per tahun angkatan (untuk filter tahun manual di chart) ──
-        // tahun_angkatan bisa berformat "2026" atau "2026-2027", ambil tahun awalnya sebagai key.
+        // PesertaDidik per tahun angkatan — 1 GROUP BY query, bukan get()->each()
         $peserta_didikPerTahun = [];
 
         PesertaDidik::whereNotNull('tahun_angkatan')
             ->where('tahun_angkatan', '!=', '')
-            ->get(['tahun_angkatan', 'rombel', 'jenis_kelamin'])
-            ->each(function ($peserta_didik) use (&$peserta_didikPerTahun) {
-                $tahunAwal = (int) \Illuminate\Support\Str::before($peserta_didik->tahun_angkatan, '-');
+            ->selectRaw('tahun_angkatan, rombel, jenis_kelamin, COUNT(*) as cnt')
+            ->groupBy('tahun_angkatan', 'rombel', 'jenis_kelamin')
+            ->get()
+            ->each(function ($row) use (&$peserta_didikPerTahun) {
+                $tahunAwal = (int) Str::before($row->tahun_angkatan, '-');
+                $rombel    = $row->rombel ?: 'Tidak Diketahui';
 
                 if (!isset($peserta_didikPerTahun[$tahunAwal])) {
                     $peserta_didikPerTahun[$tahunAwal] = [
-                        'rombel'    => [],
-                        'laki'      => 0,
-                        'perempuan' => 0,
-                        'total'     => 0,
+                        'rombel'      => [],
+                        'rombelGender' => [],
+                        'laki'        => 0,
+                        'perempuan'   => 0,
+                        'total'       => 0,
                     ];
                 }
 
-                $rombel = $peserta_didik->rombel ?: 'Tidak Diketahui';
-                $peserta_didikPerTahun[$tahunAwal]['rombel'][$rombel] = ($peserta_didikPerTahun[$tahunAwal]['rombel'][$rombel] ?? 0) + 1;
+                $peserta_didikPerTahun[$tahunAwal]['rombel'][$rombel]
+                    = ($peserta_didikPerTahun[$tahunAwal]['rombel'][$rombel] ?? 0) + $row->cnt;
 
                 if (!isset($peserta_didikPerTahun[$tahunAwal]['rombelGender'][$rombel])) {
                     $peserta_didikPerTahun[$tahunAwal]['rombelGender'][$rombel] = ['laki' => 0, 'perempuan' => 0, 'total' => 0];
                 }
-                $peserta_didikPerTahun[$tahunAwal]['rombelGender'][$rombel]['total']++;
-                if ($peserta_didik->jenis_kelamin === 'L') {
-                    $peserta_didikPerTahun[$tahunAwal]['rombelGender'][$rombel]['laki']++;
-                } elseif ($peserta_didik->jenis_kelamin === 'P') {
-                    $peserta_didikPerTahun[$tahunAwal]['rombelGender'][$rombel]['perempuan']++;
+                $peserta_didikPerTahun[$tahunAwal]['rombelGender'][$rombel]['total'] += $row->cnt;
+
+                if ($row->jenis_kelamin === 'L') {
+                    $peserta_didikPerTahun[$tahunAwal]['rombelGender'][$rombel]['laki'] += $row->cnt;
+                    $peserta_didikPerTahun[$tahunAwal]['laki']                          += $row->cnt;
+                } elseif ($row->jenis_kelamin === 'P') {
+                    $peserta_didikPerTahun[$tahunAwal]['rombelGender'][$rombel]['perempuan'] += $row->cnt;
+                    $peserta_didikPerTahun[$tahunAwal]['perempuan']                          += $row->cnt;
                 }
 
-                if ($peserta_didik->jenis_kelamin === 'L') {
-                    $peserta_didikPerTahun[$tahunAwal]['laki']++;
-                } elseif ($peserta_didik->jenis_kelamin === 'P') {
-                    $peserta_didikPerTahun[$tahunAwal]['perempuan']++;
-                }
-
-                $peserta_didikPerTahun[$tahunAwal]['total']++;
+                $peserta_didikPerTahun[$tahunAwal]['total'] += $row->cnt;
             });
 
-        // Urutkan rombel di setiap tahun agar urutan badge & warna chart konsisten (A sebelum B)
         foreach ($peserta_didikPerTahun as &$tData) {
             ksort($tData['rombel']);
-            if (isset($tData['rombelGender'])) {
-                ksort($tData['rombelGender']);
-            }
+            if (isset($tData['rombelGender'])) ksort($tData['rombelGender']);
         }
         unset($tData);
 
         ksort($peserta_didikPerTahun);
 
-        // Tahun-tahun yang tersedia datanya (untuk batas min/max input spinner)
         $tahunPesertaDidikMin = !empty($peserta_didikPerTahun) ? min(array_keys($peserta_didikPerTahun)) : now()->year;
         $tahunPesertaDidikMax = !empty($peserta_didikPerTahun) ? max(array_keys($peserta_didikPerTahun)) : now()->year;
 
         // ── Kode & Recent Users ──────────────────────────────────────
-        $totalKode   = Kode::count();
-        $recentUsers = User::with('role')->latest()->take(5)->get();
+        $totalKode    = Kode::count();
+        $kepalaRoleId = \App\Models\Role::where('name', 'Kepala Staf')->value('id_role');
+        $recentUsers  = User::with('role')
+            ->orderByRaw('CASE WHEN id_role = ? THEN 0 ELSE 1 END', [$kepalaRoleId])
+            ->orderBy('name', 'asc')
+            ->get();
 
         return view('dashboard', compact(
             'totalUser',

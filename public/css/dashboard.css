@@ -106,6 +106,10 @@
 }
 .icon-animated {
     font-size: 22px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: transform .3s ease;
 }
 .dashboard-card:hover .icon-animated { transform: scale(1.12); }
@@ -541,7 +545,7 @@
 @media (max-width: 991.98px) {
     .dashboard-number { font-size: 1.5rem; }
     .icon-wrapper { width: 48px; height: 48px; }
-    .icon-animated { font-size: 20px; }
+    .icon-animated { font-size: 20px; line-height: 1; }
     .dashboard-card .card-body { padding: .85rem .65rem !important; }
     .card-sub { min-height: 3.2rem; }
 }
@@ -549,6 +553,12 @@
     .dashboard-number { font-size: 1.35rem; }
     .dashboard-label { font-size: 0.78rem; }
     .icon-wrapper { width: 44px; height: 44px; }
-    .icon-animated { font-size: 18px; }
+    .icon-animated { font-size: 18px; line-height: 1; }
     .card-sub { min-height: 3rem; }
+}
+/* ── Badge total peserta didik ─────────────────────────────────────────── */
+#badgeTotalPesertaDidik {
+    max-width: none !important; overflow: visible !important;
+    text-overflow: unset !important; white-space: nowrap !important;
+    flex-shrink: 1 !important; min-width: 0;
 }

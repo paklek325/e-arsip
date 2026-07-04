@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @php
     $lockJenis = $lockJenis ?? null;
@@ -9,10 +9,12 @@
     };
 @endphp
 
+@section('title', $judulSurat)
+
 @section('breadcrumbs')
 <ol class="breadcrumb">
     <li class="breadcrumb-item">
-        <a href="{{ route('dashboard.index') }}"><i class="bi bi-house-door-fill"></i> Home</a>
+        <a href="{{ route('dashboard.index') }}"><i class="bi bi-house-door-fill"></i>Home</a>
     </li>
     <li class="breadcrumb-item">Master</li>
     <li class="breadcrumb-item active" aria-current="page">{{ $judulSurat }}</li>
@@ -23,11 +25,12 @@
 <div id="page-surat">
 
     {{-- Header --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="pt-2 d-flex justify-content-between align-items-center mb-3">
         <div class="d-flex align-items-center gap-2">
-            <h5 class="fw-bold text-primary mb-0">
-                <i class="bi bi-envelope-fill me-2"></i>{{ $judulSurat }}
-            </h5>
+            <span class="header-icon-badge">
+                <i class="bi bi-envelope-fill"></i>
+            </span>
+            <h5 class="fw-bold text-primary mb-0">{{ $judulSurat }}</h5>
         </div>
         <div class="d-flex align-items-center gap-2">
             @unless($lockJenis)
@@ -61,7 +64,3 @@
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/surat.css') }}">
 @endpush
-
-
-
-

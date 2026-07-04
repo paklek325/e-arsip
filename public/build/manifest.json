@@ -24,7 +24,7 @@
     "isEntry": true
   },
   "resources/js/kode.js": {
-    "file": "assets/kode-DVbWyzQX.js",
+    "file": "assets/kode-DSXZ41P9.js",
     "name": "kode",
     "src": "resources/js/kode.js",
     "isEntry": true
@@ -36,31 +36,25 @@
     "isEntry": true
   },
   "resources/js/peserta-didik.js": {
-    "file": "assets/peserta-didik-CN8hRWV2.js",
+    "file": "assets/peserta-didik-BmEXjVVk.js",
     "name": "peserta-didik",
     "src": "resources/js/peserta-didik.js",
     "isEntry": true
   },
-  "resources/js/responsif.js": {
-    "file": "assets/responsif-OM40NnW_.js",
-    "name": "responsif",
-    "src": "resources/js/responsif.js",
-    "isEntry": true
-  },
   "resources/js/surat.js": {
-    "file": "assets/surat-zTbJZFpI.js",
+    "file": "assets/surat-DKpomP93.js",
     "name": "surat",
     "src": "resources/js/surat.js",
     "isEntry": true
   },
   "resources/js/tampilan.js": {
-    "file": "assets/tampilan-CzV8lXZ4.js",
+    "file": "assets/tampilan-Bkw1RHQF.js",
     "name": "tampilan",
     "src": "resources/js/tampilan.js",
     "isEntry": true
   },
   "resources/js/user.js": {
-    "file": "assets/user-B-aK-vgR.js",
+    "file": "assets/user-DI_pSw30.js",
     "name": "user",
     "src": "resources/js/user.js",
     "isEntry": true

@@ -106,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 🧭 SIDEBAR TOGGLE (DESKTOP)
   // =======================================================
   if (sidebar && sidebarHide) {
-    sidebarHide.addEventListener("click", () => {
+    sidebarHide.addEventListener("click", (e) => { e.preventDefault();
       const isCollapsed = body.classList.toggle("sidebar-collapsed");
       sidebar.classList.toggle("collapsed", isCollapsed);
 
@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarOverlay?.classList.toggle("active");
   }
 
-  mobileToggle?.addEventListener("click", toggleMobileSidebar);
+  mobileToggle?.addEventListener("click", (e) => { e.preventDefault(); toggleMobileSidebar(); });
   sidebarOverlay?.addEventListener("click", () => {
     sidebar?.classList.remove("show");
     sidebarOverlay?.classList.remove("active");
@@ -207,5 +207,42 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       item.classList.remove("active");
     }
+  });
+
+  // =======================================================
+  // 💬 BOOTSTRAP TOOLTIPS
+  // =======================================================
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+    new bootstrap.Tooltip(el);
+  });
+
+  // =======================================================
+  // 📱 AUTO TABLE RESPONSIVE (data-label untuk card mobile)
+  // =======================================================
+  function applyTableLabels(table) {
+    const thead = table.querySelector("thead");
+    if (!thead) return;
+    const headers = thead.querySelectorAll("tr:last-child th, tr:last-child td");
+    if (!headers.length) return;
+    const labels = Array.from(headers).map(th => th.textContent.trim().replace(/\s+/g, " "));
+    table.querySelectorAll("tbody tr").forEach(row => {
+      const cells = row.querySelectorAll("td");
+      if (cells.length === 1 && cells[0].hasAttribute("colspan")) return;
+      cells.forEach((cell, i) => { if (labels[i]) cell.setAttribute("data-label", labels[i]); });
+    });
+  }
+
+  function processAllTables(root) {
+    (root || document).querySelectorAll(".table-responsive table").forEach(applyTableLabels);
+  }
+
+  processAllTables(document);
+
+  const tableObserver = new MutationObserver(() => {
+    clearTimeout(window.__earsipTableLabelTimer);
+    window.__earsipTableLabelTimer = setTimeout(() => processAllTables(document), 50);
+  });
+  document.querySelectorAll(".table-responsive").forEach(c => {
+    tableObserver.observe(c, { childList: true, subtree: true });
   });
 });

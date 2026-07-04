@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 
@@ -95,7 +96,7 @@ class UserController extends Controller
             'email'    => $user->email,
             'id_role'  => $user->id_role,
             'foto'     => $user->foto
-                ? asset('assets/foto_admin/' . $user->foto)
+                ? asset('storage/foto_admin/' . $user->foto)
                 : asset('assets/img/default_staf.png'),
             'role'     => [
                 'name' => $user->role?->name ?? '-',
@@ -158,13 +159,7 @@ class UserController extends Controller
         if ($request->hasFile('foto')) {
             $file = $request->file('foto');
             $filename = time() . '-' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-
-            $destination = public_path('assets/foto_admin');
-            if (!is_dir($destination)) {
-                mkdir($destination, 0755, true);
-            }
-
-            $file->move($destination, $filename);
+            $file->storeAs('foto_admin', $filename, 'public');
             $validated['foto'] = $filename;
         }
 
@@ -252,24 +247,13 @@ class UserController extends Controller
 
         // --- Proses Upload Foto Baru ---
         if ($request->hasFile('foto')) {
-            $destination = public_path('assets/foto_admin');
-
-            // hapus foto lama kalau ada
             if ($user->foto) {
-                $oldPath = $destination . DIRECTORY_SEPARATOR . $user->foto;
-                if (file_exists($oldPath)) {
-                    @unlink($oldPath);
-                }
+                Storage::disk('public')->delete('foto_admin/' . $user->foto);
             }
 
             $file = $request->file('foto');
             $filename = time() . '-' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-
-            if (!is_dir($destination)) {
-                mkdir($destination, 0755, true);
-            }
-
-            $file->move($destination, $filename);
+            $file->storeAs('foto_admin', $filename, 'public');
             $data['foto'] = $filename;
         }
 
@@ -282,16 +266,63 @@ class UserController extends Controller
     }
 
     // =========================
+    // PROFIL — halaman profil user yang sedang login
+    // =========================
+    public function profil()
+    {
+        $user = auth()->user()->load('role');
+        return view('user.profil', compact('user'));
+    }
+
+    public function updateProfil(Request $request)
+    {
+        $user = auth()->user();
+
+        $validator = Validator::make($request->all(), [
+            'name'     => 'required|max:150',
+            'email'    => 'required|email|unique:users,email,' . $user->id_user . ',id_user',
+            'password' => 'nullable|min:3',
+            'foto'     => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
+        ], [
+            'email.unique' => 'Email sudah digunakan oleh akun lain.',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $data = [
+            'name'  => $request->name,
+            'email' => $request->email,
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        if ($request->hasFile('foto')) {
+            if ($user->foto) {
+                Storage::disk('public')->delete('foto_admin/' . $user->foto);
+            }
+            $file     = $request->file('foto');
+            $filename = time() . '-' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+            $file->storeAs('foto_admin', $filename, 'public');
+            $data['foto'] = $filename;
+        }
+
+        $user->update($data);
+
+        return redirect()->route('dashboard.index')
+            ->with('success', 'Profil berhasil diperbarui.');
+    }
+
+    // =========================
     // DESTROY (HAPUS USER)
     // =========================
     public function destroy(User $user)
     {
-        // hapus file foto dari assets/foto_admin kalau ada
         if ($user->foto) {
-            $path = public_path('assets/foto_admin/' . $user->foto);
-            if (file_exists($path)) {
-                @unlink($path);
-            }
+            Storage::disk('public')->delete('foto_admin/' . $user->foto);
         }
 
         $user->delete();

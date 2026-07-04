@@ -18,7 +18,7 @@
           <td class="fw-medium">{{ ($users->currentPage() - 1) * $users->perPage() + $loop->iteration }}</td>
 
           <td>
-            <img src="{{ $u->foto ? asset('assets/foto_admin/' . $u->foto) : asset('assets/img/default_staf.png') }}"
+            <img src="{{ $u->foto ? asset('storage/foto_admin/' . $u->foto) : asset('assets/img/default_staf.png') }}"
                  onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
                  class="user-avatar"
                  alt="Foto {{ $u->name }}">

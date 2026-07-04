@@ -1,6 +1,10 @@
-/* ===========================
-   TABEL DATA KODE
-=========================== */
+/* ══════════════════════════════════════════════════════════
+   kode.css — E-Arsip
+   ──────────────────────────────────────────────────────────
+   MENU  : Master Kode (/kode)
+   FILE  : public/css/kode.css
+   VIEWS : resources/views/kode/
+   ══════════════════════════════════════════════════════════ */
 .table-custom {
   font-size: 0.9rem;
   text-align: center;

@@ -16,7 +16,6 @@ export default defineConfig({
                 'resources/js/dashboard.js',
                 'resources/js/peserta-didik.js',
                 'resources/js/laporan.js',
-                'resources/js/responsif.js',
                 'resources/js/chat.js',
             ],
             refresh: true,

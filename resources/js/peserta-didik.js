@@ -109,16 +109,7 @@ if (window.PesertaDidikApp) {
             }
         }
 
-        // ============================================================
-        // DEBOUNCE
-        // ============================================================
-        function debounce(fn, delay = 400) {
-            let t;
-            return (...args) => {
-                clearTimeout(t);
-                t = setTimeout(() => fn(...args), delay);
-            };
-        }
+        const debounce = window.debounce;
 
         // ============================================================
         // FILTER BAR — elemen

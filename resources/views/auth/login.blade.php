@@ -525,7 +525,7 @@
                          class="logo-light"
                          alt="Logo E-Arsip">
                     {{-- Logo khusus dark mode — ganti path jika ada versi putih/cerah --}}
-                    <img src="{{ asset('template/dist/images/logo-dark.png') }}"
+                    <img src="{{ asset('template/dist/images/logo-dark.svg') }}"
                          class="logo-dark"
                          alt="Logo E-Arsip Dark"
                          onerror="this.src='{{ asset('template/dist/images/logo.png') }}'">

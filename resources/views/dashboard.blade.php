@@ -5,7 +5,7 @@
 @section('breadcrumbs')
 <ol class="breadcrumb">
     <li class="breadcrumb-item">
-        <a href="{{ route('dashboard.index') }}"><i class="bi bi-house-door-fill"></i> Home</a>
+        <a href="{{ route('dashboard.index') }}"><i class="bi bi-house-door-fill"></i>Home</a>
     </li>
     <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
 </ol>
@@ -14,9 +14,11 @@
 @section('content')
 
     {{-- ====== Header ====== --}}
-    <div class="page-header d-flex align-items-center mb-3">
-        <i class="bi bi-speedometer2 me-2 text-primary fs-5"></i>
-        <h5 class="fw-bold text-primary mb-0">Dashboard</h5>
+    <div class="pt-2 d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-house-door-fill fs-5 text-primary"></i>
+            <h5 class="fw-bold text-primary mb-0">Dashboard</h5>
+        </div>
     </div>
 
     @php
@@ -64,7 +66,7 @@
             'type'          => 'stat',
             'count'         => $totalPesertaDidikAll ?? 0,
             'color'         => 'warning',
-            'icon'          => 'bi bi-mortarboard-fill',
+            'icon'          => 'bi bi-people-fill',
             'route'         => route('peserta-didik.index'),
             'per_rombel'    => $peserta_didikPerRombelAll ?? [],
             'rombel_gender' => $peserta_didikPerRombelGenderAll ?? [],
@@ -334,8 +336,8 @@
                                 <td class="text-center fw-semibold text-muted">{{ $loop->iteration }}</td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ $user->foto ? asset('assets/foto_admin/' . $user->foto) : asset('assets/img/noimage.png') }}"
-                                             onerror="this.onerror=null;this.src='{{ asset('assets/img/noimage.png') }}'"
+                                        <img src="{{ $user->foto ? asset('storage/foto_admin/' . $user->foto) : asset('assets/img/default_staf.png') }}"
+                                             onerror="this.onerror=null;this.src='{{ asset('assets/img/default_staf.png') }}'"
                                              class="rounded-circle me-3 border shadow-sm"
                                              style="width:40px;height:40px;object-fit:cover;"
                                              alt="{{ $user->name }}">
@@ -373,44 +375,6 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
-<style>
-    /* Badge rombel: warna fix dari palet donut chart, teks selalu putih
-       agar tetap kontras baik di mode terang maupun gelap.
-       Dipaksa (position/z-index/filter/opacity) supaya tidak ikut
-       diredupkan oleh overlay/tint warna pada card statistik. */
-    .dashboard-card .rombel-badge,
-    .rombel-badge {
-        position: relative !important;
-        z-index: 5 !important;
-        isolation: isolate !important;
-        font-size: .72rem !important;
-        font-weight: 600 !important;
-        padding: .32em .6em !important;
-        border-radius: .5rem !important;
-        box-shadow: 0 1px 3px rgba(0,0,0,.15) !important;
-        filter: none !important;
-        opacity: 1 !important;
-        mix-blend-mode: normal !important;
-        -webkit-backdrop-filter: none !important;
-        backdrop-filter: none !important;
-    }
-
-    [data-theme="dark"] .dashboard-card .rombel-badge,
-    [data-theme="dark"] .rombel-badge {
-        box-shadow: 0 1px 4px rgba(0,0,0,.4) !important;
-    }
-
-    /* Badge total peserta_didik — tidak boleh dipotong teks (angkatan) */
-    #badgeTotalPesertaDidik {
-        max-width: none !important;
-        overflow: visible !important;
-        text-overflow: unset !important;
-        white-space: nowrap !important;
-        flex-shrink: 1 !important;
-        min-width: 0;
-    }
-
-</style>
 @endpush
 
 @push('scripts')
