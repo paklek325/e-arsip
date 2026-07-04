@@ -446,9 +446,9 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
         $tmTotal += ($r->total_masuk  ?? 0);
         $tkTotal += ($r->total_keluar ?? 0);
     }
-    $urlTotalMasuk  = route('surat.index', ['jenis_surat' => 'Masuk',  'tahun' => $tahun]);
-    $urlTotalKeluar = route('surat.index', ['jenis_surat' => 'Keluar', 'tahun' => $tahun]);
-    $urlTotalSemua  = route('surat.index', ['tahun' => $tahun]);
+    $urlTotalMasuk  = route('surat.masuk',  ['tahun' => $tahun]);
+    $urlTotalKeluar = route('surat.keluar', ['tahun' => $tahun]);
+    $urlTotalSemua  = route('surat.index',  ['tahun' => $tahun]);
 @endphp
 
 <div class="laporan-tahunan">
@@ -497,9 +497,9 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
                                 $tm    += $masuk;
                                 $tk    += $keluar;
 
-                                $urlMasuk  = route('surat.index', ['jenis_surat' => 'Masuk',  'bulan' => $row->bulan, 'tahun' => $tahun]);
-                                $urlKeluar = route('surat.index', ['jenis_surat' => 'Keluar', 'bulan' => $row->bulan, 'tahun' => $tahun]);
-                                $urlSemua  = route('surat.index', ['bulan' => $row->bulan, 'tahun' => $tahun]);
+                                $urlMasuk  = route('surat.masuk',  ['bulan' => $row->bulan, 'tahun' => $tahun]);
+                                $urlKeluar = route('surat.keluar', ['bulan' => $row->bulan, 'tahun' => $tahun]);
+                                $urlSemua  = route('surat.index',  ['bulan' => $row->bulan, 'tahun' => $tahun]);
                             @endphp
 
                             <tr @if($tot == 0) class="row-empty" @endif>
@@ -579,9 +579,9 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
     $monthlyTotalKeluar = $totalSuratKeluarBulan ?? 0;
     $totalBulan         = $monthlyTotalMasuk + $monthlyTotalKeluar;
 
-    $urlMasuk  = route('surat.index', ['jenis_surat' => 'Masuk',  'bulan' => $bulan, 'tahun' => $tahun]);
-    $urlKeluar = route('surat.index', ['jenis_surat' => 'Keluar', 'bulan' => $bulan, 'tahun' => $tahun]);
-    $urlSemua  = route('surat.index', ['bulan' => $bulan, 'tahun' => $tahun]);
+    $urlMasuk  = route('surat.masuk',  ['bulan' => $bulan, 'tahun' => $tahun]);
+    $urlKeluar = route('surat.keluar', ['bulan' => $bulan, 'tahun' => $tahun]);
+    $urlSemua  = route('surat.index',  ['bulan' => $bulan, 'tahun' => $tahun]);
 @endphp
 
 <div class="laporan-bulanan">
@@ -706,15 +706,11 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
                     <thead class="table-primary">
                         <tr>
                             <th class="col-no">No</th>
-                            <th>No Surat</th>
-                            <th>Kode</th>
                             <th>Jenis</th>
-                            <th>Perihal</th>
+                            <th>No Surat</th>
+                            <th style="min-width:180px;">Perihal</th>
                             <th>Instansi</th>
-                            <th>Pengirim</th>
-                            <th>Penerima</th>
                             <th>Tgl Surat</th>
-                            <th>Tgl Dibuat</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -723,21 +719,17 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
                         @forelse(($surat ?? []) as $item)
                             <tr>
                                 <td class="col-no">{{ $noDetail++ }}</td>
-                                <td>{{ $item->no_surat }}</td>
-                                <td>{{ $item->kode_surat }}</td>
                                 <td class="{{ strtolower($item->jenis_surat) === 'masuk' ? 'txt-masuk' : 'txt-keluar' }}">
                                     {{ ucfirst($item->jenis_surat) }}
                                 </td>
+                                <td>{{ $item->no_surat }}</td>
                                 <td class="text-left">{{ $item->perihal ?: '-' }}</td>
                                 <td>{{ $item->instansi ?: '-' }}</td>
-                                <td>{{ $item->pengirim ?: '-' }}</td>
-                                <td>{{ $item->penerima ?: '-' }}</td>
-                                <td>{{ $item->tanggal_surat ? Carbon::parse($item->tanggal_surat)->translatedFormat('d F Y') : '-' }}</td>
-                                <td>{{ $item->created_at ? Carbon::parse($item->created_at)->translatedFormat('d F Y') : '-' }}</td>
+                                <td>{{ $item->tanggal_surat ? Carbon::parse($item->tanggal_surat)->translatedFormat('d M Y') : '-' }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="detail-surat-empty">Tidak ada data surat untuk bulan ini.</td>
+                                <td colspan="6" class="detail-surat-empty">Tidak ada data surat untuk bulan ini.</td>
                             </tr>
                         @endforelse
                     </tbody>

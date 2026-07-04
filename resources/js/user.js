@@ -18,32 +18,7 @@
     const searchInput = $("#search");
     const btnReset = $("#btnReset");
 
-    // ===== Toast Notification Helper =====
-    const toast = (message, type = "info") => {
-        const bg =
-            type === "success"
-                ? "bg-success"
-                : type === "error"
-                ? "bg-danger"
-                : type === "warning"
-                ? "bg-warning text-dark"
-                : "bg-primary";
-        const icon =
-            type === "success"
-                ? "✅"
-                : type === "error"
-                ? "❌"
-                : type === "warning"
-                ? "⚠️"
-                : "ℹ️";
-        const div = document.createElement("div");
-        div.className =
-            "toast align-items-center text-white show position-fixed top-0 end-0 m-3 " +
-            bg;
-        div.innerHTML = `<div class="d-flex"><div class="toast-body fw-semibold">${icon} ${message}</div></div>`;
-        document.body.append(div);
-        setTimeout(() => div.remove(), 2500);
-    };
+    const toast = (message, type = "info") => window.AppToast(message, type);
 
     // ===== Helpers error form (CLEANED UP & CONSOLIDATED) =====
     // Map field name di Laravel (key) ke ID elemen HTML (suffix)
@@ -166,6 +141,10 @@
         e.preventDefault();
         clearErrors("add");
         const data = new FormData(e.target);
+        if (croppedFileAdd) {
+            data.delete("foto");
+            data.append("foto", croppedFileAdd, "foto.jpg");
+        }
         try {
             const res = await fetch(`${baseUrl}/user`, {
                 method: "POST",
@@ -177,6 +156,7 @@
             if (res.ok && result.success) {
                 bootstrap.Modal.getInstance($("#addUserModal")).hide();
                 e.target.reset();
+                croppedFileAdd = null;
 
                 const img = $("#previewFotoAdd");
                 if (img) {
@@ -223,17 +203,42 @@
             });
             const data = await res.json();
 
-            $("#edit_id").value = data.id_user; // Pastikan ini mengarah ke hidden input name="id_user"
+            $("#edit_id").value = data.id_user;
             $("#edit_name").value = data.name;
             $("#edit_email").value = data.email;
             $("#edit_role").value = data.id_role;
 
+            // Kepala Staf: kunci email dan role — hanya nama & password yang bisa diubah
+            const isKepalaStaf = data.role?.name === "Kepala Staf";
+
+            const emailInput = $("#edit_email");
+            if (emailInput) {
+                emailInput.readOnly = isKepalaStaf;
+                emailInput.classList.toggle("bg-light", isKepalaStaf);
+                emailInput.classList.toggle("text-muted", isKepalaStaf);
+            }
+
+            const roleSelect = $("#edit_role");
+            if (roleSelect) {
+                roleSelect.disabled = isKepalaStaf;
+            }
+
+            // Tampilkan/sembunyikan info badge
+            let note = document.getElementById("edit_kepala_note");
+            if (!note) {
+                note = document.createElement("div");
+                note.id = "edit_kepala_note";
+                note.className = "alert alert-info py-2 px-3 mb-0 mt-2 small";
+                note.innerHTML = '<i class="bi bi-shield-lock-fill me-1"></i>Kepala Staf: email dan role tidak dapat diubah.';
+                roleSelect?.closest(".mb-3")?.after(note);
+            }
+            note.style.display = isKepalaStaf ? "block" : "none";
+
             const img = $("#previewFotoEdit");
             if (img) {
-                // data.foto sudah dipastikan dari Controller berisi URL foto asli atau URL noimage.png
                 img.src = data.foto;
-                // Simpan URL yang sekarang sebagai 'current' (untuk fallback preview jika user membatalkan pilih file)
                 img.dataset.current = data.foto;
+                img.dataset.default = data.foto;
             }
 
             const passwordInput = $("#edit_password");
@@ -260,6 +265,10 @@
         const id = $("#edit_id").value;
         const data = new FormData(e.target);
         data.append("_method", "PUT");
+        if (croppedFileEdit) {
+            data.delete("foto");
+            data.append("foto", croppedFileEdit, "foto.jpg");
+        }
 
         // Cek apakah password kosong. Jika kosong, hapus field 'password' dari FormData agar tidak divalidasi/diupdate.
         if (!data.get("password")) {
@@ -276,6 +285,7 @@
 
             if (res.ok && result.success) {
                 bootstrap.Modal.getInstance($("#editUserModal")).hide();
+                croppedFileEdit = null;
                 toast("User berhasil diperbarui", "success");
                 loadTable();
 
@@ -360,26 +370,131 @@
         }
     }
 
-    // ===== Preview foto ADD (OK) =====
+    const DEFAULT_FOTO = `${baseUrl}/assets/img/default_staf.png`;
+
+    const MAX_FOTO_MB = 4;
+    const MAX_FOTO_BYTES = MAX_FOTO_MB * 1024 * 1024;
+    const ALLOWED_FOTO_TYPES = ["image/jpeg", "image/jpg", "image/png"];
+
+    function validateFoto(file, errorElId) {
+        const errEl = document.getElementById(errorElId);
+        if (!file) { if (errEl) errEl.textContent = ""; return true; }
+        if (!ALLOWED_FOTO_TYPES.includes(file.type)) {
+            if (errEl) errEl.textContent = "Format harus JPG atau PNG.";
+            return false;
+        }
+        if (file.size > MAX_FOTO_BYTES) {
+            if (errEl) errEl.textContent = `Ukuran file maksimal ${MAX_FOTO_MB}MB. File Anda: ${(file.size / 1024 / 1024).toFixed(1)}MB.`;
+            return false;
+        }
+        if (errEl) errEl.textContent = "";
+        return true;
+    }
+
+    // ===== Crop modal state =====
+    let cropper = null;
+    let croppedFileAdd = null;
+    let croppedFileEdit = null;
+    let activeCropTarget = null; // 'add' | 'edit'
+
+    const cropModalEl = $("#cropFotoModal");
+    const cropImage   = $("#cropImage");
+
+    function openCropModal(file, target) {
+        activeCropTarget = target;
+        const url = URL.createObjectURL(file);
+        cropImage.src = url;
+        const modal = new bootstrap.Modal(cropModalEl);
+        cropModalEl.addEventListener("shown.bs.modal", () => {
+            if (cropper) { cropper.destroy(); cropper = null; }
+            cropper = new Cropper(cropImage, {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: "move",
+                autoCropArea: 0.85,
+                movable: true,
+                zoomable: true,
+                rotatable: false,
+                scalable: false,
+                cropBoxMovable: false,
+                cropBoxResizable: false,
+                highlight: false,
+                background: false,
+            });
+        }, { once: true });
+        modal.show();
+    }
+
+    $("#btnApplyCrop")?.addEventListener("click", () => {
+        if (!cropper) return;
+        cropper.getCroppedCanvas({ width: 400, height: 400 }).toBlob((blob) => {
+            if (!blob) return;
+            const file = new File([blob], "foto.jpg", { type: "image/jpeg" });
+            const objUrl = URL.createObjectURL(blob);
+            if (activeCropTarget === "add") {
+                croppedFileAdd = file;
+                const img = $("#previewFotoAdd");
+                if (img) img.src = objUrl;
+            } else {
+                croppedFileEdit = file;
+                const img = $("#previewFotoEdit");
+                if (img) img.src = objUrl;
+            }
+            bootstrap.Modal.getInstance(cropModalEl)?.hide();
+        }, "image/jpeg", 0.92);
+    });
+
+    function cancelCrop() {
+        if (activeCropTarget === "add") {
+            const fi = $("#add_foto");
+            const img = $("#previewFotoAdd");
+            if (fi) fi.value = "";
+            if (img) img.src = img.dataset.default || img.src;
+            croppedFileAdd = null;
+        } else {
+            const fi = $("#edit_foto");
+            const img = $("#previewFotoEdit");
+            if (fi) fi.value = "";
+            if (img) img.src = img.dataset.current || img.dataset.default || img.src;
+            croppedFileEdit = null;
+        }
+        bootstrap.Modal.getInstance(cropModalEl)?.hide();
+    }
+
+    $("#btnCancelCrop")?.addEventListener("click", cancelCrop);
+
+    cropModalEl?.addEventListener("hidden.bs.modal", () => {
+        if (cropper) { cropper.destroy(); cropper = null; }
+    });
+
+    // ===== Preview foto ADD =====
     $("#add_foto")?.addEventListener("change", (e) => {
         const img = $("#previewFotoAdd");
         if (!img) return;
         const def = img.dataset.default || img.getAttribute("src");
         const file = e.target.files?.[0];
-        img.src = file ? URL.createObjectURL(file) : def;
+        if (!validateFoto(file, "error_add_foto")) {
+            e.target.value = "";
+            img.src = def;
+            croppedFileAdd = null;
+            return;
+        }
+        if (file) openCropModal(file, "add");
     });
 
-    // ===== Preview foto EDIT (OK - menggunakan data-current yang diset di openEditModal) =====
+    // ===== Preview foto EDIT =====
     $("#edit_foto")?.addEventListener("change", (e) => {
         const img = $("#previewFotoEdit");
         if (!img) return;
-        // Fallback: Gunakan data-current (foto user saat ini/noimage) jika tidak ada file yang dipilih
-        const fallback =
-            img.dataset.current ||
-            img.dataset.default ||
-            img.getAttribute("src");
+        const fallback = img.dataset.current || img.dataset.default || img.getAttribute("src");
         const file = e.target.files?.[0];
-        img.src = file ? URL.createObjectURL(file) : fallback;
+        if (!validateFoto(file, "error_edit_foto")) {
+            e.target.value = "";
+            img.src = fallback;
+            croppedFileEdit = null;
+            return;
+        }
+        if (file) openCropModal(file, "edit");
     });
 
     // ===== Toggle password (OK) =====
@@ -402,6 +517,7 @@
     const addModalEl = $("#addUserModal");
     if (addModalEl) {
         addModalEl.addEventListener("show.bs.modal", () => {
+            croppedFileAdd = null;
             const addForm = $("#formAddUser");
             const img = $("#previewFotoAdd");
             if (img) {

@@ -4,8 +4,9 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+// Catatan: Constraint "hanya satu Kepala Staf" (functional unique index) dibuat
+// di UsersTableSeeder setelah data roles & users tersedia.
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
@@ -13,17 +14,12 @@ return new class extends Migration
             $table->string('name', 150);
             $table->string('email', 150)->unique();
             $table->string('password', 255);
-
-            // tambahkan kolom foto
             $table->string('foto', 255)->nullable();
-
-            // Relasi ke roles
             $table->unsignedBigInteger('id_role');
             $table->foreign('id_role')
                 ->references('id_role')
                 ->on('roles')
                 ->onDelete('cascade');
-
             $table->timestamps();
         });
     }

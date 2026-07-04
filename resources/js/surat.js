@@ -90,111 +90,7 @@ if (window.SuratApp) {
             });
         }
 
-        // Suntik CSS toast modern sekali saja (dipakai bersama semua tipe toast)
-        function injectToastStyles() {
-            if (document.getElementById("appToastStyles")) return;
-            const style = document.createElement("style");
-            style.id = "appToastStyles";
-            style.textContent = `
-                .app-toast{
-                    display:flex; align-items:flex-start; gap:12px;
-                    min-width:320px; max-width:380px;
-                    padding:14px 16px; margin-bottom:10px;
-                    border:0; border-radius:16px; color:#fff;
-                    box-shadow:0 12px 28px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.08);
-                    position:relative; overflow:hidden;
-                    opacity:0; transform:translateX(40px) scale(.96);
-                    transition:opacity .45s cubic-bezier(.21,1.02,.73,1),
-                               transform .45s cubic-bezier(.21,1.02,.73,1);
-                }
-                .app-toast.app-toast-in{ opacity:1; transform:translateX(0) scale(1); }
-                .app-toast.app-toast-out{ opacity:0; transform:translateX(40px) scale(.96); }
-                .app-toast-success{ background:linear-gradient(135deg,#16a34a,#22c55e); }
-                .app-toast-error{ background:linear-gradient(135deg,#dc2626,#ef4444); }
-                .app-toast-warning{ background:linear-gradient(135deg,#d97706,#f59e0b); }
-                .app-toast-info{ background:linear-gradient(135deg,#2563eb,#3b82f6); }
-                .app-toast-icon{
-                    flex-shrink:0; width:34px; height:34px; border-radius:50%;
-                    background:rgba(255,255,255,.22);
-                    display:flex; align-items:center; justify-content:center;
-                    font-size:17px; margin-top:1px;
-                }
-                .app-toast-body{ flex:1; font-size:.9rem; font-weight:600;
-                    line-height:1.35; padding-top:4px; }
-                .app-toast-close{
-                    flex-shrink:0; background:transparent; border:0; color:#fff;
-                    opacity:.85; font-size:1rem; line-height:1; padding:2px;
-                    margin-top:2px; cursor:pointer;
-                }
-                .app-toast-close:hover{ opacity:1; }
-                .app-toast-progress{
-                    position:absolute; left:0; bottom:0; height:3px; width:100%;
-                    background:rgba(255,255,255,.55); transform-origin:left;
-                    animation:appToastShrink 3.5s linear forwards;
-                }
-                @keyframes appToastShrink{ from{transform:scaleX(1);} to{transform:scaleX(0);} }
-            `;
-            document.head.appendChild(style);
-        }
-
-        const toast = (message, type = "info") => {
-            injectToastStyles();
-
-            let container = document.getElementById("customToastContainer");
-            if (!container) {
-                container = document.createElement("div");
-                container.id = "customToastContainer";
-                container.className =
-                    "position-fixed top-0 end-0 p-3 d-flex flex-column align-items-end";
-                container.style.zIndex = "2000";
-                document.body.appendChild(container);
-            }
-
-            const map = {
-                success: ["app-toast-success", "bi-check-circle-fill"],
-                error: ["app-toast-error", "bi-x-circle-fill"],
-                warning: ["app-toast-warning", "bi-exclamation-triangle-fill"],
-                info: ["app-toast-info", "bi-info-circle-fill"],
-            };
-            const [variant, icon] = map[type] || map.info;
-
-            const toastEl = document.createElement("div");
-            toastEl.className = `app-toast ${variant}`;
-            toastEl.setAttribute("role", "alert");
-            toastEl.setAttribute("aria-live", "assertive");
-            toastEl.setAttribute("aria-atomic", "true");
-            toastEl.innerHTML = `
-                <div class="app-toast-icon"><i class="bi ${icon}"></i></div>
-                <div class="app-toast-body">${message}</div>
-                <button type="button" class="app-toast-close" aria-label="Tutup">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-                <div class="app-toast-progress"></div>
-            `;
-
-            container.appendChild(toastEl);
-
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    toastEl.classList.add("app-toast-in");
-                });
-            });
-
-            const remove = () => {
-                toastEl.classList.remove("app-toast-in");
-                toastEl.classList.add("app-toast-out");
-                setTimeout(() => {
-                    toastEl.remove();
-                    if (!container.children.length) container.remove();
-                }, 450);
-            };
-
-            toastEl
-                .querySelector(".app-toast-close")
-                ?.addEventListener("click", remove);
-
-            setTimeout(remove, 3500);
-        };
+        const toast = (message, type = "info") => window.AppToast(message, type);
 
         const debounce = (fn, delay = 400) => {
             let t;
@@ -322,6 +218,68 @@ if (window.SuratApp) {
             }
         }
 
+        // ===== SINKRONISASI BULAN / TAHUN / TANGGAL =====
+        function syncDateFields(tanggalEl, bulanEl, tahunEl) {
+            if (!tanggalEl) return;
+
+            function tanggalKeBulanTahun() {
+                if (!tanggalEl.value) return;
+                const d = new Date(tanggalEl.value + "T00:00:00");
+                if (bulanEl) bulanEl.value = String(d.getMonth() + 1);
+                if (tahunEl) tahunEl.value = String(d.getFullYear());
+            }
+
+            function bulanTahunKeTanggal() {
+                const bulan = parseInt(bulanEl?.value || 0);
+                const tahun = parseInt(tahunEl?.value || 0);
+                if (!bulan || !tahun) return;
+                let day = 1;
+                if (tanggalEl.value) {
+                    const ex = new Date(tanggalEl.value + "T00:00:00");
+                    const maxDay = new Date(tahun, bulan, 0).getDate();
+                    day = Math.min(ex.getDate(), maxDay);
+                }
+                const mm = String(bulan).padStart(2, "0");
+                const dd = String(day).padStart(2, "0");
+                tanggalEl.value = `${tahun}-${mm}-${dd}`;
+            }
+
+            tanggalEl.removeEventListener("change", tanggalEl._syncHandler);
+            tanggalEl._syncHandler = tanggalKeBulanTahun;
+            tanggalEl.addEventListener("change", tanggalEl._syncHandler);
+
+            if (bulanEl) {
+                bulanEl.removeEventListener("change", bulanEl._syncHandler);
+                bulanEl._syncHandler = bulanTahunKeTanggal;
+                bulanEl.addEventListener("change", bulanEl._syncHandler);
+            }
+            if (tahunEl) {
+                tahunEl.removeEventListener("change", tahunEl._syncHandler);
+                tahunEl._syncHandler = bulanTahunKeTanggal;
+                tahunEl.addEventListener("change", tahunEl._syncHandler);
+            }
+
+            // Inisialisasi awal: jika tanggal sudah terisi, update bulan & tahun
+            tanggalKeBulanTahun();
+        }
+
+        // ===== GENERATE NOMOR SURAT OTOMATIS =====
+        async function generateNoSurat({ jenis = "Keluar", exclude_id = "" } = {}) {
+            try {
+                const params = new URLSearchParams({ jenis });
+                if (exclude_id) params.append("exclude_id", exclude_id);
+                const res = await safeFetch(`/surat/generate-nomor?${params}`, {
+                    headers: { Accept: "application/json" },
+                });
+                const data = await res.json();
+                return data.nomor || null;
+            } catch (err) {
+                console.error("Gagal generate nomor surat:", err);
+                toast("Gagal generate nomor surat.", "error");
+                return null;
+            }
+        }
+
         async function fetchKodeList() {
             try {
                 const res = await safeFetch("/surat/kode-surat-keluar", {
@@ -347,6 +305,7 @@ if (window.SuratApp) {
             no_surat,
             instansi,
             tanggal_surat,
+            jenis_surat = "",
             exclude_id = "",
         }) {
             if (!no_surat || !instansi || !tanggal_surat) {
@@ -360,6 +319,7 @@ if (window.SuratApp) {
                     tanggal_surat,
                 });
 
+                if (jenis_surat) params.append("jenis_surat", jenis_surat);
                 if (exclude_id) params.append("exclude_id", exclude_id);
 
                 const url = `/surat/cek-duplikat?${params.toString()}`;
@@ -611,72 +571,38 @@ if (window.SuratApp) {
             const kodeContainer = $("#kode-container-add");
             if (!jenisAdd || !kodeContainer) return;
 
-            async function renderKodeInput() {
+            function renderKodeInput() {
                 const val = (jenisAdd.value || "").trim().toLowerCase();
 
-                if (!val) {
-                    kodeContainer.innerHTML = `
-                    <label class="form-label">Kode Surat</label>
-                    <input type="text"
-                            id="kode_surat_add"
-                            name="kode_surat"
-                            class="form-control"
-                            placeholder="Pilih jenis surat terlebih dahulu"
-                            disabled>
-                    <small class="text-muted">
-                        Pilih jenis surat terlebih dahulu. Wajib diisi hanya untuk surat "Keluar".
-                    </small>
-                `;
-                    return;
-                }
+                const kodeSelect  = document.getElementById("kode_surat_select_add");
+                const kodeInput   = document.getElementById("kode_surat_input_add");
+                const kodePlaceholder = document.getElementById("kode_surat_placeholder_add");
+                const reqSpan     = document.getElementById("kode-required-add");
+
+                if (!kodeSelect || !kodeInput) return;
+
+                // Reset semua ke hidden/disabled dulu
+                kodeSelect.style.display = "none";
+                kodeSelect.disabled      = true;
+                kodeSelect.required      = false;
+                kodeInput.style.display  = "none";
+                kodeInput.disabled       = true;
+                if (kodePlaceholder) kodePlaceholder.style.display = "none";
+                if (reqSpan) reqSpan.style.display = "none";
 
                 if (val === "keluar") {
-                    kodeContainer.innerHTML = `
-                    <label class="form-label">Kode Surat</label>
-                    <select id="kode_surat_add" name="kode_surat" class="form-select" required>
-                        <option value="">Memuat daftar kode...</option>
-                    </select>
-                    <small class="text-muted">Pilih kode surat yang sudah terdaftar di master kode.</small>
-                `;
-
-                    const kodeSelect = $("#kode_surat_add");
-                    if (!kodeSelect) return;
-
-                    kodeSelect.disabled = true;
-
-                    const kodeList = await fetchKodeList();
-
-                    kodeSelect.innerHTML =
-                        `<option value="">-- Pilih Kode Surat --</option>` +
-                        kodeList
-                            .map(
-                                (k) =>
-                                    `<option value="${k.kode}">${k.kode} - ${
-                                        k.description || "-"
-                                    }</option>`
-                            )
-                            .join("");
-
-                    if (initialValue) {
-                        kodeSelect.value = initialValue;
-                    }
-
-                    kodeSelect.disabled = false;
-                    return;
+                    kodeSelect.style.display = "";
+                    kodeSelect.disabled      = false;
+                    kodeSelect.required      = true;
+                    if (initialValue) kodeSelect.value = initialValue;
+                    if (reqSpan) reqSpan.style.display = "";
+                } else if (val === "masuk") {
+                    kodeInput.style.display = "";
+                    kodeInput.disabled      = false;
+                    kodeInput.value         = initialValue || "";
+                } else {
+                    if (kodePlaceholder) kodePlaceholder.style.display = "";
                 }
-
-                kodeContainer.innerHTML = `
-                <label class="form-label">Kode Surat</label>
-                <input type="text"
-                            id="kode_surat_add"
-                            name="kode_surat"
-                            class="form-control"
-                            placeholder="Masukkan kode surat (optional)"
-                            value="${initialValue}">
-                <small class="text-muted">
-                    Opsional untuk surat masuk, wajib hanya jika jenis surat adalah "Keluar".
-                </small>
-            `;
             }
 
             jenisAdd.removeEventListener("change", jenisAdd._kodeHandler);
@@ -684,6 +610,52 @@ if (window.SuratApp) {
             jenisAdd.addEventListener("change", jenisAdd._kodeHandler);
 
             await renderKodeInput();
+
+            // ── Auto-generate nomor, readonly, & instansi berdasarkan jenis ──
+            async function applyNomorBehavior() {
+                const noEl      = document.getElementById("add_no_surat");
+                const btnGen    = document.getElementById("btnGenerateNoSuratAdd");
+                const instansiEl = document.getElementById("add_instansi");
+                if (!noEl) return;
+
+                const val = (jenisAdd.value || "").trim().toLowerCase();
+
+                if (val === "keluar") {
+                    // Nomor auto, field readonly
+                    noEl.readOnly = true;
+                    noEl.classList.add("bg-light");
+                    noEl.placeholder = "";
+                    if (btnGen) btnGen.style.display = "";
+                    // Instansi default SMABA
+                    if (instansiEl && !instansiEl.value) instansiEl.value = "SMABA";
+                    // Generate nomor urut Keluar
+                    const nomor = await generateNoSurat({ jenis: "Keluar" });
+                    if (nomor) noEl.value = nomor;
+                } else if (val === "masuk") {
+                    // Nomor manual
+                    noEl.readOnly = false;
+                    noEl.classList.remove("bg-light");
+                    noEl.value = "";
+                    noEl.placeholder = "Masukkan nomor surat";
+                    if (btnGen) btnGen.style.display = "none";
+                    // Instansi kosong untuk Masuk
+                    if (instansiEl) instansiEl.value = "";
+                } else {
+                    // Belum pilih jenis
+                    noEl.readOnly = false;
+                    noEl.classList.remove("bg-light");
+                    noEl.value = "";
+                    noEl.placeholder = "Pilih jenis surat terlebih dahulu";
+                    if (btnGen) btnGen.style.display = "none";
+                }
+            }
+
+            jenisAdd.removeEventListener("change", jenisAdd._nomorHandler);
+            jenisAdd._nomorHandler = applyNomorBehavior;
+            jenisAdd.addEventListener("change", jenisAdd._nomorHandler);
+
+            // Terapkan langsung untuk jenis yang sudah dipilih (edit atau re-open)
+            await applyNomorBehavior();
         }
 
         function setupAddSuratForm() {
@@ -701,12 +673,14 @@ if (window.SuratApp) {
                 const instansi = fd.get("instansi")?.toString().trim() || "";
                 const tanggal_surat =
                     fd.get("tanggal_surat")?.toString().trim() || "";
+                const jenis_surat = fd.get("jenis_surat")?.toString().trim() || "";
 
                 try {
                     const isDup = await checkDuplicateSurat({
                         no_surat,
                         instansi,
                         tanggal_surat,
+                        jenis_surat,
                     });
 
                     if (isDup) {
@@ -782,10 +756,72 @@ if (window.SuratApp) {
                         f.reset();
                         const fileInput = f.querySelector('input[type="file"]');
                         if (fileInput) fileInput.value = "";
+                        // instansi diatur oleh applyNomorBehavior berdasarkan jenis
                     }
                     hideFormAlert("#addSuratAlert");
-                    await setupAddKodeSurat();
-                    addTodayButton("#add_tanggal");
+
+                    try {
+                        await setupAddKodeSurat(); // termasuk kode + auto-generate nomor
+                    } catch (err) {
+                        console.error("[surat] setupAddKodeSurat gagal:", err);
+                    }
+
+                    // Sinkronisasi bulan / tahun / tanggal
+                    const now = new Date();
+                    const addBulan  = $("#add_bulan");
+                    const addTahun  = $("#add_tahun");
+                    const addTanggal = $("#add_tanggal");
+                    if (addBulan)  addBulan.value  = String(now.getMonth() + 1);
+                    if (addTahun)  addTahun.value  = String(now.getFullYear());
+                    syncDateFields(addTanggal, addBulan, addTahun);
+
+                    // Tombol Hari Ini
+                    const btnHariIni = $("#btnHariIniAdd");
+                    if (btnHariIni) {
+                        btnHariIni.onclick = () => {
+                            const today = now.toISOString().split("T")[0];
+                            if (addTanggal) {
+                                addTanggal.value = today;
+                                addTanggal.dispatchEvent(new Event("change"));
+                            }
+                        };
+                    }
+                    // Tombol Bulan Ini
+                    const btnBulanIni = $("#btnBulanIniAdd");
+                    if (btnBulanIni) {
+                        btnBulanIni.onclick = () => {
+                            if (addBulan) {
+                                addBulan.value = String(now.getMonth() + 1);
+                                addBulan.dispatchEvent(new Event("change"));
+                            }
+                        };
+                    }
+                    // Tombol Tahun Ini
+                    const btnTahunIni = $("#btnTahunIniAdd");
+                    if (btnTahunIni) {
+                        btnTahunIni.onclick = () => {
+                            if (addTahun) {
+                                addTahun.value = String(now.getFullYear());
+                                addTahun.dispatchEvent(new Event("change"));
+                            }
+                        };
+                    }
+
+                    // Tombol Generate: re-generate untuk Surat Keluar
+                    const btnGen = $("#btnGenerateNoSuratAdd");
+                    if (btnGen) {
+                        btnGen.onclick = async () => {
+                            const jenis = ($("#jenis_surat_add")?.value || "Keluar").trim();
+                            const nomor = await generateNoSurat({ jenis });
+                            if (nomor) {
+                                const el = $("#add_no_surat");
+                                if (el) {
+                                    el.value = nomor;
+                                    el.dispatchEvent(new Event("input"));
+                                }
+                            }
+                        };
+                    }
                 });
             }
         }
@@ -817,6 +853,15 @@ if (window.SuratApp) {
                 editJenis?.value ||
                 ""
             ).toLowerCase();
+
+            // Sinkronkan visibilitas tombol Generate setiap kali jenis berubah
+            const btnGenEdit = $("#btnGenerateNoSuratEdit");
+            if (btnGenEdit) {
+                btnGenEdit.style.display = jenis === "keluar" ? "" : "none";
+            }
+
+            // Nomor surat tidak diubah otomatis saat jenis berubah di mode edit
+            // — user harus klik tombol generate secara manual jika ingin nomor baru
 
             if (jenis === "keluar") {
                 const currentKode = s?.kode_surat || "";
@@ -1000,7 +1045,70 @@ if (window.SuratApp) {
                     }
                 }
 
-                addTodayButton("#edit_tanggal");
+                // Sinkronisasi bulan / tahun / tanggal (edit)
+                const editBulan   = $("#edit_bulan");
+                const editTahun   = $("#edit_tahun");
+                const editTanggal = $("#edit_tanggal");
+                // Isi bulan & tahun dari tanggal_surat yang sudah di-set
+                if (editTanggal?.value) {
+                    const d = new Date(editTanggal.value + "T00:00:00");
+                    if (editBulan) editBulan.value = String(d.getMonth() + 1);
+                    if (editTahun) editTahun.value = String(d.getFullYear());
+                }
+                syncDateFields(editTanggal, editBulan, editTahun);
+
+                // Tombol Hari Ini
+                const btnHariIniEdit = $("#btnHariIniEdit");
+                if (btnHariIniEdit) {
+                    btnHariIniEdit.onclick = () => {
+                        const today = new Date().toISOString().split("T")[0];
+                        if (editTanggal) {
+                            editTanggal.value = today;
+                            editTanggal.dispatchEvent(new Event("change"));
+                        }
+                    };
+                }
+                // Tombol Bulan Ini
+                const btnBulanIniEdit = $("#btnBulanIniEdit");
+                if (btnBulanIniEdit) {
+                    btnBulanIniEdit.onclick = () => {
+                        if (editBulan) {
+                            editBulan.value = String(new Date().getMonth() + 1);
+                            editBulan.dispatchEvent(new Event("change"));
+                        }
+                    };
+                }
+                // Tombol Tahun Ini
+                const btnTahunIniEdit = $("#btnTahunIniEdit");
+                if (btnTahunIniEdit) {
+                    btnTahunIniEdit.onclick = () => {
+                        if (editTahun) {
+                            editTahun.value = String(new Date().getFullYear());
+                            editTahun.dispatchEvent(new Event("change"));
+                        }
+                    };
+                }
+
+                // Tombol Generate Nomor (edit) — hanya untuk Surat Keluar
+                const btnGenEdit = $("#btnGenerateNoSuratEdit");
+                if (btnGenEdit) {
+                    const editJenisVal = ($("#edit_jenis")?.value || "").trim();
+                    btnGenEdit.style.display = editJenisVal.toLowerCase() === "keluar" ? "" : "none";
+
+                    btnGenEdit.onclick = async () => {
+                        const jenis      = ($("#edit_jenis")?.value || "Keluar").trim();
+                        const exclude_id = $("#edit_id")?.value || "";
+                        const nomor = await generateNoSurat({ jenis, exclude_id });
+                        if (nomor) {
+                            const el = $("#edit_no_surat");
+                            if (el) {
+                                el.value = nomor;
+                                el.dispatchEvent(new Event("input"));
+                            }
+                        }
+                    };
+                }
+
                 getOrCreateModal("#editSuratModal")?.show();
             } catch (err) {
                 console.error(err);
@@ -1026,12 +1134,14 @@ if (window.SuratApp) {
                 const instansi = fd.get("instansi")?.toString().trim() || "";
                 const tanggal_surat =
                     fd.get("tanggal_surat")?.toString().trim() || "";
+                const jenis_surat = fd.get("jenis_surat")?.toString().trim() || "";
 
                 try {
                     const isDup = await checkDuplicateSurat({
                         no_surat,
                         instansi,
                         tanggal_surat,
+                        jenis_surat,
                         exclude_id: id,
                     });
 
@@ -1433,61 +1543,87 @@ if (window.SuratApp) {
         function openPreview(url) {
             if (!url) return;
 
-            const body = $("#filePreviewBody");
-            const spinner = $("#file-loading-spinner");
-            const downloadLink = $("#previewDownloadLink");
+            const body     = $("#filePreviewBody");
+            const spinner  = $("#file-loading-spinner");
+            const dlLink   = $("#previewDownloadLink");
 
+            // Reset state
+            if (body)    body.innerHTML = "";
             if (spinner) spinner.style.display = "flex";
-            if (body) body.innerHTML = "";
 
-            if (downloadLink) {
-                downloadLink.href = url;
+            if (dlLink) {
+                dlLink.href = url;
                 const filename = getFilenameFromUrl(url, "lampiran");
-                downloadLink.setAttribute("download", filename);
-                // Update label nama file di header preview modal
-                const filenameLabel = $("#preview_filename_label");
-                if (filenameLabel) filenameLabel.textContent = filename;
+                dlLink.setAttribute("download", filename);
+                const label = $("#preview_filename_label");
+                if (label) label.textContent = filename;
             }
 
-            const ext = url.split(".").pop().toLowerCase();
-            let content;
+            // Ambil ekstensi (abaikan query string)
+            const ext = url.split("?")[0].split(".").pop().toLowerCase();
 
+            let timerId;
             const hideSpinner = () => {
+                clearTimeout(timerId);
                 if (spinner) spinner.style.display = "none";
             };
+            // Fallback: paksa hide spinner setelah 12 detik
+            timerId = setTimeout(hideSpinner, 12000);
 
-            if (["pdf"].includes(ext)) {
-                content = document.createElement("iframe");
-                content.className = "w-100";
-                content.style.minHeight = "80vh";
-                // BUGFIX: pasang handler SEBELUM set src. Kalau dipasang
-                // sesudah, dan file sudah ada di cache browser, event
-                // load/error bisa selesai lebih dulu sebelum handler
-                // terpasang -> spinner "buffering" selamanya.
-                content.onload = hideSpinner;
-                content.onerror = hideSpinner;
-                content.src = url;
+            let content;
+
+            if (ext === "pdf") {
+                // <object> lebih andal dari <iframe> untuk PDF inline di Firefox/Chrome
+                content = document.createElement("div");
+                content.style.cssText = "width:100%;height:80vh;";
+                content.innerHTML = `
+                    <object data="${url}" type="application/pdf"
+                            style="width:100%;height:100%;border:none;">
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-file-earmark-pdf fs-1 text-danger"></i>
+                            <p class="mt-2">Browser tidak mendukung pratinjau PDF.</p>
+                        </div>
+                    </object>
+                    <div class="text-center py-2 border-top bg-light">
+                        <a href="${url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>Buka di Tab Baru
+                        </a>
+                    </div>`;
+                // Sembunyikan spinner setelah 2 detik (object tidak punya event onload)
+                setTimeout(hideSpinner, 2000);
+
             } else if (["jpg", "jpeg", "png"].includes(ext)) {
                 content = document.createElement("img");
-                content.className = "img-fluid";
-                content.onload = hideSpinner;
-                content.onerror = hideSpinner;
+                content.className = "img-fluid mx-auto d-block";
+                content.style.maxHeight = "75vh";
+                content.onload  = hideSpinner;
+                content.onerror = () => {
+                    hideSpinner();
+                    if (body) body.innerHTML = `
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-image fs-1"></i>
+                            <p class="mt-2">Gambar tidak dapat ditampilkan.</p>
+                            <a href="${url}" target="_blank" class="btn btn-sm btn-primary mt-1">
+                                <i class="bi bi-box-arrow-up-right me-1"></i>Buka di Tab Baru
+                            </a>
+                        </div>`;
+                };
                 content.src = url;
+
             } else {
-                // BUGFIX: konten fallback ini cuma <div>, tidak pernah
-                // memicu event load/error, jadi spinner harus disembunyikan
-                // langsung di sini, bukan menunggu content.onload.
-                content = document.createElement("div");
-                content.className = "p-3";
-                content.innerHTML = `
-                <p class="mb-1">Pratinjau langsung tidak tersedia.</p>
-                <a href="${url}" target="_blank">Klik di sini untuk membuka / mengunduh file.</a>
-            `;
+                // Word, dsb. — tidak bisa di-preview langsung
                 hideSpinner();
+                content = document.createElement("div");
+                content.className = "p-4 text-center";
+                content.innerHTML = `
+                    <i class="bi bi-file-earmark-word fs-1 text-primary"></i>
+                    <p class="mt-2 text-muted">Pratinjau tidak tersedia untuk format <strong>.${ext}</strong>.</p>
+                    <a href="${url}" target="_blank" class="btn btn-primary">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Buka / Download File
+                    </a>`;
             }
 
             if (body) body.appendChild(content);
-
             getOrCreateModal("#filePreviewModal")?.show();
         }
 
@@ -1551,9 +1687,7 @@ if (window.SuratApp) {
                 const w = window.open(url, "_blank");
                 if (w) {
                     w.addEventListener("load", () => {
-                        try {
-                            w.print();
-                        } catch (_) {}
+                        try { w.print(); } catch (_) {}
                     });
                 }
             });
@@ -1704,8 +1838,6 @@ if (window.SuratApp) {
             setupDeleteSurat();
             setupPreviewHandlers();
             setupAlphanumericGuards();
-
-            addTodayButton("#edit_tanggal");
 
             // Expose API publik di bawah namespace SuratApp supaya tidak
             // bentrok dengan fungsi bernama sama di file JS lain.

@@ -5,8 +5,11 @@
         class="filter-bar"
         novalidate>
 
+    {{-- Tipe dihitung otomatis dari bulan (hidden) --}}
+    <input type="hidden" name="tipe" id="tipe_rekap" value="Tahun">
+
     <div class="mb-3">
-      <label class="form-label">Tahun</label>
+      <label class="form-label fw-semibold">Tahun</label>
       <input type="number"
              name="tahun"
              id="tahun"
@@ -18,21 +21,13 @@
              required>
     </div>
 
-    
     <div class="mb-3">
-      <label class="form-label">Tipe Rekap</label>
-      <select name="tipe" id="tipe_rekap" class="form-control" required>
-        <option value="">-- Pilih Tipe --</option>
-        <option value="Tahun" {{ old('tipe') == 'Tahun' ? 'selected' : '' }}>Tahunan</option>
-        <option value="Bulan" {{ old('tipe') == 'Bulan' ? 'selected' : '' }}>Bulanan</option>
-      </select>
-    </div>
-
-
-    <div class="mb-3" id="bulan_group" style="display:none;">
-      <label class="form-label">Bulan (Opsional)<a href="#" data-bs-toggle="tooltip" class="ms-2" data-bs-title="Kosongkan untuk rekap setahun penuh."><i class="bi bi-info-circle"></i></a></label>
+      <label class="form-label fw-semibold">
+        Bulan
+        <span class="badge bg-secondary fw-normal ms-1">Opsional</span>
+      </label>
       <select name="bulan" id="bulan" class="form-control">
-        <option value="">-- Semua Bulan --</option>
+        <option value="">-- Semua Bulan (Rekap Tahunan) --</option>
         @php
           $months = [
             1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',
@@ -46,14 +41,11 @@
           </option>
         @endforeach
       </select>
-      {{-- <small class="text-muted">Kosongkan untuk rekap setahun penuh.</small> --}}
+      <small class="text-muted">Kosongkan untuk melihat rekap seluruh tahun.</small>
     </div>
-      <button type="button" id="btn_reset_filter" class="btn btn-secondary" style="height: 41px;margin-top: 7px;">
-        <i class="bi bi-x-lg"></i></i> Reset Filter
-      </button>
+
+    <button type="button" id="btn_reset_filter" class="btn btn-secondary w-100 mt-1">
+      <i class="bi bi-x-lg me-1"></i> Reset Filter
+    </button>
+
   </form>
-
-
-
-
-

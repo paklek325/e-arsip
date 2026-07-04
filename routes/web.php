@@ -114,6 +114,7 @@ Route::middleware('auth')->group(function () {
     */
     Route::prefix('surat')->name('surat.')->controller(SuratController::class)->group(function () {
         Route::get('/kode-surat-keluar', 'kodeSuratKeluar')->name('kodeSuratKeluar');
+        Route::get('/generate-nomor', 'generateNomor')->name('generateNomor');
         Route::get('/cek-duplikat', 'cekDuplikat')->name('cekDuplikat');
         Route::post('/ai-search', 'aiSearch')->name('aiSearch');
 

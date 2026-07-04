@@ -7,7 +7,7 @@ use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Log; // Ditambahkan untuk debugging (opsional)
+
 
 class UserController extends Controller
 {
@@ -25,7 +25,7 @@ class UserController extends Controller
      *
      * @param  int|null  $ignoreUserId  id_user yang diabaikan (untuk update)
      */
-    private function guardSingleKepalaStaf($requestRoleId, ?int $ignoreUserId = null)
+    private function guardSingleKepalaStaf(mixed $requestRoleId, ?int $ignoreUserId = null)
     {
         $kepalaRoleId = $this->kepalaStafRoleId();
 
@@ -91,10 +91,9 @@ class UserController extends Controller
             'name'     => $user->name,
             'email'    => $user->email,
             'id_role'  => $user->id_role,
-            // kalau foto null → pakai noimage dari assets/img
             'foto'     => $user->foto
                 ? asset('assets/foto_admin/' . $user->foto)
-                : asset('assets/img/noimage.png'),
+                : asset('assets/img/default_staf.png'),
             'role'     => [
                 'name' => $user->role->name ?? '-',
             ],
@@ -115,7 +114,7 @@ class UserController extends Controller
                 'email'    => 'required|email|unique:users,email',
                 'password' => 'required|min:3',
                 'id_role'  => 'required|exists:roles,id_role',
-                'foto'     => 'nullable|image|mimes:jpeg,png,jpg|max:10000',
+                'foto'     => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
             ],
             [
                 'email.unique' => 'Email sudah digunakan.',
@@ -185,15 +184,18 @@ class UserController extends Controller
     {
         // Log::info('Request data (Update):', $request->all()); // Debugging: cek data input
 
+        $kepalaRoleId = $this->kepalaStafRoleId();
+        $isKepalaStaf = $kepalaRoleId && (int) $user->id_role === (int) $kepalaRoleId;
+
         $validator = Validator::make(
             $request->all(),
             [
                 'name'     => 'required|max:150',
-                // Abaikan email user saat ini dari pengecekan unique
-                'email'    => 'required|email|unique:users,email,' . $user->id_user . ',id_user',
-                'password' => 'nullable|min:3', // Opsional
-                'id_role'  => 'required|exists:roles,id_role',
-                'foto'     => 'nullable|image|mimes:jpeg,png,jpg|max:10000',
+                // Kepala Staf: email & role tidak dikirim dari form (field disabled/readonly)
+                'email'    => $isKepalaStaf ? 'nullable' : 'required|email|unique:users,email,' . $user->id_user . ',id_user',
+                'password' => 'nullable|min:3',
+                'id_role'  => $isKepalaStaf ? 'nullable' : 'required|exists:roles,id_role',
+                'foto'     => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
             ],
             [
                 'email.unique' => 'Email sudah digunakan.',
@@ -223,17 +225,21 @@ class UserController extends Controller
             ], 422);
         }
 
-        // Batasi hanya boleh ada satu Kepala Staf (abaikan user yang sedang diedit)
-        if ($guard = $this->guardSingleKepalaStaf($request->id_role, $user->id_user)) {
+        // Batasi hanya boleh ada satu Kepala Staf — skip jika user ini memang sudah Kepala Staf
+        if (!$isKepalaStaf && ($guard = $this->guardSingleKepalaStaf($request->id_role, $user->id_user))) {
             return $guard;
         }
 
         $validated = $validator->validated();
 
+        $kepalaRoleId  = $this->kepalaStafRoleId();
+        $isKepalaStaf  = $kepalaRoleId && (int) $user->id_role === (int) $kepalaRoleId;
+
         $data = [
             'name'    => $validated['name'],
-            'email'   => $validated['email'],
-            'id_role' => $validated['id_role'],
+            // Kepala Staf: email & role tidak boleh diubah
+            'email'   => $isKepalaStaf ? $user->email   : $validated['email'],
+            'id_role' => $isKepalaStaf ? $user->id_role : $validated['id_role'],
         ];
 
         // update password bila diisi

@@ -12,14 +12,16 @@
 
                     {{-- FOTO --}}
                     <div class="mb-3 text-center">
-                        <img id="previewFotoAdd"
-                            src="{{ asset('assets/img/noimage.png') }}" 
-                            data-default="{{ asset('assets/img/noimage.png') }}"
-                            class="rounded-circle shadow-sm"
-                            width="100" height="100">
-                        <input type="file" name="foto" id="add_foto" 
-                            class="form-control mt-2" accept="image/*">
-                         <div class="invalid-feedback d-block" id="error_add_foto"></div>
+                        <div style="width:100px;height:100px;border-radius:50%;overflow:hidden;margin:0 auto;box-shadow:0 0 0 3px rgba(255,255,255,0.35),0 2px 8px rgba(0,0,0,0.4);">
+                            <img id="previewFotoAdd"
+                                src="{{ asset('assets/img/default_staf.png') }}"
+                                data-default="{{ asset('assets/img/default_staf.png') }}"
+                                style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
+                        </div>
+                        <input type="file" name="foto" id="add_foto"
+                            class="form-control mt-2" accept="image/jpeg,image/png,image/jpg">
+                        <small class="text-muted">Format JPG/PNG, maks. 4MB</small>
+                        <div class="invalid-feedback d-block" id="error_add_foto"></div>
                     </div>
 
                     <div class="mb-3">
@@ -87,12 +89,14 @@
                     
                     {{-- FOTO --}}
                     <div class="mb-3 text-center">
-                        <img id="previewFotoEdit"
-                            src="{{ asset('assets/img/noimage.png') }}"
-                            data-default="{{ asset('assets/img/noimage.png') }}"
-                            class="rounded-circle shadow-sm"
-                            width="100" height="100">
-                        <input type="file" name="foto" id="edit_foto" class="form-control mt-2" accept="image/*">
+                        <div style="width:100px;height:100px;border-radius:50%;overflow:hidden;margin:0 auto;box-shadow:0 0 0 3px rgba(255,255,255,0.35),0 2px 8px rgba(0,0,0,0.4);">
+                            <img id="previewFotoEdit"
+                                src="{{ asset('assets/img/default_staf.png') }}"
+                                data-default="{{ asset('assets/img/default_staf.png') }}"
+                                style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
+                        </div>
+                        <input type="file" name="foto" id="edit_foto" class="form-control mt-2" accept="image/jpeg,image/png,image/jpg">
+                        <small class="text-muted">Format JPG/PNG, maks. 4MB</small>
                         <div class="invalid-feedback d-block" id="error_edit_foto"></div>
                     </div>
 
@@ -153,7 +157,10 @@
             </div>
 
             <div class="modal-body text-center">
-                <img id="detail_foto" class="rounded-circle shadow-sm mb-3" width="100" height="100">
+                <div style="width:100px;height:100px;border-radius:50%;overflow:hidden;margin:0 auto 1rem;box-shadow:0 0 0 3px rgba(255,255,255,0.35),0 2px 8px rgba(0,0,0,0.4);">
+                    <img id="detail_foto"
+                        style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
+                </div>
                 <p><strong>Nama:</strong> <span id="detail_name"></span></p>
                 <p><strong>Email:</strong> <span id="detail_email"></span></p>
                 <p><strong>Role:</strong> <span id="detail_role"></span></p>
@@ -166,6 +173,29 @@
     </div>
 </div>
 
+
+{{-- =========  Modal Crop Foto ================ --}}
+<div class="modal fade" id="cropFotoModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:360px;">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h6 class="modal-title mb-0"><i class="bi bi-crop me-1"></i>Atur Posisi Foto</h6>
+            </div>
+            <div class="modal-body p-0" style="background:#111;min-height:280px;display:flex;align-items:center;justify-content:center;">
+                <img id="cropImage" style="display:block;max-width:100%;max-height:320px;">
+            </div>
+            <div class="modal-footer py-2 gap-2 justify-content-between">
+                <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Drag untuk atur posisi, scroll untuk zoom</small>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnCancelCrop">Batal</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="btnApplyCrop">
+                        <i class="bi bi-check-lg"></i> Terapkan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 {{-- =========  Modal Hapus User===============  --}}
 

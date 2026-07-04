@@ -17,8 +17,8 @@ class DatabaseSeeder extends Seeder
             UsersTableSeeder::class,   // isi user admin & staf
             KodeTableSeeder::class,    // isi master kode (wajib ada dulu sebelum surat Keluar diisi)
             // SiswaTableSeeder::class,  // isi contoh data siswas
-            SuratTableSeeder::class,   // isi contoh data surat
-            UpdateSuratEditorSeeder::class, // lengkapi updated_by; harus SETELAH ada data surat
+            //SuratTableSeeder::class,   // isi contoh data surat
+            //UpdateSuratEditorSeeder::class, // lengkapi updated_by; harus SETELAH ada data surat
         ]);
     }
 }

@@ -20,8 +20,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Force HTTPS for all URLs (behind Cloudflare proxy)
-        \URL::forceScheme('https');
+        // Force HTTPS for all URLs when running in production (behind Cloudflare proxy).
+        // Skipped in local dev, since the local server doesn't speak SSL/TLS.
+        if (! $this->app->environment('local')) {
+            \URL::forceScheme('https');
+        }
 
         Paginator::useBootstrapFive();
     }

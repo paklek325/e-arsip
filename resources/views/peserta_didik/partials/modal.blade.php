@@ -13,7 +13,7 @@
       {{-- ALERT (AJAX) --}}
       <div class="alert alert-danger d-none mx-3 mt-3" id="alertTambahPesertaDidik"></div>
 
-      <form id="formTambahPesertaDidik" enctype="multipart/form-data">
+      <form id="formTambahPesertaDidik" enctype="multipart/form-data" autocomplete="off">
         @csrf
 
         <div class="modal-body">
@@ -75,7 +75,7 @@
               'file_kts' => 'Kartu Peserta Didik',
               'file_foto' => 'Foto 3x4',
               'file_ijazah_smp' => 'Ijazah SMP',
-              'file_ijazah_sma' => 'Ijazah SMA',
+              'file_ijazah_sma' => 'Ijazah SMA <span class="badge bg-secondary fw-normal ms-1">Opsional</span>',
             ];
           @endphp
 
@@ -88,10 +88,11 @@
                           type="checkbox"
                           id="add_check_{{ $key }}"
                           data-target="#add_{{ $key }}">
-                    <label class="form-check-label fw-semibold" for="add_check_{{ $key }}">{{ $label }}</label>
+                    <label class="form-check-label fw-semibold" for="add_check_{{ $key }}">{!! $label !!}</label>
                   </div>
                   <input type="file" name="{{ $key }}" id="add_{{ $key }}"
-                         class="form-control mt-2 d-none file-input" disabled>
+                         class="form-control mt-2 d-none file-input" disabled
+                         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
                 </div>
               </div>
             @endforeach
@@ -127,7 +128,7 @@
       {{-- ALERT --}}
       <div class="alert alert-danger d-none mx-3 mt-3" id="alertEditPesertaDidik"></div>
 
-      <form id="formEditPesertaDidik" enctype="multipart/form-data">
+      <form id="formEditPesertaDidik" enctype="multipart/form-data" autocomplete="off">
         @csrf
         <input type="hidden" id="edit_id" name="id">
 
@@ -191,12 +192,13 @@
                   <div class="form-check">
                     <input type="checkbox" class="form-check-input file-check"
                            id="edit_check_{{ $key }}" data-target="#edit_{{ $key }}">
-                    <label class="form-check-label fw-semibold" for="edit_check_{{ $key }}">{{ $label }}</label>
+                    <label class="form-check-label fw-semibold" for="edit_check_{{ $key }}">{!! $label !!}</label>
                   </div>
                   <input type="file" name="{{ $key }}"
                          id="edit_{{ $key }}"
                          class="form-control mt-2 d-none file-input"
-                         data-server-file="0">
+                         data-server-file="0"
+                         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
                 </div>
               </div>
             @endforeach
@@ -291,7 +293,7 @@
             <div class="col-md-6">
               <div class="file-item">
                 <div class="d-flex justify-content-between align-items-start">
-                  <span class="fw-semibold">{{ $label }}</span>
+                  <span class="fw-semibold">{!! $label !!}</span>
 
                   <div class="form-check mt-1">
                     <input class="form-check-input file-select-checkbox"
@@ -328,26 +330,34 @@
 {{-- ==========================
       MODAL PREVIEW FILE
 =========================== --}}
-<div class="modal fade" id="modalPreviewFile" tabindex="-1">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content shadow-lg border-0 rounded-4">
+<div class="modal fade" id="modalPreviewFile" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
 
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title"><i class="bi bi-eye me-2"></i> Pratinjau File</h5>
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title text-truncate">
+          <i class="bi bi-eye me-2"></i>
+          <span id="pd_preview_filename_label">Pratinjau File</span>
+        </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
 
-      <div class="modal-body bg-light">
-        <div id="preview-container" class="text-center">
-          <div class="text-muted py-5">Memuat file...</div>
+      <div class="modal-body position-relative p-0" style="min-height:200px;">
+        <div id="pd-file-loading-spinner"
+             class="justify-content-center align-items-center"
+             style="display:flex; min-height:200px;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Memuat...</span>
+          </div>
         </div>
+        <div id="pd-preview-container" class="text-center p-2"></div>
       </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
-        <button type="button" class="btn btn-primary" id="btnUnduhPreview">
-          <i class="bi bi-download"></i> Unduh File
-        </button>
+      <div class="modal-footer bg-light">
+        <a id="pd_previewDownloadLink" href="#" class="btn btn-success" target="_blank">
+          <i class="bi bi-download me-1"></i> Download
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
       </div>
 
     </div>

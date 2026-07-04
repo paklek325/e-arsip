@@ -59,10 +59,8 @@
             <div class="position-relative">
 
                 <select id="sort" class="form-select pe-5">
-                    <option value="tanggal_terbaru">Tanggal Terbaru</option>
-                    <option value="tanggal_terlama">Tanggal Terlama</option>
-                    <option value="a-z">No Surat A-Z</option>
-                    <option value="z-a">No Surat Z-A</option>
+                    <option value="tanggal_terbaru" @selected(($currentSort ?? 'tanggal_terbaru') === 'tanggal_terbaru')>Data Terbaru</option>
+                    <option value="tanggal_terlama" @selected(($currentSort ?? '') === 'tanggal_terlama')>Data Terlama</option>
                 </select>
 
                 <button

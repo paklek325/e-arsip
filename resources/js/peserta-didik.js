@@ -39,47 +39,7 @@ if (window.PesertaDidikApp) {
         // ============================================================
         // TOAST
         // ============================================================
-        function toast(message, type = "info") {
-            const existing = document.getElementById(
-                "PesertaDidikToastContainer"
-            );
-            if (existing) existing.remove();
-
-            const container = document.createElement("div");
-            container.id = "PesertaDidikToastContainer";
-            container.className = "position-fixed top-0 end-0 p-3";
-            container.style.zIndex = "2100";
-
-            const map = {
-                success: ["bg-success", "✅"],
-                error: ["bg-danger", "❌"],
-                warning: ["bg-warning text-dark", "⚠️"],
-                info: ["bg-primary", "ℹ️"],
-            };
-            const [bg, icon] = map[type] || map.info;
-
-            container.innerHTML = `
-            <div class="toast align-items-center text-white ${bg} border-0 shadow-sm"
-                role="alert" aria-live="assertive" aria-atomic="true"
-                style="min-width:280px;opacity:0;transform:translateY(-10px);transition:all .4s ease;">
-                <div class="d-flex">
-                    <div class="toast-body fw-semibold">${icon} ${message}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                </div>
-            </div>`;
-
-            document.body.appendChild(container);
-            const toastEl = container.querySelector(".toast");
-            setTimeout(() => {
-                toastEl.style.opacity = "1";
-                toastEl.style.transform = "translateY(0)";
-            }, 50);
-            setTimeout(() => {
-                toastEl.style.opacity = "0";
-                toastEl.style.transform = "translateY(-10px)";
-                setTimeout(() => container.remove(), 500);
-            }, 3500);
-        }
+        function toast(message, type = "info") { window.AppToast(message, type); }
 
         // ============================================================
         // ALERT FORM
@@ -101,6 +61,27 @@ if (window.PesertaDidikApp) {
             el.textContent = "";
             el.classList.add("d-none");
             el.style.display = "none";
+        }
+
+        // ============================================================
+        // FILE WARNING
+        // ============================================================
+        function showFileWarning(input) {
+            if (!input) return;
+            let warn = input.parentElement?.querySelector(".__file-warn");
+            if (!warn) {
+                warn = document.createElement("div");
+                warn.className = "__file-warn text-danger small mt-1";
+                warn.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i>Isi file terlebih dahulu';
+                input.insertAdjacentElement("afterend", warn);
+            }
+            input.classList.add("is-invalid");
+        }
+
+        function hideFileWarning(input) {
+            if (!input) return;
+            input.parentElement?.querySelector(".__file-warn")?.remove();
+            input.classList.remove("is-invalid");
         }
 
         // ============================================================
@@ -147,7 +128,7 @@ if (window.PesertaDidikApp) {
         const rombelSelect = $("#rombel");
         const statusSelect = $("#statusFilter");
         const sortAngkatanSelect = $("#sortAngkatan");
-        const sortDataSelect = $("#sortData");
+        const sortNamaSelect = $("#sortNama");
         const resetAllBtn = $("#resetAllBtn"); // tombol di dalam filter
         const resetBtnHeader = document.getElementById("resetBtn"); // tombol di header (opsional)
 
@@ -162,7 +143,7 @@ if (window.PesertaDidikApp) {
             if (statusSelect?.value) params.status = statusSelect.value;
             if (sortAngkatanSelect?.value)
                 params.sort_angkatan = sortAngkatanSelect.value;
-            if (sortDataSelect?.value) params.sort_data = sortDataSelect.value;
+            if (sortNamaSelect?.value) params.sort_nama = sortNamaSelect.value;
             return params;
         }
 
@@ -266,15 +247,15 @@ if (window.PesertaDidikApp) {
 
             if (sortAngkatanSelect) {
                 sortAngkatanSelect.addEventListener("change", () => {
-                    if (sortAngkatanSelect.value && sortDataSelect)
-                        sortDataSelect.selectedIndex = 0;
+                    if (sortAngkatanSelect.value && sortNamaSelect)
+                        sortNamaSelect.selectedIndex = 0;
                     applyFilters(true, true);
                 });
             }
 
-            if (sortDataSelect) {
-                sortDataSelect.addEventListener("change", () => {
-                    if (sortDataSelect.value && sortAngkatanSelect)
+            if (sortNamaSelect) {
+                sortNamaSelect.addEventListener("change", () => {
+                    if (sortNamaSelect.value && sortAngkatanSelect)
                         sortAngkatanSelect.selectedIndex = 0;
                     applyFilters(true, true);
                 });
@@ -317,7 +298,7 @@ if (window.PesertaDidikApp) {
                     if (statusSelect) statusSelect.selectedIndex = 0;
                     if (sortAngkatanSelect)
                         sortAngkatanSelect.selectedIndex = 0;
-                    if (sortDataSelect) sortDataSelect.selectedIndex = 0;
+                    if (sortNamaSelect) sortNamaSelect.selectedIndex = 0;
                     document
                         .getElementById("resetSearch")
                         ?.classList.add("d-none");
@@ -335,7 +316,7 @@ if (window.PesertaDidikApp) {
                     if (statusSelect) statusSelect.selectedIndex = 0;
                     if (sortAngkatanSelect)
                         sortAngkatanSelect.selectedIndex = 0;
-                    if (sortDataSelect) sortDataSelect.selectedIndex = 0;
+                    if (sortNamaSelect) sortNamaSelect.selectedIndex = 0;
                     document
                         .getElementById("resetSearch")
                         ?.classList.add("d-none");
@@ -362,8 +343,8 @@ if (window.PesertaDidikApp) {
             if (statusSelect) statusSelect.value = params.get("status") || "";
             if (sortAngkatanSelect)
                 sortAngkatanSelect.value = params.get("sort_angkatan") || "";
-            if (sortDataSelect)
-                sortDataSelect.value = params.get("sort_data") || "";
+            if (sortNamaSelect)
+                sortNamaSelect.value = params.get("sort_nama") || "";
 
             // Tampilkan/sembunyikan tombol reset search
             const resetSearch = document.getElementById("resetSearch");
@@ -454,34 +435,95 @@ if (window.PesertaDidikApp) {
                 if (!j?.success || !fileUrl)
                     return toast("File tidak ditemukan.", "error");
 
-                const modalEl = $("#modalPreviewFile");
-                const viewer = $("#preview-container");
-                viewer.innerHTML = "";
+                const modalEl  = $("#modalPreviewFile");
+                const body     = $("#pd-preview-container");
+                const spinner  = $("#pd-file-loading-spinner");
+                const dlLink   = $("#pd_previewDownloadLink");
+                const label    = $("#pd_preview_filename_label");
+
+                // Reset
+                if (body)    body.innerHTML = "";
+                if (spinner) spinner.style.display = "flex";
+
+                // Download link
+                if (dlLink) {
+                    dlLink.href = `${baseUrl}/${id}/download/${field}?download=true`;
+                    dlLink.removeAttribute("download");
+                }
+                if (label) {
+                    label.textContent = field.replace("file_", "").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+                }
+
                 modalEl.dataset.pesertaDidikId = id;
                 modalEl.dataset.field = field;
 
-                if (/\.pdf$/i.test(fileUrl)) {
-                    viewer.innerHTML = `<embed src="${fileUrl}" type="application/pdf" width="100%" height="600px" style="border:none;border-radius:8px;" />`;
-                } else if (/\.(jpe?g|png|gif|webp)$/i.test(fileUrl)) {
-                    viewer.innerHTML = `<img src="${fileUrl}" alt="Preview" class="img-fluid rounded shadow-sm w-100">`;
+                const ext = fileUrl.split("?")[0].split(".").pop().toLowerCase();
+
+                let timerId;
+                const hideSpinner = () => {
+                    clearTimeout(timerId);
+                    if (spinner) spinner.style.display = "none";
+                };
+                timerId = setTimeout(hideSpinner, 12000);
+
+                let content;
+
+                if (ext === "pdf") {
+                    content = document.createElement("div");
+                    content.style.cssText = "width:100%;height:80vh;";
+                    content.innerHTML = `
+                        <object data="${fileUrl}" type="application/pdf"
+                                style="width:100%;height:100%;border:none;">
+                            <div class="p-4 text-center text-muted">
+                                <i class="bi bi-file-earmark-pdf fs-1 text-danger"></i>
+                                <p class="mt-2">Browser tidak mendukung pratinjau PDF.</p>
+                            </div>
+                        </object>
+                        <div class="text-center py-2 border-top bg-light">
+                            <a href="${fileUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-box-arrow-up-right me-1"></i>Buka di Tab Baru
+                            </a>
+                        </div>`;
+                    setTimeout(hideSpinner, 2000);
+
+                } else if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
+                    content = document.createElement("img");
+                    content.className = "img-fluid mx-auto d-block";
+                    content.style.maxHeight = "75vh";
+                    content.onload  = hideSpinner;
+                    content.onerror = () => {
+                        hideSpinner();
+                        if (body) body.innerHTML = `
+                            <div class="p-4 text-center text-muted">
+                                <i class="bi bi-image fs-1"></i>
+                                <p class="mt-2">Gambar tidak dapat ditampilkan.</p>
+                                <a href="${fileUrl}" target="_blank" class="btn btn-sm btn-primary mt-1">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>Buka di Tab Baru
+                                </a>
+                            </div>`;
+                    };
+                    content.src = fileUrl;
+
                 } else {
-                    viewer.innerHTML = `<div class="alert alert-info mt-3">File tidak dapat dipratinjau. Gunakan tombol <strong>Unduh File</strong>.</div>`;
+                    hideSpinner();
+                    content = document.createElement("div");
+                    content.className = "p-4 text-center";
+                    content.innerHTML = `
+                        <i class="bi bi-file-earmark-word fs-1 text-primary"></i>
+                        <p class="mt-2 text-muted">Pratinjau tidak tersedia untuk format <strong>.${ext}</strong>.</p>
+                        <a href="${fileUrl}" target="_blank" class="btn btn-primary">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>Buka / Download File
+                        </a>`;
                 }
 
+                if (body) body.appendChild(content);
                 new bootstrap.Modal(modalEl).show();
+
             } catch (err) {
                 console.error(err);
                 toast("Gagal memuat file.", "error");
             }
         }
-
-        $("#btnUnduhPreview")?.addEventListener("click", () => {
-            const modalEl = $("#modalPreviewFile");
-            const id = modalEl?.dataset.pesertaDidikId;
-            const field = modalEl?.dataset.field;
-            if (!id || !field) return toast("File tidak valid.", "error");
-            openDownload(id, field);
-        });
 
         // ============================================================
         // REFRESH EDIT DOWNLOAD ALL
@@ -674,11 +716,14 @@ if (window.PesertaDidikApp) {
                             if (input.dataset.serverFile !== "1") {
                                 input.classList.remove("d-none");
                                 input.disabled = false;
+                                showFileWarning(input);
                             } else {
                                 input.classList.add("d-none");
                                 input.disabled = true;
+                                hideFileWarning(input);
                             }
                         } else {
+                            hideFileWarning(input);
                             if (input.dataset.serverFile === "1")
                                 input.dataset.markDelete = "1";
                             else input.dataset.markDelete = "0";
@@ -697,8 +742,11 @@ if (window.PesertaDidikApp) {
                             input.dataset.replace = "1";
                             input.dataset.markDelete = "0";
                             check.checked = true;
+                            hideFileWarning(input);
                         } else {
                             input.dataset.replace = "0";
+                            if (check.checked && input.dataset.serverFile !== "1")
+                                showFileWarning(input);
                         }
                         refreshEditDownloadAll();
                     };
@@ -778,6 +826,7 @@ if (window.PesertaDidikApp) {
                             fileCount++;
                             btn.classList.remove("d-none");
                             none.classList.add("d-none");
+                            none.classList.remove("d-block");
                             btn.innerHTML = `
                           <div class="btn-group w-100" role="group">
                             <button type="button" class="btn btn-sm btn-info text-white" data-peserta-didik-preview="${id}" data-field="${field}">
@@ -787,6 +836,10 @@ if (window.PesertaDidikApp) {
                               <i class="bi bi-download"></i> Unduh
                             </button>
                           </div>`;
+                            const previewBtn = btn.querySelector(`[data-peserta-didik-preview]`);
+                            const downloadBtn = btn.querySelector(`[data-peserta-didik-download]`);
+                            if (previewBtn) previewBtn.onclick = () => previewFile(id, field);
+                            if (downloadBtn) downloadBtn.onclick = () => openDownload(id, field);
                             if (checkbox) {
                                 checkbox.disabled = false;
                                 checkbox.checked = false;
@@ -797,6 +850,7 @@ if (window.PesertaDidikApp) {
                         } else {
                             btn.classList.add("d-none");
                             none.classList.remove("d-none");
+                            none.classList.add("d-block");
                             none.innerHTML = `<span class="text-danger fw-semibold">Belum Ada File</span>`;
                             if (checkbox) {
                                 checkbox.checked = false;
@@ -881,6 +935,27 @@ if (window.PesertaDidikApp) {
                 e.preventDefault();
                 hideFormAlert("#alertTambahPesertaDidik");
 
+                const fieldLabels = {
+                    file_ppdb: 'Formulir PPDB', file_kk: 'Kartu Keluarga',
+                    file_akte: 'Akte Kelahiran', file_ktp: 'KTP Orang Tua',
+                    file_kts: 'Kartu Peserta Didik', file_foto: 'Foto 3x4',
+                    file_ijazah_smp: 'Ijazah SMP', file_ijazah_sma: 'Ijazah SMA',
+                };
+                let firstInvalid = null;
+                for (const [field] of Object.entries(fieldLabels)) {
+                    const check = $(`#add_check_${field}`);
+                    const input = $(`#add_${field}`);
+                    if (check?.checked && (!input?.files || input.files.length === 0)) {
+                        showFileWarning(input);
+                        if (!firstInvalid) firstInvalid = input;
+                    }
+                }
+                if (firstInvalid) {
+                    showFormAlert("#alertTambahPesertaDidik", "❌ Beberapa file yang dicentang belum diisi.");
+                    firstInvalid.closest(".file-item")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    return;
+                }
+
                 const nama = $("#add_nama_peserta_didik")?.value?.trim();
                 const tanggal = $("#add_tanggal_lahir")?.value;
                 const isDup = await cekDuplikatPesertaDidik(nama, tanggal);
@@ -929,6 +1004,27 @@ if (window.PesertaDidikApp) {
                 const id = idInput?.value;
                 if (!id)
                     return toast("ID peserta_didik tidak ditemukan.", "error");
+
+                const fieldLabels = {
+                    file_ppdb: 'Formulir PPDB', file_kk: 'Kartu Keluarga',
+                    file_akte: 'Akte Kelahiran', file_ktp: 'KTP Orang Tua',
+                    file_kts: 'Kartu Peserta Didik', file_foto: 'Foto 3x4',
+                    file_ijazah_smp: 'Ijazah SMP', file_ijazah_sma: 'Ijazah SMA',
+                };
+                let firstInvalidEdit = null;
+                for (const [field] of Object.entries(fieldLabels)) {
+                    const check = $(`#edit_check_${field}`);
+                    const input = $(`#edit_${field}`);
+                    if (check?.checked && input?.dataset.serverFile !== "1" && (!input?.files || input.files.length === 0)) {
+                        showFileWarning(input);
+                        if (!firstInvalidEdit) firstInvalidEdit = input;
+                    }
+                }
+                if (firstInvalidEdit) {
+                    showFormAlert("#alertEditPesertaDidik", "❌ Beberapa file yang dicentang belum diisi.");
+                    firstInvalidEdit.closest(".file-item")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    return;
+                }
 
                 const nama = $("#edit_nama_peserta_didik")?.value?.trim();
                 const tanggal = $("#edit_tanggal_lahir")?.value;
@@ -1033,7 +1129,13 @@ if (window.PesertaDidikApp) {
                 if (this.checked) {
                     target.classList.remove("d-none");
                     target.disabled = false;
+                    showFileWarning(target);
+                    target.onchange = () => {
+                        if (target.files && target.files.length > 0) hideFileWarning(target);
+                        else showFileWarning(target);
+                    };
                 } else {
+                    hideFileWarning(target);
                     if (target.closest("#modalTambahPesertaDidik")) {
                         target.classList.add("d-none");
                         target.disabled = true;
@@ -1209,7 +1311,7 @@ if (window.PesertaDidikApp) {
             if (rombelSelect) rombelSelect.selectedIndex = 0;
             if (statusSelect) statusSelect.selectedIndex = 0;
             if (sortAngkatanSelect) sortAngkatanSelect.selectedIndex = 0;
-            if (sortDataSelect) sortDataSelect.selectedIndex = 0;
+            if (sortNamaSelect) sortNamaSelect.selectedIndex = 0;
 
             const resetSearch = document.getElementById("resetSearch");
             resetSearch?.classList.add("d-none");

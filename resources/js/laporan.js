@@ -114,8 +114,12 @@
 
         if (!form || !container) return;
 
-        // Cek kondisi: Jika tipe rekap kosong, tampilkan pesan awal dan hentikan.
-        if (!tipe || !tipe.value || tipe.value.trim() === "") {
+        // Sinkronkan tipe berdasarkan bulan sebelum fetch
+        syncTipeFromBulan();
+
+        // Cek kondisi: Jika tahun kosong, tampilkan pesan awal dan hentikan.
+        const tahunEl = $id(SELECTORS.tahunInputId);
+        if (!tahunEl || !tahunEl.value || tahunEl.value.trim() === "") {
             renderInitialMessage(container);
 
             // Hapus semua parameter filter terkait laporan dari URL
@@ -210,20 +214,16 @@
         }
     }
 
-    // Toggle bulan group visibility based on tipe rekap value
-    function toggleBulanGroup() {
-        const tipe = $id(SELECTORS.tipeRekapId);
-        const bulanGroup = $id(SELECTORS.bulanGroupId);
+    // Hitung tipe otomatis dari nilai bulan
+    function syncTipeFromBulan() {
         const bulanSelect = $id(SELECTORS.bulanSelectId);
-        if (!tipe || !bulanGroup) return;
-
-        if (tipe.value === "Bulan") {
-            bulanGroup.style.display = "block";
-        } else {
-            bulanGroup.style.display = "none";
-            if (bulanSelect) bulanSelect.value = "";
-        }
+        const tipeInput   = $id(SELECTORS.tipeRekapId);
+        if (!tipeInput) return;
+        tipeInput.value = (bulanSelect && bulanSelect.value) ? "Bulan" : "Tahun";
     }
+
+    // Alias lama agar tidak error di tempat lain yang masih memanggil toggleBulanGroup()
+    function toggleBulanGroup() { syncTipeFromBulan(); }
 
     /**
      * Handle Reset Filter.
@@ -238,11 +238,6 @@
         const container = $id(SELECTORS.hasilContainerId);
 
         // 1. Reset nilai semua input filter ke kondisi awal/default
-        if (tipe) {
-            tipe.value = ""; // kembali ke option kosong
-        }
-
-        // Asumsi nilai default Tahun di-set di blade (data-default-year)
         if (tahun) {
             const defaultYear =
                 tahun.getAttribute("data-default-year") ||
@@ -252,8 +247,8 @@
 
         if (bulan) bulan.value = "";
 
-        // 2. Sembunyikan grup bulan
-        toggleBulanGroup();
+        // 2. Sinkron tipe (akan jadi Tahun karena bulan dikosongkan)
+        syncTipeFromBulan();
 
         // 3. Bersihkan kontainer dan tampilkan pesan awal
         if (container) {
@@ -363,9 +358,7 @@
         const printHtml = `<!doctype html><html><head>${headHtml}${printStyles}<title>Cetak Laporan</title></head><body>${container.innerHTML}</body></html>`;
         const w = window.open("", "_blank");
         if (!w) {
-            alert(
-                "Pop-up diblokir. Izinkan pop-up untuk menggunakan fitur cetak."
-            );
+            window.AppToast("Pop-up diblokir. Izinkan pop-up untuk menggunakan fitur cetak.", "warning");
             return;
         }
         w.document.open();
@@ -391,7 +384,7 @@
 
         const url = buildExportUrl(format);
         if (!url) {
-            alert("Tidak dapat membuat URL download.");
+            window.AppToast("Tidak dapat membuat URL download.", "error");
             return;
         }
 
@@ -448,11 +441,10 @@
               new Date().getFullYear()
             : new Date().getFullYear();
 
-        if (formTipe) formTipe.value = tipe;
         if (formTahun) formTahun.value = tahun || defaultYear;
         if (formBulan) formBulan.value = bulan;
 
-        toggleBulanGroup();
+        syncTipeFromBulan();
     }
 
     /**
@@ -467,14 +459,9 @@
         const downloadGroup = $id(SELECTORS.downloadGroupId);
 
         const filterChangeHandler = () => {
-            if (tipe) toggleBulanGroup();
+            syncTipeFromBulan();
             loadLaporan();
         };
-
-        if (tipe && !tipe.__hasChange) {
-            tipe.addEventListener("change", filterChangeHandler);
-            tipe.__hasChange = true;
-        }
 
         if (tahun && !tahun.__hasChange) {
             tahun.addEventListener("change", filterChangeHandler);

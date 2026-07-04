@@ -72,16 +72,16 @@
             </button>
         </div>
 
-        {{-- 🆕 Urutan Data Masuk --}}
+        {{-- 🔤 Urutan Nama --}}
         <div class="col-6 col-md-2 position-relative">
-            <select name="sort_data" id="sortData" class="form-select pe-5">
-                <option value="">Urutan Data Masuk</option>
-                <option value="terbaru_data" {{ request('sort_data') == 'terbaru_data' ? 'selected' : '' }}>🆕 Terbaru</option>
-                <option value="terlama_data" {{ request('sort_data') == 'terlama_data' ? 'selected' : '' }}>🕰️ Terlama</option>
+            <select name="sort_nama" id="sortNama" class="form-select pe-5">
+                <option value="">Urutan Nama</option>
+                <option value="az" {{ request('sort_nama') == 'az' ? 'selected' : '' }}>🔤 A - Z</option>
+                <option value="za" {{ request('sort_nama') == 'za' ? 'selected' : '' }}>🔡 Z - A</option>
             </select>
             <button type="button"
                     class="btn btn-sm btn-light position-absolute top-50 end-0 translate-middle-y me-2 reset-sort-and-submit"
-                    data-target="#sortData" title="Reset urutan data">
+                    data-target="#sortNama" title="Reset urutan nama">
                 <i class="bi bi-x-circle"></i>
             </button>
         </div>

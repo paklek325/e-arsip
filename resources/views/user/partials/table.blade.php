@@ -21,11 +21,10 @@
             {{-- FOTO USER --}}
             <td>
               <img
-                src="{{ $u->foto ? asset('assets/foto_admin/' . $u->foto) : asset('assets/img/noimage.png') }}"
-                onerror="this.src='{{ asset('assets/img/noimage.png') }}'"
-                width="40"
-                height="40"
-                class="rounded-circle shadow-sm border"
+                src="{{ $u->foto ? asset('assets/foto_admin/' . $u->foto) : asset('assets/img/default_staf.png') }}"
+                onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
+                style="width:42px;height:42px;object-fit:cover;object-position:center;box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 1px 4px rgba(0,0,0,0.4);"
+                class="rounded-circle"
               >
             </td>
 

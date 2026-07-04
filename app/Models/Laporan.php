@@ -115,7 +115,10 @@ class Laporan extends Model
     public static function getSuratForMonth(int $year, int $month, ?int $perPage = 10, ?string $jenis = null)
     {
         // 1. Inisialisasi query dasar untuk tahun dan bulan
-        $query = self::forMonth($year, $month)->orderBy('tanggal_surat', 'desc');
+        $query = self::forMonth($year, $month)
+            ->orderBy('tanggal_surat', 'asc')
+            ->orderBy('jenis_surat', 'asc')
+            ->orderByRaw('CAST(no_surat AS UNSIGNED) asc');
 
         // 2. Terapkan filter jenis jika ada ('masuk' atau 'keluar')
         if ($jenis && in_array(strtolower($jenis), ['masuk', 'keluar'])) {

@@ -33,6 +33,7 @@
 @endsection
 @push('styles')
 <link href="{{ asset('css/user.css') }}" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 <style>
 .animate-fade-in {
     animation: fadeIn 0.3s ease-in-out;
@@ -41,9 +42,15 @@
     from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
 }
+/* Crop box berbentuk lingkaran */
+#cropFotoModal .cropper-view-box,
+#cropFotoModal .cropper-face {
+    border-radius: 50%;
+}
 </style>
 @endpush
 @push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 @endpush
 
 

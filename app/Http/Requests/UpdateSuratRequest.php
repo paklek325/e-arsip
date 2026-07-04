@@ -28,6 +28,11 @@ class UpdateSuratRequest extends FormRequest
                     ->where(function ($q) {
                         $instansi = $this->input('instansi');
                         $tanggal  = $this->input('tanggal_surat');
+                        $jenis    = $this->input('jenis_surat');
+
+                        if ($jenis) {
+                            $q->where('jenis_surat', $jenis);
+                        }
 
                         if ($instansi) {
                             $q->where('instansi', $instansi);
@@ -58,7 +63,7 @@ class UpdateSuratRequest extends FormRequest
                 ]),
             ],
 
-            'file_surat.*' => 'nullable|file',
+            'file_surat.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
             'hapus_file'   => 'nullable|array',
             'hapus_file.*' => 'string',
         ];
@@ -72,12 +77,14 @@ class UpdateSuratRequest extends FormRequest
             'kode_surat.required_if' => 'Kode surat wajib diisi untuk Surat Keluar.',
             'kode_surat.exists'      => 'Kode surat yang dipilih tidak valid. Pilih dari daftar kode yang tersedia.',
 
-            'no_surat.regex'   => 'Nomor surat hanya boleh berisi huruf, angka, spasi, dan tanda / - .',
-            'kode_surat.regex' => 'Kode surat hanya boleh berisi huruf, angka, spasi, dan tanda / - .',
-            'perihal.regex'    => 'Perihal hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
-            'instansi.regex'   => 'Instansi hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
-            'pengirim.regex'   => 'Pengirim hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
-            'penerima.regex'   => 'Penerima hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
+            'no_surat.regex'     => 'Nomor surat hanya boleh berisi huruf, angka, spasi, dan tanda / - .',
+            'kode_surat.regex'   => 'Kode surat hanya boleh berisi huruf, angka, spasi, dan tanda / - .',
+            'perihal.regex'      => 'Perihal hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
+            'instansi.regex'     => 'Instansi hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
+            'pengirim.regex'     => 'Pengirim hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
+            'penerima.regex'     => 'Penerima hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
+            'file_surat.*.mimes' => 'File hanya boleh berupa PDF, Word (doc/docx), atau gambar (jpg/jpeg/png).',
+            'file_surat.*.max'   => 'Ukuran file maksimal 10 MB.',
         ];
     }
 }

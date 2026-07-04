@@ -1,59 +1,7 @@
 (() => {
     "use strict";
 
-    // ==============================
-    // 🔔 Helper: toast
-    // ==============================
-    const toast = (message, type = "info") => {
-        const existing = document.getElementById("customToastContainer");
-        if (existing) existing.remove();
-
-        const container = document.createElement("div");
-        container.id = "customToastContainer";
-        container.className = "position-fixed top-0 end-0 p-3";
-        container.style.zIndex = "2000";
-
-        const bg =
-            type === "success"
-                ? "bg-success"
-                : type === "error"
-                ? "bg-danger"
-                : type === "warning"
-                ? "bg-warning text-dark"
-                : "bg-primary";
-
-        const icon =
-            type === "success"
-                ? "✅"
-                : type === "error"
-                ? "❌"
-                : type === "warning"
-                ? "⚠️"
-                : "ℹ️";
-
-        container.innerHTML = `
-            <div class="toast align-items-center text-white ${bg} border-0 show shadow-sm"
-                  role="alert" aria-live="assertive" aria-atomic="true"
-                  style="min-width:280px; opacity:0; transform:translateY(-10px); transition:all .4s ease;">
-                <div class="d-flex">
-                    <div class="toast-body fw-semibold">${icon} ${message}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                </div>
-            </div>`;
-        document.body.appendChild(container);
-
-        const toastEl = container.querySelector(".toast");
-        setTimeout(() => {
-            toastEl.style.opacity = "1";
-            toastEl.style.transform = "translateY(0)";
-        }, 50);
-
-        setTimeout(() => {
-            toastEl.style.opacity = "0";
-            toastEl.style.transform = "translateY(-10px)";
-            setTimeout(() => container.remove(), 400);
-        }, 3500);
-    };
+    const toast = (message, type = "info") => window.AppToast(message, type);
 
     const debounce = (fn, delay = 400) => {
         let timer;

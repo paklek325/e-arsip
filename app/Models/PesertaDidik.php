@@ -52,6 +52,7 @@ class PesertaDidik extends Model
      */
     public function computeStatus(): string
     {
+        // file_ijazah_sma tidak wajib karena peserta belum tentu lulus SMA
         $files = [
             $this->file_ppdb,
             $this->file_kk,
@@ -60,10 +61,8 @@ class PesertaDidik extends Model
             $this->file_kts,
             $this->file_foto,
             $this->file_ijazah_smp,
-            $this->file_ijazah_sma,
         ];
 
-        // semua file harus terisi agar lengkap
         return collect($files)->every(fn($f) => !empty($f))
             ? 'lengkap'
             : 'belum lengkap';

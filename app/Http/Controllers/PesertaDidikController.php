@@ -95,15 +95,18 @@ class PesertaDidikController extends Controller
             ->when($request->jenis_kelamin, fn($q, $jk) => $q->where('jenis_kelamin', strtoupper($jk)))
             ->when($request->tahun_angkatan, fn($q, $thn) => $q->where('tahun_angkatan', (int) $thn))
             ->when(
-                $request->filled('sort_angkatan') || $request->filled('sort_data'),
+                $request->filled('sort_angkatan'),
                 function ($q) use ($request) {
-                    if ($request->filled('sort_angkatan')) {
-                        $q->orderBy('tahun_angkatan', $request->sort_angkatan === 'terbaru' ? 'DESC' : 'ASC');
-                    } else {
-                        $q->orderBy('created_at', $request->sort_data === 'terbaru_data' ? 'DESC' : 'ASC');
-                    }
+                    $q->orderBy('tahun_angkatan', $request->sort_angkatan === 'terbaru' ? 'DESC' : 'ASC')
+                      ->orderBy('rombel', 'ASC')
+                      ->orderBy('nama_peserta_didik', 'ASC');
                 },
-                fn($q) => $q->orderBy('tahun_angkatan', 'DESC')
+                function ($q) use ($request) {
+                    // sort_nama: az (default) atau za
+                    $namaDir = $request->sort_nama === 'za' ? 'DESC' : 'ASC';
+                    $q->orderBy('rombel', 'ASC')
+                      ->orderBy('nama_peserta_didik', $namaDir);
+                }
             )
             ->paginate(10);
 

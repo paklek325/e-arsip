@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -219,54 +218,27 @@ class SuratController extends Controller
     |--------------------------------------------------------------------------
     */
 
-        switch ($request->get('sort', 'tanggal_terbaru')) {
+        $isKeluar    = $lockJenis === 'Keluar';
+        $currentSort = $request->get('sort', 'tanggal_terbaru');
+
+        switch ($currentSort) {
+
+            case 'nomor_terbaru':
+                // Nomor terbesar di atas (004, 003, 002, 001)
+                $query->orderByRaw('CAST(no_surat AS UNSIGNED) desc');
+                break;
+
+            case 'nomor_terlama':
+                // Nomor terkecil di atas (001, 002, 003, 004)
+                $query->orderByRaw('CAST(no_surat AS UNSIGNED) asc');
+                break;
 
             case 'tanggal_terlama':
-
-                $query->orderBy(
-                    'tanggal_surat',
-                    'asc'
-                );
-
+                $query->orderBy('created_at', 'asc');
                 break;
 
-            case 'created_terbaru':
-
-                $query->orderByDesc(
-                    'created_at'
-                );
-
-                break;
-
-            case 'created_terlama':
-
-                $query->orderBy(
-                    'created_at'
-                );
-
-                break;
-
-            case 'a-z':
-
-                $query->orderBy(
-                    'no_surat'
-                );
-
-                break;
-
-            case 'z-a':
-
-                $query->orderByDesc(
-                    'no_surat'
-                );
-
-                break;
-
-            default:
-
-                $query->orderByDesc(
-                    'tanggal_surat'
-                );
+            default: // data_terbaru — urut berdasarkan waktu input (created_at)
+                $query->orderBy('created_at', 'desc');
         }
 
         $surat = $query
@@ -288,7 +260,9 @@ class SuratController extends Controller
             compact(
                 'surat',
                 'kode',
-                'lockJenis'
+                'lockJenis',
+                'isKeluar',
+                'currentSort'
             )
         );
     }
@@ -449,7 +423,23 @@ class SuratController extends Controller
                 }
             }
 
+            $jenisDihapus  = $surat->jenis_surat;
+            $nomorDihapus  = (int) explode('/', trim((string) $surat->no_surat))[0];
+
             $surat->delete();
+
+            // Jika Surat Keluar: geser nomor berikutnya turun satu angka
+            if ($jenisDihapus === 'Keluar' && $nomorDihapus > 0) {
+                Surat::where('jenis_surat', 'Keluar')
+                    ->get()
+                    ->each(function ($s) use ($nomorDihapus) {
+                        $n = (int) explode('/', trim((string) $s->no_surat))[0];
+                        if ($n > $nomorDihapus) {
+                            $s->no_surat = sprintf('%03d', $n - 1);
+                            $s->save();
+                        }
+                    });
+            }
 
             return response()->json([
                 'success' => true,
@@ -990,15 +980,52 @@ class SuratController extends Controller
     }
 
     /* ======================================================
- | 6. CEK DUPLIKAT SURAT
+ | 6. GENERATE NOMOR SURAT OTOMATIS
+ | Format: 001/KODE/INSTANSI/BULAN_ROMAWI/TAHUN
+ | Contoh: 001/S-K/SMABA/VII/2026
+ ====================================================== */
+    public function generateNomor(Request $request)
+    {
+        $request->validate([
+            'jenis'      => 'nullable|in:Masuk,Keluar',
+            'exclude_id' => 'nullable|integer',
+        ]);
+
+        $jenis     = $request->input('jenis', 'Keluar');
+        $excludeId = $request->filled('exclude_id') ? (int) $request->exclude_id : null;
+
+        // Kumpulkan semua nomor surat — ambil angka di bagian depan (sebelum '/' jika ada)
+        // Sehingga "042", "042/SK/2025", maupun "042/VII/2026" semua terhitung
+        $query = Surat::where('jenis_surat', $jenis);
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        $existingNomors = $query->pluck('no_surat')
+            ->map(fn($n) => (int) explode('/', trim((string) $n))[0])
+            ->filter(fn($n) => $n > 0)
+            ->sort()
+            ->values();
+
+        $maxNum  = $existingNomors->max() ?? 0;
+        $nextNum = $maxNum + 1;
+
+        return response()->json([
+            'nomor' => sprintf('%03d', $nextNum),
+        ]);
+    }
+
+    /* ======================================================
+ | 7. CEK DUPLIKAT SURAT
  ====================================================== */
     public function cekDuplikat(Request $request)
     {
         $request->validate([
-            'no_surat'    => 'required|string',
-            'instansi'    => 'required|string',
+            'no_surat'     => 'required|string',
+            'instansi'     => 'required|string',
             'tanggal_surat' => 'required|string',
-            'exclude_id'  => 'nullable|integer',
+            'jenis_surat'  => 'nullable|in:Masuk,Keluar',
+            'exclude_id'   => 'nullable|integer',
         ]);
 
         // tanggal_surat dari form input type="date" selalu format Y-m-d,
@@ -1007,7 +1034,7 @@ class SuratController extends Controller
 
         try {
             $tanggalParsed = Carbon::parse($tanggal)->format('Y-m-d');
-        } catch (Throwable $e) {
+        } catch (Throwable) {
             return response()->json([
                 'exists' => false,
             ]);
@@ -1015,7 +1042,8 @@ class SuratController extends Controller
 
         $query = Surat::whereRaw('LOWER(no_surat) = ?', [strtolower(trim($request->no_surat))])
             ->whereRaw('LOWER(instansi) = ?', [strtolower(trim($request->instansi))])
-            ->whereDate('tanggal_surat', $tanggalParsed);
+            ->whereDate('tanggal_surat', $tanggalParsed)
+            ->when($request->filled('jenis_surat'), fn ($q) => $q->where('jenis_surat', $request->jenis_surat));
 
         if ($request->filled('exclude_id')) {
             $query->where('id', '!=', $request->exclude_id);
@@ -1071,7 +1099,7 @@ class SuratController extends Controller
         foreach ($paths as $path) {
             if (Storage::disk('public')->exists($path)) {
                 $zip->addFile(
-                    Storage::disk('public')->path($path),
+                    storage_path('app/public/' . $path),
                     basename($path)
                 );
             }
@@ -1087,7 +1115,7 @@ class SuratController extends Controller
  |   Belum dipakai oleh surat.js saat ini, disiapkan agar
  |   route tidak 500 jika dipanggil dari fitur lain (mis. chat AI).
  ====================================================== */
-    public function aiSearch(Request $request)
+    public function aiSearch()
     {
         return response()->json([
             'success' => false,

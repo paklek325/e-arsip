@@ -8,190 +8,109 @@
                 <thead class="table-light">
                     <tr class="text-center">
 
-                        <th style="width:60px;">
-                            No
-                        </th>
-
-                        <th style="min-width:170px;">
-                            Nomor Surat
-                        </th>
-
-                        <th style="min-width:170px;">
-                            Kode Surat
-                        </th>
-
-                        <th style="width:110px;">
-                            Jenis
-                        </th>
-
-                        <th style="min-width:260px;">
-                            Perihal
-                        </th>
-
-                        <th style="min-width:220px;">
-                            Instansi
-                        </th>
-
-                        <th style="width:140px;">
-                            Tanggal Surat
-                        </th>
-
-                        <th style="width:120px;">
-                            Aksi
-                        </th>
+                        <th style="width:50px;">No</th>
+                        <th style="min-width:230px;">Nomor Surat</th>
+                        <th style="min-width:120px;">Kode</th>
+                        <th style="width:100px;">Jenis</th>
+                        <th style="min-width:200px;">Perihal</th>
+                        <th style="min-width:160px;">Instansi</th>
+                        <th style="width:110px;">Aksi</th>
 
                     </tr>
                 </thead>
 
                 <tbody>
 
+@php
+$romans = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+@endphp
+
 @forelse (($surat ?? collect()) as $item)
+
+@php
+$bulanRoman = $item->tanggal_surat ? $romans[$item->tanggal_surat->month - 1] : '';
+$tahun      = $item->tanggal_surat ? $item->tanggal_surat->year : '';
+$kodeStr    = $item->kode_surat ?: ($item->kode?->kode ?? '');
+$parts      = array_filter([$item->no_surat, $kodeStr, $item->instansi, $bulanRoman, $tahun]);
+$nomorLengkap = implode('/', $parts);
+@endphp
 
 <tr>
 
     <td class="text-center text-muted fw-semibold">
-
         {{ ($surat->currentPage() - 1) * $surat->perPage() + $loop->iteration }}
-
     </td>
 
+    {{-- NOMOR SURAT (format lengkap dirakit dari field) --}}
     <td class="fw-semibold text-break">
+        {{ $nomorLengkap ?: $item->no_surat }}
+    </td>
 
-        {{ $item->no_surat }}
-
-        </td>
-
-    {{-- =========================
-        KODE SURAT
-    ========================== --}}
-    <td>
-
+    {{-- KODE SURAT --}}
+    <td class="text-center">
         @if($item->jenis_surat === 'Keluar')
-
             @if($item->kode)
-
-                <span class="badge bg-primary">
-                    {{ $item->kode->kode }}
-                </span>
-
-                <div class="small text-muted mt-1">
-                    {{ $item->kode->description }}
-                </div>
-
+                <span class="badge bg-primary">{{ $item->kode->kode }}</span>
+                @if($item->kode->description)
+                    <div class="small text-muted">{{ $item->kode->description }}</div>
+                @endif
+            @elseif($item->kode_surat)
+                <span class="badge bg-secondary">{{ $item->kode_surat }}</span>
             @else
-
-                <span class="text-muted">
-                    -
-                </span>
-
+                <span class="text-muted">-</span>
             @endif
-
         @else
-
             @if($item->kode_surat)
-
-                <span class="badge bg-secondary">
-                    {{ $item->kode_surat }}
-                </span>
-
+                <span class="badge bg-secondary">{{ $item->kode_surat }}</span>
             @else
-
-                <span class="text-muted">
-                    -
-                </span>
-
+                <span class="text-muted">-</span>
             @endif
-
         @endif
-
     </td>
 
-    {{-- =========================
-        JENIS SURAT
-    ========================== --}}
+    {{-- JENIS --}}
     <td class="text-center">
-
-        @if($item->jenis_surat == 'Masuk')
-
-            <span class="badge rounded-pill bg-info">
-                <i class="bi bi-box-arrow-in-down me-1"></i>
-                Masuk
-            </span>
-
-        @else
-
+        @if($item->jenis_surat === 'Keluar')
             <span class="badge rounded-pill bg-success">
-                <i class="bi bi-box-arrow-up-right me-1"></i>
-                Keluar
+                <i class="bi bi-box-arrow-up-right me-1"></i>Keluar
             </span>
-
+        @else
+            <span class="badge rounded-pill bg-info">
+                <i class="bi bi-box-arrow-in-down me-1"></i>Masuk
+            </span>
         @endif
-
     </td>
 
-    {{-- =========================
-        PERIHAL
-    ========================== --}}
+    {{-- PERIHAL --}}
     <td class="text-break">
-
-        {{ Str::limit($item->perihal,60) }}
-
+        {{ Str::limit($item->perihal, 50) }}
     </td>
 
-    {{-- =========================
-        INSTANSI
-    ========================== --}}
+    {{-- INSTANSI --}}
     <td class="text-break">
-
         {{ $item->instansi ?: '-' }}
-
     </td>
 
-    {{-- =========================
-        TANGGAL SURAT
-    ========================== --}}
-    <td class="text-center">
-
-        {{ optional($item->tanggal_surat)->translatedFormat('d M Y') }}
-
-    </td>
-
-    {{-- =========================
-        AKSI
-    ========================== --}}
+    {{-- AKSI --}}
     <td>
-
         <div class="d-flex justify-content-center gap-1">
 
-            <button
-                class="btn btn-sm btn-info text-white btn-view"
-                data-id="{{ $item->id }}"
-                title="Detail">
-
+            <button class="btn btn-sm btn-info text-white btn-view"
+                    data-id="{{ $item->id }}" title="Detail">
                 <i class="bi bi-eye"></i>
-
             </button>
 
-            <button
-                class="btn btn-sm btn-warning text-white btn-edit"
-                data-id="{{ $item->id }}"
-                title="Edit">
-
+            <button class="btn btn-sm btn-warning text-white btn-edit"
+                    data-id="{{ $item->id }}" title="Edit">
                 <i class="bi bi-pencil-square"></i>
-
             </button>
 
-            <button
-                class="btn btn-sm btn-danger btn-delete"
-                data-id="{{ $item->id }}"
-                title="Hapus">
-
+            <button class="btn btn-sm btn-danger btn-delete"
+                    data-id="{{ $item->id }}" title="Hapus">
                 <i class="bi bi-trash"></i>
-
             </button>
 
         </div>
-
     </td>
 
 </tr>
@@ -199,19 +118,12 @@
 @empty
 
 <tr>
-
-    <td colspan="8" class="text-center py-5">
-
+    <td colspan="7" class="text-center py-5">
         <div class="text-muted">
-
             <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-
             Tidak ada data surat.
-
         </div>
-
     </td>
-
 </tr>
 
 @endforelse
@@ -228,32 +140,21 @@
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
 
             @if(isset($surat) && method_exists($surat,'total'))
-
                 <small class="text-muted">
-
                     Menampilkan
                     <strong>{{ $surat->firstItem() ?? 0 }}</strong>
                     -
                     <strong>{{ $surat->lastItem() ?? 0 }}</strong>
-
                     dari
-
                     <strong>{{ $surat->total() }}</strong>
-
                     data surat
-
                 </small>
-
             @endif
 
             <div>
-
                 @if(isset($surat) && method_exists($surat,'links'))
-
                     {{ $surat->appends(request()->query())->links() }}
-
                 @endif
-
             </div>
 
         </div>
