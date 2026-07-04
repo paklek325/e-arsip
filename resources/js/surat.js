@@ -92,34 +92,8 @@ if (window.SuratApp) {
 
         const toast = (message, type = "info") => window.AppToast(message, type);
 
-        const debounce = (fn, delay = 400) => {
-            let t;
-            return function (...args) {
-                clearTimeout(t);
-                t = setTimeout(() => fn.apply(this, args), delay);
-            };
-        };
-
-        async function safeFetch(url, options = {}) {
-            const headers = {
-                "X-Requested-With": "XMLHttpRequest",
-                ...(options.method && options.method !== "GET"
-                    ? { "X-CSRF-TOKEN": CSRF }
-                    : {}),
-                ...options.headers,
-            };
-
-            const res = await fetch(url, { ...options, headers });
-            if (!res.ok) {
-                let msg = res.statusText;
-                try {
-                    const errorBody = await res.json();
-                    msg = errorBody.message || msg;
-                } catch (_) {}
-                throw new Error(msg || `HTTP Error: ${res.status}`);
-            }
-            return res;
-        }
+        const debounce  = window.debounce;
+        const safeFetch = window.safeFetch;
 
         /* ========== INLINE ALERT DI DALAM MODAL ========== */
         function showFormAlert(alertSelector, message, type = "warning") {

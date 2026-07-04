@@ -1,70 +1,83 @@
-<div class="card shadow-sm border-0 animate-fade-in">
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-striped align-middle text-center mb-0">
-        <thead class="table-light text-center align-middle">
-          <tr>
-            <th width="50" class="text-center">No</th>
-            <th width="70" class="text-center">Foto</th>
-            <th class="text-center">Nama</th>
-            <th class="text-center">Email</th>
-            <th class="text-center">Role</th>
-            <th class="text-center">Dibuat Pada</th>
-            <th width="180" class="text-center">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($users as $u)
-          <tr>
-            <td>{{ $loop->iteration }}</td>
+<div class="user-card">
+  <div class="table-responsive">
+    <table class="table table-user mb-0 text-center">
+      <thead class="text-center align-middle">
+        <tr>
+          <th width="50">No</th>
+          <th width="70">Foto</th>
+          <th>Nama</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Dibuat Pada</th>
+          <th width="150">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        @forelse($users as $u)
+        <tr>
+          <td class="fw-medium">{{ ($users->currentPage() - 1) * $users->perPage() + $loop->iteration }}</td>
 
-            {{-- FOTO USER --}}
-            <td>
-              <img
-                src="{{ $u->foto ? asset('assets/foto_admin/' . $u->foto) : asset('assets/img/default_staf.png') }}"
-                onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
-                style="width:42px;height:42px;object-fit:cover;object-position:center;box-shadow:0 0 0 2px rgba(255,255,255,0.35),0 1px 4px rgba(0,0,0,0.4);"
-                class="rounded-circle"
-              >
-            </td>
+          <td>
+            <img src="{{ $u->foto ? asset('assets/foto_admin/' . $u->foto) : asset('assets/img/default_staf.png') }}"
+                 onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
+                 class="user-avatar"
+                 alt="Foto {{ $u->name }}">
+          </td>
 
-            <td>{{ $u->name }}</td>
-            <td>{{ $u->email }}</td>
-            <td>{{ $u->role->name ?? '-' }}</td>
-
-            <td>
-              {{ $u->created_at ? $u->created_at->format('d M Y H:i') : '-' }}
-            </td>
-
-            <td>
+          <td class="fw-medium text-start">{{ $u->name }}</td>
+          <td class="text-muted">{{ $u->email }}</td>
+          <td>
+            <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-1 rounded-pill"
+                  style="font-size:0.75rem;">
+              {{ $u->role?->name ?? '-' }}
+            </span>
+          </td>
+          <td class="text-muted" style="font-size:0.82rem;white-space:nowrap;">
+            {{ $u->created_at ? $u->created_at->format('d M Y') : '-' }}
+          </td>
+          <td>
+            <div class="d-flex gap-1 justify-content-center">
               <button class="btn btn-info btn-sm text-white btn-detail"
-                data-id="{{ $u->id_user }}">
+                      data-id="{{ $u->id_user }}" title="Detail"
+                      data-bs-toggle="tooltip">
                 <i class="bi bi-eye"></i>
               </button>
-
               <button class="btn btn-warning btn-sm text-white btn-edit"
-                data-id="{{ $u->id_user }}">
+                      data-id="{{ $u->id_user }}" title="Edit"
+                      data-bs-toggle="tooltip">
                 <i class="bi bi-pencil"></i>
               </button>
-
               <button class="btn btn-danger btn-sm btn-delete"
-                data-id="{{ $u->id_user }}"
-                data-name="{{ $u->name }}">
+                      data-id="{{ $u->id_user }}" data-name="{{ $u->name }}"
+                      title="Hapus" data-bs-toggle="tooltip">
                 <i class="bi bi-trash"></i>
               </button>
-            </td>
-          </tr>
-          @empty
-          <tr>
-            <td colspan="7" class="text-muted py-4 text-center">
-              Tidak ada data user
-            </td>
-          </tr>
-          @endforelse
-        </tbody>
-      </table>
-    </div>
+            </div>
+          </td>
+        </tr>
+        @empty
+        <tr>
+          <td colspan="7" class="py-5 text-center">
+            <div class="text-muted">
+              <i class="bi bi-people" style="font-size:2rem;opacity:.4;"></i>
+              <p class="mt-2 mb-0">Belum ada data user</p>
+            </div>
+          </td>
+        </tr>
+        @endforelse
+      </tbody>
+    </table>
   </div>
+
+  @if($users->hasPages())
+  <div class="user-card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <small class="text-muted">
+      Menampilkan <strong>{{ $users->firstItem() }}</strong>–<strong>{{ $users->lastItem() }}</strong>
+      dari <strong>{{ $users->total() }}</strong> user
+    </small>
+    {{ $users->links() }}
+  </div>
+  @endif
 </div>
 
 

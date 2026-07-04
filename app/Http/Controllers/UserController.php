@@ -58,7 +58,10 @@ class UserController extends Controller
         $query = User::with('role');
 
         if ($search = $request->get('search')) {
-            $query->where('name', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
         }
 
         // Prioritas urutan: Kepala Staf selalu di paling atas,
@@ -95,7 +98,7 @@ class UserController extends Controller
                 ? asset('assets/foto_admin/' . $user->foto)
                 : asset('assets/img/default_staf.png'),
             'role'     => [
-                'name' => $user->role->name ?? '-',
+                'name' => $user->role?->name ?? '-',
             ],
         ]);
     }

@@ -64,13 +64,7 @@
     }
 
     // ===== Table, filter, pagination =====
-    const debounce = (fn, delay = 500) => {
-        let timer;
-        return (...args) => {
-            clearTimeout(timer);
-            timer = setTimeout(() => fn(...args), delay);
-        };
-    };
+    const debounce = window.debounce;
 
     async function loadTable(url = `${baseUrl}/user`) {
         // BUGFIX: sebelumnya selalu menambahkan "?...", sehingga jika `url` sudah

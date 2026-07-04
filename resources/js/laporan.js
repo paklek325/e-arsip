@@ -1,58 +1,74 @@
 /**
- * public/js/laporan.js
- * Semua logic JS untuk halaman laporan digabung di sini (vanilla JS).
- * Memicu pemuatan laporan secara otomatis (AJAX) ketika filter Tipe, Tahun, atau Bulan berubah.
- * Menangani navigasi pagination dan link detail bulanan via AJAX.
+ * laporan.js
+ * ══════════════════════════════════════════════════════════════
+ * MENU   : Laporan (/laporan)
+ * FILE   : resources/js/laporan.js
+ *          (di-bundle Vite → public/build/assets/laporan-*.js)
+ *
+ * ALUR UMUM:
+ *  1. Halaman pertama kali dibuka → auto-load rekap tahunan
+ *  2. User ganti Tahun / Bulan   → AJAX fetch partial hasil baru
+ *  3. User klik Reset            → reset form + auto-load rekap tahunan
+ *  4. User klik Cetak            → window.print() tanpa tab baru
+ *  5. User klik Download         → buka URL export di tab baru
+ *  6. User klik link pagination  → AJAX fetch halaman berikutnya
+ *  7. Browser Back/Forward       → restore state dari URL (popstate)
+ *
+ * ELEMEN YANG DIKENDALIKAN:
+ *  #filter_form         — form filter (tahun, bulan, tipe_rekap)
+ *  #tahun               — input tahun  → trigger loadLaporan() on change
+ *  #bulan               — select bulan → trigger loadLaporan() on change
+ *  #tipe_rekap          — hidden input, diisi otomatis oleh syncTipeFromBulan()
+ *  #laporan_hasil_container — div tempat hasil laporan di-inject via AJAX
+ *  #btn_print           — tombol Cetak  → handlePrint()
+ *  #btn_reset_filter    — tombol Reset  → handleResetFilter()
+ *  #download_group      — grup tombol Download → handleDownloadClick()
+ *
+ * PARTIAL VIEW (di-inject ke #laporan_hasil_container):
+ *  laporan/partials/hasil.blade.php
+ * ══════════════════════════════════════════════════════════════
  */
 
 (function () {
-    // CONFIG: id / selector elemen di blade
+    // ── Mapping ID elemen HTML ────────────────────────────────────────────
+    // Pusatkan semua ID di sini agar tidak perlu ubah di banyak tempat
     const SELECTORS = {
-        filterFormId: "filter_form",
-        bulanGroupId: "bulan_group",
-        bulanSelectId: "bulan",
-        tipeRekapId: "tipe_rekap",
-        tahunInputId: "tahun",
-        hasilContainerId: "laporan_hasil_container",
-        printButtonId: "btn_print",
-        resetButtonId: "btn_reset_filter",
-        downloadGroupId: "download_group", // <-- tombol download (dropdown)
+        filterFormId:     "filter_form",       // <form> filter laporan
+        bulanGroupId:     "bulan_group",       // wrapper select bulan
+        bulanSelectId:    "bulan",             // <select> bulan
+        tipeRekapId:      "tipe_rekap",        // <input hidden> tipe (Tahun/Bulan)
+        tahunInputId:     "tahun",             // <input> tahun
+        hasilContainerId: "laporan_hasil_container", // div hasil AJAX
+        printButtonId:    "btn_print",         // tombol Cetak
+        resetButtonId:    "btn_reset_filter",  // tombol Reset Filter
+        tampilkanButtonId:"btn_tampilkan",     // (tidak dipakai, reset auto-load)
+        downloadGroupId:  "download_group",    // grup tombol Download
     };
 
-    // Helper: safe querySelector by id
-    function $id(id) {
-        return document.getElementById(id);
-    }
+    // ── Shortcut getElementById ───────────────────────────────────────────
+    function $id(id) { return document.getElementById(id); }
 
-    // Helper: render loading spinner to container
+    // ── Wrapper renderLoading (dari app.js) ──────────────────────────────
+    // ELEMEN: #laporan_hasil_container
+    // KAPAN : saat fetch dimulai — tampilkan spinner agar user tahu loading
     function renderLoading(container) {
-        if (!container) return;
-        container.style.display = "block";
-        container.innerHTML = `
-            <div class="text-center p-5">
-                <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
-                <p class="mt-2 text-muted">Memuat laporan...</p>
-            </div>
-        `;
+        window.renderLoading(container, "Memuat laporan...");
     }
 
+    // ── Wrapper renderError (dari app.js) ────────────────────────────────
+    // ELEMEN: #laporan_hasil_container
+    // KAPAN : saat fetch gagal — tampilkan alert + sembunyikan tombol Cetak/Download
     function renderError(container, message) {
-        if (!container) return;
-        container.style.display = "block";
-        container.innerHTML = `
-            <div class="alert alert-danger p-4 shadow-sm">
-                <h5><i class="fas fa-exclamation-triangle"></i> Gagal Memuat Laporan</h5>
-                <p class="mb-0">${message}</p>
-            </div>
-        `;
-
-        // sembunyikan tombol print & download saat error
+        window.renderError(container, message);
         const printBtn = $id(SELECTORS.printButtonId);
         const downloadGroup = $id(SELECTORS.downloadGroupId);
         if (printBtn) printBtn.style.display = "none";
         if (downloadGroup) downloadGroup.style.display = "none";
     }
 
+    // ── Pesan awal (sebelum ada laporan dimuat) ───────────────────────────
+    // ELEMEN: #laporan_hasil_container
+    // KAPAN : kondisi tahun kosong atau setelah reset — sembunyikan tombol Cetak/Download
     function renderInitialMessage(container) {
         if (!container) return;
         container.style.display = "block";
@@ -104,8 +120,18 @@
     }
 
     /**
-     * >>> FUNGSI INTI UNTUK MEMUAT LAPORAN <<<
-     * Menganalisis form dan memicu pemuatan URL.
+     * loadLaporan — FUNGSI UTAMA LOADER
+     * ─────────────────────────────────────────────────────────
+     * DIPANGGIL OLEH:
+     *  - onChange #tahun              (user ganti tahun)
+     *  - onChange #bulan              (user ganti bulan)
+     *  - DOMContentLoaded             (auto-load pertama kali)
+     *  - handleResetFilter()          (setelah reset form)
+     *  - handlePopState()             (browser back/forward)
+     * ALUR:
+     *  1. syncTipeFromBulan() → tentukan tipe Tahun/Bulan dari nilai select #bulan
+     *  2. Jika #tahun kosong  → tampilkan pesan awal, hapus query URL
+     *  3. Jika #tahun ada     → build URL dari form, panggil loadUrlIntoContainer()
      */
     function loadLaporan({ pushState = true } = {}) {
         const form = $id(SELECTORS.filterFormId);
@@ -145,7 +171,14 @@
     }
 
     /**
-     * Fetch URL (GET) and inject response HTML to container
+     * loadUrlIntoContainer — Fetch HTML partial & inject ke container
+     * ─────────────────────────────────────────────────────────
+     * ELEMEN  : #laporan_hasil_container
+     * RESPONSE: HTML dari laporan/partials/hasil.blade.php
+     * SETELAH BERHASIL:
+     *  - tampilkan tombol #btn_print dan #download_group
+     *  - pushState URL ke browser history (jika pushState=true)
+     *  - re-bind delegated handler untuk link pagination/ajax baru
      */
     async function loadUrlIntoContainer(url, { pushState = true } = {}) {
         const container = $id(SELECTORS.hasilContainerId);
@@ -214,7 +247,10 @@
         }
     }
 
-    // Hitung tipe otomatis dari nilai bulan
+    // ── syncTipeFromBulan ─────────────────────────────────────────────────
+    // ELEMEN  : #tipe_rekap (hidden input), #bulan (select)
+    // FUNGSI  : set #tipe_rekap = "Bulan" jika bulan dipilih, "Tahun" jika kosong
+    //           Controller Laravel membaca #tipe_rekap untuk memilih query
     function syncTipeFromBulan() {
         const bulanSelect = $id(SELECTORS.bulanSelectId);
         const tipeInput   = $id(SELECTORS.tipeRekapId);
@@ -226,8 +262,15 @@
     function toggleBulanGroup() { syncTipeFromBulan(); }
 
     /**
-     * Handle Reset Filter.
-     * Reset semua input ke default, bersihkan konten laporan, dan hapus query di URL.
+     * handleResetFilter — Tombol "Reset Filter" (#btn_reset_filter)
+     * ─────────────────────────────────────────────────────────
+     * MENU    : Laporan — sidebar filter (laporan/partials/filter.blade.php)
+     * TOMBOL  : #btn_reset_filter  (btn btn-outline-secondary "Reset Filter")
+     * ALUR:
+     *  1. Reset #tahun ke tahun berjalan (dari data-default-year)
+     *  2. Kosongkan #bulan → tipe otomatis jadi "Tahun"
+     *  3. Hapus query params dari URL (tanpa reload)
+     *  4. Auto-load rekap tahunan default (loadLaporan)
      */
     function handleResetFilter(e) {
         e.preventDefault();
@@ -250,12 +293,7 @@
         // 2. Sinkron tipe (akan jadi Tahun karena bulan dikosongkan)
         syncTipeFromBulan();
 
-        // 3. Bersihkan kontainer dan tampilkan pesan awal
-        if (container) {
-            renderInitialMessage(container);
-        }
-
-        // 4. Bersihkan parameter filter di URL (tanpa membuat history baru)
+        // 3. Bersihkan parameter filter di URL (tanpa membuat history baru)
         const currentUrl = new URL(location.href);
         currentUrl.searchParams.delete("tipe");
         currentUrl.searchParams.delete("tahun");
@@ -263,115 +301,47 @@
         currentUrl.searchParams.delete("jenis");
         currentUrl.searchParams.delete("page");
         history.replaceState(null, "", currentUrl.toString());
+
+        // 4. Auto-load rekap tahunan default (sama seperti pertama buka halaman)
+        loadLaporan({ pushState: false });
     }
 
     /**
-     * Handle print: open hasil container html in new window and print
+     * handlePrint — Tombol "Cetak" (#btn_print)
+     * ─────────────────────────────────────────────────────────
+     * MENU    : Laporan — header halaman (laporan/index.blade.php)
+     * TOMBOL  : #btn_print  (btn btn-outline-light "Cetak")
+     * ALUR:
+     *  1. Tambahkan class "laporan-print-mode" ke <body>
+     *  2. CSS @media print di laporan.css membaca class ini:
+     *     - sembunyikan sidebar, navbar, filter card, page header
+     *     - perlebar kolom hasil laporan ke 100%
+     *  3. Panggil window.print() → dialog cetak browser muncul
+     *  4. Setelah selesai (event afterprint) → hapus class dari <body>
      */
     function handlePrint() {
-        const container = $id(SELECTORS.hasilContainerId);
-        if (!container) return;
-
-        const headHtml = Array.from(
-            document.querySelectorAll('link[rel="stylesheet"], style')
-        )
-            .map((el) => el.outerHTML)
-            .join("");
-
-        const printStyles = `
-            <style>
-                @page { 
-                    margin: 1cm;
-                }
-                @media print {
-                    .card-footer, .btn-view, .btn-edit, .btn-delete, .pagination, .d-flex .ajax-link { 
-                        display: none !important; 
-                    }
-
-                    a[href]:after {
-                        content: none !important;
-                    }
-
-                    a.btn-outline-secondary,
-                    a[title*="Kembali"],
-                    .ajax-link {
-                        display: none !important;
-                    }
-
-                    a {
-                        text-decoration: none !important;
-                        color: #000 !important;
-                    }
-
-                    body { font-size: 10pt; }
-                    .table-custom { font-size: 9pt; }
-                    .table-responsive { overflow: visible !important; }
-
-                    table { 
-                        width: 100%; 
-                        border-collapse: collapse; 
-                    }
-                    th, td { 
-                        border: 1px solid #ccc; 
-                        padding: 5px; 
-                    }
-
-                    thead { 
-                        display: table-header-group;
-                    }
-                    tfoot {
-                        display: table-footer-group;
-                    }
-
-                    tr, th, td {
-                        page-break-inside: avoid !important;
-                        break-inside: avoid !important;
-                    }
-
-                    .table-primary, .table-dark { 
-                        background-color: #f0f0f0 !important; 
-                        -webkit-print-color-adjust: exact; 
-                        color-adjust: exact; 
-                        color: #000 !important; 
-                    }
-
-                    h4 {
-                        page-break-after: avoid !important;
-                    }
-                    .card, .table { 
-                        page-break-inside: avoid !important; 
-                        page-break-before: auto;
-                    }
-
-                    h5 { 
-                        page-break-after: avoid; 
-                        page-break-before: auto;
-                    }
-
-                    .d-flex, .justify-content-between { 
-                        display: block !important; 
-                    } 
-                }
-            </style>
-        `;
-
-        const printHtml = `<!doctype html><html><head>${headHtml}${printStyles}<title>Cetak Laporan</title></head><body>${container.innerHTML}</body></html>`;
-        const w = window.open("", "_blank");
-        if (!w) {
-            window.AppToast("Pop-up diblokir. Izinkan pop-up untuk menggunakan fitur cetak.", "warning");
-            return;
-        }
-        w.document.open();
-        w.document.write(printHtml);
-        w.document.close();
-        w.focus();
-        setTimeout(() => {
-            w.print();
-        }, 300);
+        document.body.classList.add("laporan-print-mode");
+        window.addEventListener(
+            "afterprint",
+            function () {
+                document.body.classList.remove("laporan-print-mode");
+            },
+            { once: true }
+        );
+        window.print();
     }
 
     /**
-     * Handle klik dropdown download (PDF/Excel/Word)
+     * handleDownloadClick — Dropdown "Download" (#download_group)
+     * ─────────────────────────────────────────────────────────
+     * MENU    : Laporan — header halaman (laporan/index.blade.php)
+     * ELEMEN  : #download_group → .dropdown-menu → .download-link[data-format]
+     *           data-format : "pdf" | "excel" | "word"
+     * ALUR:
+     *  1. Tangkap klik pada .download-link
+     *  2. buildExportUrl(format) → ambil semua query URL aktif + set format
+     *  3. Buka URL export di tab baru (window.open)
+     *  Controller: LaporanController@filter → redirect ke export sesuai format
      */
     function handleDownloadClick(e) {
         const link = e.target.closest(".download-link");
@@ -392,7 +362,13 @@
     }
 
     /**
-     * Delegated click handler for links inside hasil container (pagination/ajax links).
+     * onDelegatedLinkClick — Delegated handler untuk link di dalam hasil
+     * ─────────────────────────────────────────────────────────
+     * ELEMEN  : #laporan_hasil_container → a.ajax-link | a di dalam .pagination
+     * FUNGSI  : tangkap klik pada link pagination dan link detail bulan
+     *           agar navigasi tidak full-page reload, melainkan AJAX
+     * CATATAN : handler ini di-attach ke container (delegasi), bukan ke link
+     *           langsung — karena konten container di-replace setiap AJAX load
      */
     function onDelegatedLinkClick(e) {
         let el = e.target.closest("a");
@@ -488,6 +464,15 @@
             downloadGroup.__hasClick = true;
         }
 
+        const tampilkanBtn = $id(SELECTORS.tampilkanButtonId);
+        if (tampilkanBtn && !tampilkanBtn.__hasClick) {
+            tampilkanBtn.addEventListener("click", () => {
+                syncTipeFromBulan();
+                loadLaporan();
+            });
+            tampilkanBtn.__hasClick = true;
+        }
+
         attachDelegatedHandlers();
     }
 
@@ -525,15 +510,17 @@
             const currentUrl = new URL(location.href);
 
             if (currentUrl.searchParams.get("tipe")) {
+                // Ada parameter URL → restore state dari URL
                 updateFormFromUrl(location.href);
-
                 loadUrlIntoContainer(location.href, {
                     pushState: false,
                 }).finally(() => {
                     hasilContainer.style.display = "block";
                 });
             } else {
-                renderInitialMessage(hasilContainer);
+                // Tidak ada parameter → auto-load rekap tahunan default
+                syncTipeFromBulan();
+                loadLaporan({ pushState: false });
             }
         } catch (e) {
             console.error("Error during initial load check:", e);

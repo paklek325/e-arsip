@@ -12,11 +12,10 @@
 
                     {{-- FOTO --}}
                     <div class="mb-3 text-center">
-                        <div style="width:100px;height:100px;border-radius:50%;overflow:hidden;margin:0 auto;box-shadow:0 0 0 3px rgba(255,255,255,0.35),0 2px 8px rgba(0,0,0,0.4);">
+                        <div class="foto-preview-wrapper mx-auto mb-2">
                             <img id="previewFotoAdd"
                                 src="{{ asset('assets/img/default_staf.png') }}"
-                                data-default="{{ asset('assets/img/default_staf.png') }}"
-                                style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
+                                data-default="{{ asset('assets/img/default_staf.png') }}">
                         </div>
                         <input type="file" name="foto" id="add_foto"
                             class="form-control mt-2" accept="image/jpeg,image/png,image/jpg">
@@ -89,11 +88,10 @@
                     
                     {{-- FOTO --}}
                     <div class="mb-3 text-center">
-                        <div style="width:100px;height:100px;border-radius:50%;overflow:hidden;margin:0 auto;box-shadow:0 0 0 3px rgba(255,255,255,0.35),0 2px 8px rgba(0,0,0,0.4);">
+                        <div class="foto-preview-wrapper mx-auto mb-2">
                             <img id="previewFotoEdit"
                                 src="{{ asset('assets/img/default_staf.png') }}"
-                                data-default="{{ asset('assets/img/default_staf.png') }}"
-                                style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
+                                data-default="{{ asset('assets/img/default_staf.png') }}">
                         </div>
                         <input type="file" name="foto" id="edit_foto" class="form-control mt-2" accept="image/jpeg,image/png,image/jpg">
                         <small class="text-muted">Format JPG/PNG, maks. 4MB</small>
@@ -157,9 +155,8 @@
             </div>
 
             <div class="modal-body text-center">
-                <div style="width:100px;height:100px;border-radius:50%;overflow:hidden;margin:0 auto 1rem;box-shadow:0 0 0 3px rgba(255,255,255,0.35),0 2px 8px rgba(0,0,0,0.4);">
-                    <img id="detail_foto"
-                        style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
+                <div class="foto-preview-wrapper mx-auto mb-3">
+                    <img id="detail_foto">
                 </div>
                 <p><strong>Nama:</strong> <span id="detail_name"></span></p>
                 <p><strong>Email:</strong> <span id="detail_email"></span></p>

@@ -632,6 +632,16 @@
     });
     </script>
 
+    <script>
+        // Bersihkan status chat widget agar panel tidak auto-terbuka setelah login
+        try {
+            sessionStorage.removeItem('eac_panel_open');
+            sessionStorage.removeItem('eac_user');
+            sessionStorage.removeItem('eac_history');
+            sessionStorage.removeItem('eac_messages_html');
+        } catch (_) {}
+    </script>
+
 </body>
 </html>
 

@@ -47,14 +47,16 @@
         }
 
         $cards[] = [
-            'label'  => 'Surat',
-            'type'   => 'stat',
-            'count'  => $totalSurat ?? 0,
-            'color'  => 'success',
-            'icon'   => 'bi bi-envelope-fill',
-            'route'  => route('surat.index'),
-            'masuk'  => $totalSuratMasukAll ?? 0,
-            'keluar' => $totalSuratKeluarAll ?? 0,
+            'label'        => 'Surat',
+            'type'         => 'stat',
+            'count'        => $totalSurat ?? 0,
+            'color'        => 'success',
+            'icon'         => 'bi bi-envelope-fill',
+            'route'        => route('surat.index'),
+            'route_masuk'  => route('surat.masuk'),
+            'route_keluar' => route('surat.keluar'),
+            'masuk'        => $totalSuratMasukAll ?? 0,
+            'keluar'       => $totalSuratKeluarAll ?? 0,
         ];
 
         $cards[] = [
@@ -119,15 +121,24 @@
 
                             <div class="card-sub">
                                 @if($card['label'] === 'Users')
-                                    <div class="d-flex flex-wrap justify-content-center gap-1">
-                                        <span class="badge badge-primary">Kepala: {{ $card['kepala'] }}</span>
-                                        <span class="badge badge-secondary">Staf: {{ $card['staf'] }}</span>
+                                    <div class="small text-muted" style="font-size:0.76rem;">
+                                        <i class="bi bi-person-badge me-1"></i>Kepala Staf &amp; Staf
                                     </div>
 
                                 @elseif($card['label'] === 'Surat')
-                                    <div class="d-flex flex-wrap justify-content-center gap-1">
-                                        <span class="badge badge-success">Masuk: {{ $card['masuk'] }}</span>
-                                        <span class="badge badge-info">Keluar: {{ $card['keluar'] }}</span>
+                                    <div class="d-flex flex-wrap justify-content-center gap-2 mt-1">
+                                        <a href="{{ $card['route_masuk'] }}"
+                                           class="badge-surat-link badge-surat-masuk"
+                                           onclick="event.stopPropagation()">
+                                            <i class="bi bi-envelope-arrow-down-fill me-1"></i>
+                                            Masuk <strong>{{ $card['masuk'] }}</strong>
+                                        </a>
+                                        <a href="{{ $card['route_keluar'] }}"
+                                           class="badge-surat-link badge-surat-keluar"
+                                           onclick="event.stopPropagation()">
+                                            <i class="bi bi-envelope-arrow-up-fill me-1"></i>
+                                            Keluar <strong>{{ $card['keluar'] }}</strong>
+                                        </a>
                                     </div>
 
                                 @elseif($card['label'] === 'Peserta Didik')
@@ -145,11 +156,11 @@
                                             <span class="text-muted fst-italic small">Belum ada data</span>
                                         @endforelse
                                     </div>
-                                    <div class="d-flex justify-content-center gap-1 mt-1 w-100">
-                                        <span class="badge badge-gender-laki d-inline-flex align-items-center justify-content-center gap-1 flex-fill">
+                                    <div class="d-flex justify-content-center gap-1 mt-1">
+                                        <span class="badge badge-gender-laki d-inline-flex align-items-center gap-1">
                                             <i class="bi bi-gender-male"></i> L: {{ $card['laki'] }}
                                         </span>
-                                        <span class="badge badge-gender-perempuan d-inline-flex align-items-center justify-content-center gap-1 flex-fill">
+                                        <span class="badge badge-gender-perempuan d-inline-flex align-items-center gap-1">
                                             <i class="bi bi-gender-female"></i> P: {{ $card['perempuan'] }}
                                         </span>
                                     </div>
@@ -399,13 +410,6 @@
         min-width: 0;
     }
 
-    /* Badge L/P di card peserta_didik — selebar penuh & sejajar */
-    .dashboard-card .badge-gender-laki,
-    .dashboard-card .badge-gender-perempuan {
-        flex: 1 1 0 !important;
-        text-align: center !important;
-        justify-content: center !important;
-    }
 </style>
 @endpush
 

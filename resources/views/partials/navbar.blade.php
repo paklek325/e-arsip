@@ -198,14 +198,29 @@
             </label>
         </li>
         @auth
-            <li class="user-info text-nowrap">
-                <span class="fw-semibold">Hi, {{ auth()->user()->name }}</span>
+            <li class="d-flex align-items-center gap-2">
+                @php
+                    $authUser = auth()->user();
+                    $fotoUrl  = $authUser->foto
+                        ? asset('assets/foto_admin/' . $authUser->foto)
+                        : asset('assets/img/default_staf.png');
+                @endphp
+                <img src="{{ $fotoUrl }}"
+                     onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
+                     alt="Foto {{ $authUser->name }}"
+                     style="width:34px;height:34px;object-fit:cover;object-position:center;
+                            border-radius:50%;border:2px solid rgba(99,102,241,.45);
+                            box-shadow:0 1px 4px rgba(0,0,0,.25);flex-shrink:0;">
+                <span class="fw-semibold text-nowrap d-none d-sm-inline"
+                      style="font-size:.875rem;">
+                    Hi, {{ $authUser->name }}
+                </span>
             </li>
             <li>
                 <form method="POST" action="{{ route('logout') }}" onsubmit="try{sessionStorage.removeItem('eac_user');sessionStorage.removeItem('eac_history');sessionStorage.removeItem('eac_messages_html');sessionStorage.removeItem('eac_panel_open');}catch(_){}">
                     @csrf
                     <button type="submit" class="btn btn-sm btn-outline-danger">
-                        <i class="bi bi-box-arrow-right"></i> Logout
+                        <i class="bi bi-box-arrow-right"></i> <span class="d-none d-sm-inline">Logout</span>
                     </button>
                 </form>
             </li>

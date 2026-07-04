@@ -2,6 +2,11 @@
    ARSY — AI Chat Widget
    ============================================================ */
 
+@media print {
+  #earsipchat-btn,
+  #earsipchat-panel { display: none !important; }
+}
+
 /* ── Container ── */
 #chat-widget {
     position: fixed;

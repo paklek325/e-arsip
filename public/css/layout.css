@@ -704,3 +704,180 @@ body[data-theme-transition] * { transition: none !important; }
 [data-theme="dark"] .chart-card .card-header {
   border-bottom: 1px solid rgba(255,255,255,0.07) !important;
 }
+
+/* =======================================================
+   🔍 FILTER BAR — Global (dipakai di user, surat, laporan, peserta-didik)
+======================================================= */
+.filter-bar {
+  width: 100%;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  margin-bottom: 1rem;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.filter-bar .form-control,
+.filter-bar .form-select {
+  font-size: 0.9rem;
+  border-radius: 0.5rem;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border-color: var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.filter-bar .form-control::placeholder {
+  color: #6c757d;
+}
+
+.filter-bar .form-control:focus,
+.filter-bar .form-select:focus {
+  border-color: var(--active-color);
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
+}
+
+[data-theme="dark"] .filter-bar {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .filter-bar .form-control,
+[data-theme="dark"] .filter-bar .form-select {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .filter-bar .form-control::placeholder {
+  color: #64748b;
+}
+
+[data-theme="dark"] .filter-bar .form-control:focus,
+[data-theme="dark"] .filter-bar .form-select:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+@media (max-width: 768px) {
+  .filter-bar { padding: 0.75rem; }
+}
+
+/* =======================================================
+   📄 PAGINATION — Dark Mode Global
+======================================================= */
+[data-theme="dark"] .pagination .page-link {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .pagination .page-link:hover {
+  background-color: #273549;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .pagination .page-item.active .page-link {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+[data-theme="dark"] .pagination .page-item.disabled .page-link {
+  background-color: #1a2233;
+  border-color: #334155;
+  color: #475569;
+}
+
+/* =======================================================
+   🪟 MODAL — Dark Mode Global
+======================================================= */
+.modal-content {
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  transition: background 0.3s;
+}
+
+[data-theme="dark"] .modal-content {
+  border: 1px solid #334155;
+}
+
+.modal-footer {
+  background-color: var(--card-bg) !important;
+  border-top: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .modal-header {
+  border-color: #334155;
+}
+
+[data-theme="dark"] .modal-title {
+  color: #f1f5f9;
+}
+
+.form-label {
+  color: var(--text-color);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.modal-content .form-control,
+.modal-content .form-select,
+.modal-content textarea {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-color);
+  transition: all 0.2s ease;
+}
+
+.modal-content .form-control::placeholder,
+.modal-content textarea::placeholder {
+  color: #6c757d;
+}
+
+.modal-content .form-control:focus,
+.modal-content .form-select:focus,
+.modal-content textarea:focus {
+  border-color: var(--active-color);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.2);
+}
+
+[data-theme="dark"] .modal-content .form-control,
+[data-theme="dark"] .modal-content .form-select,
+[data-theme="dark"] .modal-content textarea {
+  background-color: #263149;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .modal-content .form-control::placeholder,
+[data-theme="dark"] .modal-content textarea::placeholder {
+  color: #64748b;
+}
+
+[data-theme="dark"] .modal-content .form-control:focus,
+[data-theme="dark"] .modal-content .form-select:focus,
+[data-theme="dark"] .modal-content textarea:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 0.2rem rgba(96, 165, 250, 0.2);
+}
+
+[data-theme="dark"] .modal-content .input-group-text {
+  background-color: #263149;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .modal-content small.text-muted,
+[data-theme="dark"] .modal-body small {
+  color: #64748b !important;
+}
+
+[data-theme="dark"] .modal-footer {
+  background-color: #172033 !important;
+  border-top-color: #334155;
+}

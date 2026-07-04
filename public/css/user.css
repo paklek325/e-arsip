@@ -1,97 +1,244 @@
-/* ==============================
-   STYLE UNTUK TABEL USER
-   ============================== */
-.card {
-  background-color: var(--bs-card-bg, #fff);
-  border-radius: 1rem;
-  overflow: hidden;
+/* =======================================================
+   👤 USER.CSS — E-ARSIP
+   Hanya berisi style SPESIFIK halaman user.
+   Style global (card, table, badge, dark mode umum)
+   sudah ada di layout.css
+======================================================= */
+
+/* =======================================================
+   🎨 USER THEME VARIABLES
+======================================================= */
+:root {
+  --user-input-ph:     #6c757d;
+  --user-thead-bg:     #f8f9fa;
+  --user-thead-color:  #495057;
+  --user-td-color:     #212529;
+  --user-tr-hover:     #f1f3f5;
+  --user-row-border:   #e9ecef;
+  --user-footer-bg:    #f9fafb;
+  --user-modal-bg:     #ffffff;
+  --user-modal-footer: #f8f9fa;
 }
 
-/* Pastikan table melebar penuh */
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
+[data-theme="dark"] {
+  --user-input-ph:     #64748b;
+  --user-thead-bg:     #1a2942;
+  --user-thead-color:  #94a3b8;
+  --user-td-color:     #cbd5e1;
+  --user-tr-hover:     #273549;
+  --user-row-border:   #1e293b;
+  --user-footer-bg:    #172033;
+  --user-modal-bg:     #1e293b;
+  --user-modal-footer: #172033;
 }
 
-.table {
-  width: 100%;
-  margin-bottom: 0;
-  border-collapse: collapse;
-}
+/* filter-bar → dipindah ke layout.css */
 
-/* Header table */
-.table thead th {
-  background-color: #f8f9fa;
-  color: #212529;
-  font-weight: 600;
-  text-transform: uppercase;
-  padding: 0.9rem;
-  font-size: 0.875rem;
-}
-
-/* Isi table */
-.table tbody td {
-  vertical-align: middle;
+/* =======================================================
+   📋 TABEL USER (.table-user)
+======================================================= */
+.table-user {
   font-size: 0.9rem;
-  padding: 0.8rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  background-color: var(--card-bg);
+  color: var(--user-td-color);
+  transition: background 0.3s;
 }
 
-/* Hover row */
-.table tbody tr:hover {
-  background-color: rgba(0, 123, 255, 0.05);
-  transition: 0.2s ease;
+.table-user th,
+.table-user td {
+  vertical-align: middle;
+  color: var(--user-td-color);
 }
 
-/* Tombol aksi */
-.table .btn {
-  border-radius: 8px;
-  padding: 0.35rem 0.5rem;
+.table-user thead {
+  background-color: var(--user-thead-bg);
+  color: var(--user-thead-color);
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
 }
 
-/* ==============================
-   MODE GELAP (DARK MODE)
-   ============================== */
-[data-theme="dark"] .card {
-  background-color: #121826 !important;
-  color: #fff !important;
+.table-user thead th {
+  color: var(--user-thead-color);
+  border-bottom: 2px solid var(--user-row-border);
+  padding: 0.85rem 0.85rem;
+  white-space: nowrap;
+  text-align: center;
 }
 
-[data-theme="dark"] .table thead th {
-  background-color: #1e2636 !important;
-  color: #ffffff !important;
-  border-color: #2e3748 !important;
+.table-user tbody tr {
+  transition: background 0.2s ease;
+  border-bottom: 1px solid var(--user-row-border);
 }
 
-[data-theme="dark"] .table tbody tr {
-  background-color: #121826 !important;
-  border-color: #2e3748 !important;
+.table-user tbody tr:hover {
+  background-color: var(--user-tr-hover);
 }
 
-[data-theme="dark"] .table tbody td {
-  color: #e2e8f0 !important;
+.table-user tbody td {
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid var(--user-row-border);
 }
 
-/* Tombol tetap kontras di dark mode */
-[data-theme="dark"] .btn-info {
-  background-color: #3b82f6 !important;
-  border: none;
+[data-theme="dark"] .table-user td,
+[data-theme="dark"] .table-user th {
+  color: var(--user-td-color);
 }
 
-[data-theme="dark"] .btn-warning {
-  background-color: #f59e0b !important;
-  border: none;
-  color: #fff !important;
+[data-theme="dark"] .table-user thead {
+  background-color: var(--user-thead-bg);
 }
 
-[data-theme="dark"] .btn-danger {
-  background-color: #ef4444 !important;
-  border: none;
+[data-theme="dark"] .table-user thead th {
+  color: var(--user-thead-color);
+  border-bottom-color: var(--user-row-border);
 }
 
-/* ==============================
-   PERBAIKAN WIDTH TABLE
-   ============================== */
-.card .table-responsive {
-  min-width: 100%;
+[data-theme="dark"] .table-user tbody td {
+  border-bottom-color: var(--user-row-border);
+}
+
+[data-theme="dark"] .table-user tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* =======================================================
+   🖼 FOTO PROFIL DALAM TABEL
+======================================================= */
+.user-avatar {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  transition: border-color 0.2s;
+}
+
+[data-theme="dark"] .user-avatar {
+  border-color: #334155;
+}
+
+/* =======================================================
+   📦 CARD WRAPPER TABEL
+======================================================= */
+.user-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: background 0.3s, border-color 0.3s;
+  animation: userFadeIn 0.3s ease-in-out;
+}
+
+@keyframes userFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+[data-theme="dark"] .user-card {
+  border-color: var(--border-color);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Footer pagination */
+.user-card-footer {
+  background-color: var(--user-footer-bg);
+  border-top: 1px solid var(--border-color);
+  padding: 0.6rem 1rem;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+[data-theme="dark"] .user-card-footer {
+  background-color: var(--user-footer-bg);
+  border-top-color: var(--border-color);
+}
+
+.user-card-footer .text-muted {
+  font-size: 0.82rem;
+  color: var(--user-input-ph) !important;
+}
+
+/* modal styles → dipindah ke layout.css */
+
+/* Modal footer dark mode */
+[data-theme="dark"] .modal-footer {
+  background-color: var(--user-modal-footer) !important;
+  border-top-color: #334155;
+}
+
+/* Alert kepala staf info */
+[data-theme="dark"] .alert-info {
+  background-color: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.25);
+  color: #7dd3fc;
+}
+
+/* =======================================================
+   📸 FOTO PREVIEW DI MODAL
+======================================================= */
+.foto-preview-wrapper {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto;
+  border: 3px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: border-color 0.3s;
+}
+
+[data-theme="dark"] .foto-preview-wrapper {
+  border-color: #334155;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.foto-preview-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   display: block;
+}
+
+/* =======================================================
+   🌙 DARK MODE — CROP MODAL
+======================================================= */
+[data-theme="dark"] #cropFotoModal .modal-header {
+  background-color: #1e293b;
+  border-bottom-color: #334155;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] #cropFotoModal .modal-footer {
+  background-color: #1e293b !important;
+  border-top-color: #334155;
+}
+
+[data-theme="dark"] #cropFotoModal small.text-muted {
+  color: #64748b !important;
+}
+
+/* =======================================================
+   🗑 MODAL HAPUS — DARK MODE
+======================================================= */
+[data-theme="dark"] #deleteUserModal .modal-content {
+  background-color: var(--user-modal-bg);
+}
+
+/* pagination dark mode → dipindah ke layout.css */
+
+/* =======================================================
+   📱 RESPONSIVE
+======================================================= */
+@media (max-width: 768px) {
+  .table-user thead { font-size: 0.72rem; }
+  .table-user tbody td { font-size: 0.82rem; padding: 0.6rem 0.5rem; }
+  .user-avatar { width: 34px; height: 34px; }
 }

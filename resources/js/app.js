@@ -1,12 +1,32 @@
+/**
+ * app.js  —  Entry point Vite (di-bundle ke public/build/assets/app-*.js)
+ * ─────────────────────────────────────────────────────────────────────────
+ * FILE   : resources/js/app.js
+ * SCOPE  : GLOBAL — dimuat di setiap halaman via @vite(['resources/js/app.js'])
+ *          yang ada di layouts/app.blade.php
+ *
+ * Isi file ini:
+ *  1. Bootstrap JS + Flatpickr (datepicker bahasa Indonesia)
+ *  2. window.debounce     — helper delay input, dipakai di user.js & surat.js
+ *  3. window.safeFetch    — wrapper fetch dengan header CSRF & AJAX otomatis
+ *  4. window.renderLoading — tampilkan spinner di dalam container AJAX
+ *  5. window.renderError  — tampilkan alert error di dalam container AJAX
+ *  6. window.AppToast     — notifikasi toast pop-up (sukses/error/info/warning)
+ *
+ * Semua fungsi di-expose ke `window.*` agar bisa diakses oleh modul JS lain
+ * (laporan.js, user.js, surat.js, dll.) tanpa perlu import/export ES module.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+
 import './bootstrap';
 import flatpickr from "flatpickr";
 import { Indonesian } from "flatpickr/dist/l10n/id.js";
 
+// Lokalisasi flatpickr ke bahasa Indonesia — berlaku untuk semua input tanggal
+// yang menggunakan flatpickr di seluruh aplikasi (surat, laporan, dll.)
 flatpickr.localize(Indonesian);
 
-import '../css/laporan.css';
-
-// ── Global Toast Notification ──────────────────────────────────────────────
+// ── Global Utilities + Toast ───────────────────────────────────────────────
 (function () {
     const CSS = `
         .app-toast{
@@ -53,6 +73,109 @@ import '../css/laporan.css';
     style.textContent = CSS;
     document.head.appendChild(style);
 
+    // ════════════════════════════════════════════════════════════
+    // GLOBAL UTILITIES — dipakai oleh modul JS lain via window.*
+    // ════════════════════════════════════════════════════════════
+
+    /**
+     * window.debounce
+     * ─────────────────────────────────────────────────────────
+     * DIPAKAI DI : user.js  → input #search (filter tabel user)
+     *              surat.js → input #search (filter tabel surat)
+     * FUNGSI     : tunda pemanggilan fn hingga user berhenti mengetik
+     *              selama `delay` ms, agar tidak fetch di setiap keystroke
+     * CONTOH     : const handler = window.debounce(() => loadTable(), 400);
+     */
+    window.debounce = function (fn, delay = 400) {
+        let timer;
+        return function (...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), delay);
+        };
+    };
+
+    /**
+     * window.safeFetch
+     * ─────────────────────────────────────────────────────────
+     * DIPAKAI DI : surat.js  → semua request CRUD surat (tambah/edit/hapus)
+     *              user.js   → CRUD user (tambah/edit/hapus/upload foto)
+     * FUNGSI     : wrapper fetch yang otomatis menyertakan header:
+     *              - X-Requested-With: XMLHttpRequest  (agar Laravel tahu ini AJAX)
+     *              - X-CSRF-TOKEN     (untuk request POST/PUT/DELETE)
+     *              Melempar Error jika response.ok === false
+     */
+    window.safeFetch = async function (url, options = {}) {
+        const csrf = document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute("content") ?? "";
+
+        const headers = {
+            "X-Requested-With": "XMLHttpRequest",
+            ...(options.method && options.method !== "GET"
+                ? { "X-CSRF-TOKEN": csrf }
+                : {}),
+            ...options.headers,
+        };
+
+        const res = await fetch(url, { ...options, headers });
+        if (!res.ok) {
+            let msg = res.statusText;
+            try {
+                const body = await res.json();
+                msg = body.message || msg;
+            } catch (_) {}
+            throw new Error(msg || `HTTP ${res.status}`);
+        }
+        return res;
+    };
+
+    /**
+     * window.renderLoading
+     * ─────────────────────────────────────────────────────────
+     * DIPAKAI DI : laporan.js → #laporan_hasil_container (area hasil laporan)
+     *              user.js   → #tableContainer (tabel daftar user)
+     *              surat.js  → #tableContainer (tabel daftar surat)
+     * FUNGSI     : inject HTML spinner Bootstrap ke dalam container AJAX
+     *              agar user tahu data sedang dimuat
+     */
+    window.renderLoading = function (container, message = "Memuat data...") {
+        if (!container) return;
+        container.style.display = "block";
+        container.innerHTML = `
+            <div class="text-center p-5">
+                <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+                <p class="mt-2 text-muted">${message}</p>
+            </div>`;
+    };
+
+    /**
+     * window.renderError
+     * ─────────────────────────────────────────────────────────
+     * DIPAKAI DI : laporan.js → #laporan_hasil_container (jika fetch gagal)
+     *              user.js   → #tableContainer
+     *              surat.js  → #tableContainer
+     * FUNGSI     : inject HTML alert-danger ke dalam container AJAX
+     *              saat fetch/server mengembalikan error
+     */
+    window.renderError = function (container, message) {
+        if (!container) return;
+        container.style.display = "block";
+        container.innerHTML = `
+            <div class="alert alert-danger m-3 shadow-sm">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>${message}
+            </div>`;
+    };
+
+    /**
+     * window.AppToast
+     * ─────────────────────────────────────────────────────────
+     * DIPAKAI DI : surat.js  → notif setelah tambah/edit/hapus surat
+     *              user.js   → notif setelah tambah/edit/hapus user
+     *              laporan.js → notif error saat download gagal
+     * FUNGSI     : tampilkan toast pop-up di pojok kanan atas, auto-tutup 3.5 dtk
+     * CONTOH     : window.AppToast("Berhasil disimpan!", "success")
+     *              Tipe: "success" | "error" | "warning" | "info"
+     */
     window.AppToast = function (message, type = "info") {
         let container = document.getElementById("customToastContainer");
         if (!container) {

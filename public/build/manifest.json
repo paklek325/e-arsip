@@ -6,13 +6,10 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-VyCKZTuz.js",
+    "file": "assets/app-CGRCELVk.js",
     "name": "app",
     "src": "resources/js/app.js",
-    "isEntry": true,
-    "css": [
-      "assets/app-BEpTWA9Q.css"
-    ]
+    "isEntry": true
   },
   "resources/js/chat.js": {
     "file": "assets/chat-CanrcFd3.js",
@@ -21,7 +18,7 @@
     "isEntry": true
   },
   "resources/js/dashboard.js": {
-    "file": "assets/dashboard-DxDH_YED.js",
+    "file": "assets/dashboard-BQKmTbsK.js",
     "name": "dashboard",
     "src": "resources/js/dashboard.js",
     "isEntry": true
@@ -33,7 +30,7 @@
     "isEntry": true
   },
   "resources/js/laporan.js": {
-    "file": "assets/laporan-m3hKJ0bQ.js",
+    "file": "assets/laporan-C8nZ3SfQ.js",
     "name": "laporan",
     "src": "resources/js/laporan.js",
     "isEntry": true
@@ -51,7 +48,7 @@
     "isEntry": true
   },
   "resources/js/surat.js": {
-    "file": "assets/surat-O0AW2AhA.js",
+    "file": "assets/surat-zTbJZFpI.js",
     "name": "surat",
     "src": "resources/js/surat.js",
     "isEntry": true
@@ -63,7 +60,7 @@
     "isEntry": true
   },
   "resources/js/user.js": {
-    "file": "assets/user-BYxVEd7h.js",
+    "file": "assets/user-B-aK-vgR.js",
     "name": "user",
     "src": "resources/js/user.js",
     "isEntry": true

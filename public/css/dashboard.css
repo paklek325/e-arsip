@@ -1,8 +1,31 @@
-/* ============================================================
-   dashboard.css  —  E-Arsip Dashboard
-   ============================================================ */
+/* ════════════════════════════════════════════════════════════
+   dashboard.css — E-Arsip Dashboard
+   ────────────────────────────────────────────────────────────
+   MENU    : Dashboard (/)
+   VIEW    : resources/views/dashboard.blade.php
+   JS      : resources/js/dashboard.js  (animasi + clickable-card)
+             @push('scripts') di dashboard.blade.php (Chart.js)
+   DIMUAT  : via @push('styles') di dashboard.blade.php
+             <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+   ────────────────────────────────────────────────────────────
+   STRUKTUR:
+    1. Animasi fadeUp    — card masuk dari bawah saat halaman dibuka
+    2. Page Header       — judul halaman (.page-header)
+    3. Stat Cards        — .dashboard-card (Users/Surat/Peserta Didik/Kode/Rekap)
+       ├─ Icon wrapper   — lingkaran ikon di atas card
+       ├─ Label & Number — nama card + angka animasi counter
+       └─ Card sub       — area badge/info di bawah angka
+    4. Badge Surat Link  — .badge-surat-masuk / .badge-surat-keluar (link ke menu surat)
+    5. Rombel Badge      — badge warna per rombel di card Peserta Didik
+    6. Chart Cards       — .chart-card (bar surat, donut peserta didik, line tren)
+    7. Background Light  — .bg-*-light (gradient per card)
+    8. Badge Base        — .badge-* (success/info/warning/dll)
+    9. Tabel Users       — .users-table (hanya tampil untuk role Kepala Staf)
+   10. Dark Mode         — semua section di atas versi dark [data-theme="dark"]
+   11. Responsive        — penyesuaian mobile
+════════════════════════════════════════════════════════════ */
 
-/* ==== ANIMASI ==== */
+/* ── 1. ANIMASI — card muncul dari bawah saat halaman dimuat ──────────── */
 .fade-up {
     opacity: 0;
     transform: translateY(16px);
@@ -17,13 +40,16 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* ==== PAGE HEADER ==== */
+/* ── 2. PAGE HEADER — judul "Dashboard" di atas halaman ───────────────── */
 .page-header h5 {
     font-size: 1.1rem;
     letter-spacing: .3px;
 }
 
-/* ==== STAT CARDS ==== */
+/* ── 3. STAT CARDS — kartu statistik (Users/Surat/Peserta Didik/Kode/Rekap)
+        ELEMEN : .dashboard-card   — card utama
+                 .clickable-card   — JS: klik → window.location.href (dashboard.js)
+        VIEW   : dashboard.blade.php → @foreach ($cards as $card) ────────── */
 .dashboard-card {
     border-radius: 1rem !important;
     border: none !important;
@@ -50,7 +76,7 @@
     pointer-events: none;
 }
 
-/* ==== CARD BODY ==== */
+/* ── Card Body ──────────────────────────────────────────────────────────── */
 .dashboard-card .card-body {
     display: flex;
     flex-direction: column;
@@ -60,7 +86,7 @@
     gap: 0;
 }
 
-/* ==== ICON ==== */
+/* ── Icon Wrapper — lingkaran ikon di atas angka card ───────────────────── */
 .icon-wrapper {
     width: 54px;
     height: 54px;
@@ -84,7 +110,7 @@
 }
 .dashboard-card:hover .icon-animated { transform: scale(1.12); }
 
-/* ==== LABEL & NUMBER ==== */
+/* ── Label & Number — nama card + angka counter (JS: count-up di dashboard.js) ── */
 .dashboard-label {
     font-weight: 600;
     font-size: 0.82rem;
@@ -104,7 +130,7 @@
     letter-spacing: -1px;
 }
 
-/* ==== CARD SUB (badges area) ==== */
+/* ── Card Sub — area di bawah angka (badge/info per jenis card) ─────────── */
 .card-sub {
     min-height: 3.6rem;
     width: 100%;
@@ -127,7 +153,11 @@
     border-radius: 2px !important;
 }
 
-/* ==== CHART CARDS ==== */
+/* ── CHART CARDS — kartu grafik (bar surat, donut peserta didik, line tren)
+        ELEMEN : .chart-card         — wrapper kartu grafik
+                 .chart-header-title — baris judul + ikon
+                 .chart-header-controls — baris badge + filter tahun
+        JS     : Chart.js → diinisialisasi di @push('scripts') dashboard.blade.php ── */
 .chart-card {
     border-radius: 1rem !important;
     border: none !important;
@@ -234,7 +264,7 @@
     color: #e2e8f0 !important;
 }
 
-/* ==== BACKGROUND GRADIENTS (LIGHT MODE) ==== */
+/* ── BACKGROUND GRADIENTS — warna latar per card (light mode) ───────────── */
 .bg-primary-light {
     background: linear-gradient(145deg, #c5d8ff 0%, #deeaff 55%, #f0f5ff 100%);
 }
@@ -251,7 +281,7 @@
     background: linear-gradient(145deg, #7dd7f0 0%, #caf0fc 55%, #f0fbff 100%);
 }
 
-/* ==== DARK MODE CORE ==== */
+/* ── DARK MODE — semua override untuk [data-theme="dark"] ───────────────── */
 [data-theme="dark"] .dashboard-label { color: #cbd5e1; }
 [data-theme="dark"] .dashboard-number { color: #f1f5f9; }
 [data-theme="dark"] .icon-wrapper {
@@ -303,7 +333,7 @@
 [data-theme="dark"] .page-header h5 { color: #93c5fd !important; }
 [data-theme="dark"] .page-header .text-primary { color: #93c5fd !important; }
 
-/* ==== BADGE BASE ==== */
+/* ── BADGE BASE — style dasar semua badge di dashboard ─────────────────── */
 .badge {
     font-size: 0.73rem;
     font-weight: 600;
@@ -351,6 +381,47 @@
 [data-theme="dark"] .dashboard-card .badge-gender-laki     { background: rgba(147,197,253,.92) !important; color: #0c1830 !important; }
 [data-theme="dark"] .dashboard-card .badge-gender-perempuan { background: rgba(249,168,212,.92) !important; color: #2d0a1a !important; }
 
+/* ==== BADGE SURAT LINK (masuk / keluar di card Surat) ==== */
+.badge-surat-link {
+    display: inline-flex;
+    align-items: center;
+    padding: .35rem .75rem;
+    border-radius: .55rem;
+    font-size: .76rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: filter .15s, transform .15s, box-shadow .15s;
+    position: relative;
+    z-index: 5;
+    white-space: nowrap;
+}
+.badge-surat-link:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0,0,0,.18);
+}
+.badge-surat-masuk {
+    background: rgba(34,197,94,.18);
+    color: #15803d;
+    border: 1.5px solid #22c55e;
+}
+.badge-surat-keluar {
+    background: rgba(6,182,212,.18);
+    color: #0e7490;
+    border: 1.5px solid #06b6d4;
+}
+
+[data-theme="dark"] .badge-surat-masuk {
+    background: rgba(74,222,128,.18);
+    color: #4ade80;
+    border-color: #4ade80;
+}
+[data-theme="dark"] .badge-surat-keluar {
+    background: rgba(103,232,249,.18);
+    color: #67e8f9;
+    border-color: #67e8f9;
+}
+
 /* ==== ROMBEL BADGE ==== */
 .dashboard-card .rombel-badge,
 .rombel-badge {
@@ -376,7 +447,9 @@
     filter: brightness(1.15) !important;
 }
 
-/* ==== TABEL ==== */
+/* ── TABEL USERS — daftar pengguna (hanya tampil untuk role Kepala Staf)
+        ELEMEN : .users-table   — tabel daftar user di bawah chart
+        VIEW   : dashboard.blade.php → @if ($isKepala) tabel users @endif ── */
 .users-table {
     border-collapse: separate;
     border-spacing: 0 6px;
@@ -413,7 +486,7 @@
 .users-table td:first-child { border-radius: .5rem 0 0 .5rem; border-left: 1px solid #f1f5f9; }
 .users-table td:last-child  { border-radius: 0 .5rem .5rem 0; border-right: 1px solid #f1f5f9; }
 
-/* ==== TABEL DARK MODE ==== */
+/* ── TABEL DARK MODE ────────────────────────────────────────────────────── */
 [data-theme="dark"] .users-table thead {
     background-color: #1b2435;
 }
@@ -434,7 +507,7 @@
 }
 [data-theme="dark"] .users-table td a { color: #93c5fd !important; }
 
-/* ==== CARD TABLE WRAPPER DARK ==== */
+/* ── Card wrapper (shadow-sm) dark mode ─────────────────────────────────── */
 [data-theme="dark"] .card.shadow-sm {
     background: #141c2c !important;
     border-color: #27324b !important;
@@ -445,7 +518,7 @@
 }
 [data-theme="dark"] .card.shadow-sm .card-header h6.text-primary { color: #93c5fd !important; }
 
-/* ==== FORM CONTROL (tahun filter) DARK ==== */
+/* ── Form Control — input filter tahun di chart header (dark mode) ───────── */
 [data-theme="dark"] .form-control {
     background: #1e293b !important;
     border-color: #334155 !important;
@@ -459,12 +532,12 @@
 }
 [data-theme="dark"] label.small.text-muted { color: #94a3b8 !important; }
 
-/* ==== BREADCRUMB DARK ==== */
+/* ── Breadcrumb dark mode ────────────────────────────────────────────────── */
 [data-theme="dark"] .breadcrumb-item a { color: #93c5fd; }
 [data-theme="dark"] .breadcrumb-item.active { color: #94a3b8; }
 [data-theme="dark"] .breadcrumb-item + .breadcrumb-item::before { color: #475569; }
 
-/* ==== RESPONSIF ==== */
+/* ── RESPONSIF — penyesuaian ukuran untuk tablet & mobile ───────────────── */
 @media (max-width: 991.98px) {
     .dashboard-number { font-size: 1.5rem; }
     .icon-wrapper { width: 48px; height: 48px; }

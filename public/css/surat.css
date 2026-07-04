@@ -36,45 +36,7 @@
   --surat-file-border:  #334155;
 }
 
-/* =======================================================
-   🔍 FILTER BAR
-======================================================= */
-.filter-bar {
-  width: 100%;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 0.75rem;
-  padding: 1rem 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  margin-bottom: 1rem;
-  transition: background 0.3s, border-color 0.3s;
-}
-
-.filter-bar .form-control,
-.filter-bar .form-select {
-  font-size: 0.9rem;
-  border-radius: 0.5rem;
-  background-color: var(--card-bg);
-  color: var(--text-color);
-  border-color: var(--border-color);
-  transition: all 0.2s ease;
-}
-
-.filter-bar .form-control::placeholder {
-  color: var(--surat-input-ph);
-}
-
-.filter-bar .form-control:focus,
-.filter-bar .form-select:focus {
-  border-color: var(--active-color);
-  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
-}
-
-[data-theme="dark"] .filter-bar .form-control:focus,
-[data-theme="dark"] .filter-bar .form-select:focus {
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
-}
+/* filter-bar → dipindah ke layout.css */
 
 /* Padding untuk select agar tombol X tidak menutupi panah */
 .position-relative .form-select {
@@ -191,60 +153,14 @@
   color: #f87171 !important;
 }
 
-/* =======================================================
-   🪟 MODAL
-======================================================= */
-.modal-content {
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  background-color: var(--surat-modal-bg);
-  color: var(--surat-td-color);
-  transition: background 0.3s;
-}
-
-[data-theme="dark"] .modal-content { border: 1px solid #334155; }
+/* modal global → dipindah ke layout.css */
 
 .modal-header .btn-close { opacity: 0.8; transition: opacity 0.2s; }
 .modal-header .btn-close:hover { opacity: 1; }
 
-[data-theme="dark"] .modal-header { border-color: #334155; color: #f1f5f9; }
-[data-theme="dark"] .modal-title  { color: #f1f5f9; }
-
 #editSuratModal .modal-header {
   background-color: #ffc107 !important;
   color: #212529 !important;
-}
-
-.modal-footer {
-  background-color: var(--surat-modal-footer) !important;
-  border-top: 1px solid var(--border-color);
-}
-
-.form-label { color: var(--text-color); }
-
-.modal-content .form-control,
-.modal-content .form-select,
-.modal-content textarea {
-  background-color: var(--card-bg);
-  border-color: var(--border-color);
-  color: var(--text-color);
-}
-
-.modal-content .form-control::placeholder,
-.modal-content textarea::placeholder { color: var(--surat-input-ph); }
-
-.modal-content .form-control:focus,
-.modal-content .form-select:focus,
-.modal-content textarea:focus {
-  border-color: var(--active-color);
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-
-[data-theme="dark"] .modal-content .form-control:focus,
-[data-theme="dark"] .modal-content .form-select:focus,
-[data-theme="dark"] .modal-content textarea:focus {
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 0.25rem rgba(96, 165, 250, 0.25);
 }
 
 .modal-content .form-text,
@@ -309,26 +225,7 @@
   50%       { box-shadow: 0 0 0 8px rgba(96, 165, 250, 0); }
 }
 
-/* =======================================================
-   📄 PAGINATION (dark mode)
-======================================================= */
-[data-theme="dark"] .page-link {
-  background-color: #1e293b;
-  border-color: #334155;
-  color: #94a3b8;
-}
-
-[data-theme="dark"] .page-item.active .page-link {
-  background-color: #3b82f6;
-  border-color: #3b82f6;
-  color: #fff;
-}
-
-[data-theme="dark"] .page-item.disabled .page-link {
-  background-color: #0f172a;
-  border-color: #334155;
-  color: #475569;
-}
+/* pagination dark mode → dipindah ke layout.css */
 
 /* =======================================================
    Select2 (dark mode)
