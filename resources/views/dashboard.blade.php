@@ -339,6 +339,7 @@
                                         <img src="{{ $user->foto ? asset('storage/foto_admin/' . $user->foto) : asset('assets/img/default_staf.png') }}"
                                              onerror="this.onerror=null;this.src='{{ asset('assets/img/default_staf.png') }}'"
                                              class="rounded-circle me-3 border shadow-sm users-table-avatar"
+                                             loading="lazy" decoding="async"
                                              alt="{{ $user->name }}">
                                         <span class="fw-semibold text-truncate users-table-name">
                                             {{ $user->name }}
@@ -372,8 +373,12 @@
 
 @endsection
 
-@push('styles')
-<link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+@push('page-css')
+<link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ filemtime(public_path('css/dashboard.css')) }}">
+@endpush
+
+@push('page-js')
+  @vite(['resources/js/dashboard.js'])
 @endpush
 
 @push('scripts')

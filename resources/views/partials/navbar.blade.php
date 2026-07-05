@@ -49,7 +49,8 @@
                         <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#"
                             role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false">
                             <img src="{{ $fotoUrl }}" onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
-                                alt="Foto {{ $authUser->name }}" class="user-avatar">
+                                alt="Foto {{ $authUser->name }}" class="user-avatar"
+                                loading="eager" fetchpriority="high" decoding="sync">
                         </a>
 
                         <div
@@ -59,7 +60,8 @@
                             <div class="dropdown-header d-flex align-items-center gap-3 dropdown-user-header">
                                 <img src="{{ $fotoUrl }}"
                                     onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
-                                    alt="{{ $authUser->name }}" class="img-radius wid-35 dropdown-user-avatar">
+                                    alt="{{ $authUser->name }}" class="img-radius wid-35 dropdown-user-avatar"
+                                    loading="lazy" decoding="async">
                                 <div class="flex-grow-1 overflow-hidden">
                                     <h6 class="text-white mb-0 text-truncate">{{ $authUser->name }}</h6>
                                     <small class="text-white text-opacity-75">{{ $roleName }}</small>

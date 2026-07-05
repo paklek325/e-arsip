@@ -20,7 +20,7 @@
           <td>
             <img src="{{ $u->foto ? asset('storage/foto_admin/' . $u->foto) : asset('assets/img/default_staf.png') }}"
                  onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
-                 class="user-avatar"
+                 class="user-avatar" loading="lazy" decoding="async"
                  alt="Foto {{ $u->name }}">
           </td>
 

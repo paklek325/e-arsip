@@ -40,5 +40,9 @@
     @include('peserta_didik.partials.modal')
 </div>{{-- /py-2 --}}
 @endsection
-@push('scripts')
+@push('page-css')
+<link rel="stylesheet" href="{{ asset('css/peserta-didik.css') }}?v={{ filemtime(public_path('css/peserta-didik.css')) }}">
+@endpush
+@push('page-js')
+  @vite(['resources/js/peserta-didik.js'])
 @endpush

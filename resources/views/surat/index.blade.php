@@ -59,3 +59,10 @@
 
     </div>
 @endsection
+
+@push('page-css')
+<link rel="stylesheet" href="{{ asset('css/surat.css') }}?v={{ filemtime(public_path('css/surat.css')) }}">
+@endpush
+@push('page-js')
+  @vite(['resources/js/surat.js'])
+@endpush

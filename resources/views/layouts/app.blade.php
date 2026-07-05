@@ -22,7 +22,12 @@
   {{-- Fonts & Icons --}}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  {{-- Google Fonts: non-blocking (preload swap trick) --}}
+  <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'"
+        href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600&display=swap">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600&display=swap"></noscript>
   <link rel="stylesheet" href="{{ asset('template/dist/fonts/tabler-icons.min.css') }}">
   <link rel="stylesheet" href="{{ asset('template/dist/fonts/phosphor/regular/style.css') }}">
   <link rel="stylesheet" href="{{ asset('template/dist/fonts/fontawesome.css') }}">
@@ -36,29 +41,23 @@
   {{-- Flatpickr --}}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
-  {{-- App CSS (v= filemtime agar browser selalu ambil versi terbaru) --}}
+  {{-- App CSS global (semua halaman) --}}
   <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/layout.css') }}?v={{ filemtime(public_path('css/layout.css')) }}">
-  <link rel="stylesheet" href="{{ asset('css/kode.css') }}?v={{ filemtime(public_path('css/kode.css')) }}">
-  <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ filemtime(public_path('css/dashboard.css')) }}">
-  <link rel="stylesheet" href="{{ asset('css/user.css') }}?v={{ filemtime(public_path('css/user.css')) }}">
-  <link rel="stylesheet" href="{{ asset('css/surat.css') }}?v={{ filemtime(public_path('css/surat.css')) }}">
-  <link rel="stylesheet" href="{{ asset('css/peserta-didik.css') }}?v={{ filemtime(public_path('css/peserta-didik.css')) }}">
-  <link rel="stylesheet" href="{{ asset('css/laporan.css') }}?v={{ filemtime(public_path('css/laporan.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/chat.css') }}?v={{ filemtime(public_path('css/chat.css')) }}">
 
-  {{-- Aset dari Vite --}}
+  {{-- CSS khusus per-halaman (di-push dari masing-masing view) --}}
+  @stack('page-css')
+
+  {{-- Aset Vite global (semua halaman) --}}
   @vite([
     'resources/js/app.js',
     'resources/js/tampilan.js',
-    'resources/js/surat.js',
-    'resources/js/kode.js',
-    'resources/js/user.js',
-    'resources/js/dashboard.js',
-    'resources/js/peserta-didik.js',
-    'resources/js/laporan.js',
     'resources/js/chat.js',
   ])
+
+  {{-- JS Vite khusus per-halaman --}}
+  @stack('page-js')
 
   @stack('styles')
 

@@ -106,3 +106,10 @@
 
 </div>
 @endsection
+
+@push('page-css')
+<link rel="stylesheet" href="{{ asset('css/laporan.css') }}?v={{ filemtime(public_path('css/laporan.css')) }}">
+@endpush
+@push('page-js')
+  @vite(['resources/js/laporan.js'])
+@endpush

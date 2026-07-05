@@ -58,6 +58,13 @@
 </div>
 @endsection
 
+@push('page-css')
+<link rel="stylesheet" href="{{ asset('css/kode.css') }}?v={{ filemtime(public_path('css/kode.css')) }}">
+@endpush
+@push('page-js')
+  @vite(['resources/js/kode.js'])
+@endpush
+
 
 
 
