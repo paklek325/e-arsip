@@ -3,6 +3,8 @@
    ──────────────────────────────────────────────────────────
    MENU  : Master Peserta Didik (/peserta-didik)
    FILE  : public/css/peserta-didik.css
+   VIEWS : resources/views/peserta_didik/
+   ══════════════════════════════════════════════════════════ */
 
 /* === BADGE STATUS === */
 .badge-status-lengkap {
@@ -17,8 +19,6 @@
   font-size: 0.75rem;
   padding: 0.35em 0.75em;
 }
-   VIEWS : resources/views/peserta_didik/
-   ══════════════════════════════════════════════════════════ */
 
 /* filter-bar → dipindah ke layout.css */
 

@@ -1392,34 +1392,29 @@ if (window.PesertaDidikApp) {
         };
 
         // ============================================================
-        // INIT — reset filter setiap kali halaman dimuat/di-refresh
-        // (Catatan: dahulu filter dipulihkan dari query string URL,
-        //  sekarang sengaja di-reset agar setiap refresh halaman
-        //  selalu menampilkan data tanpa filter aktif.)
+        // INIT — bind row actions pada tabel yang sudah di-render server-side.
+        // Tidak perlu AJAX ulang karena server sudah render tabel yang benar.
+        // AJAX hanya dipanggil saat filter/pagination berubah.
         // ============================================================
         function initPesertaDidikPage() {
-            // Pasang pembatas input alphanumeric pada form tambah & edit
             setupPesertaAlphanumericGuards();
 
-            // Kosongkan semua input filter
+            // Reset semua input filter ke default
             if (searchInput) searchInput.value = "";
             if (rombelSelect) rombelSelect.selectedIndex = 0;
             if (statusSelect) statusSelect.selectedIndex = 0;
             if (sortAngkatanSelect) sortAngkatanSelect.selectedIndex = 0;
             if (sortNamaSelect) sortNamaSelect.selectedIndex = 0;
+            document.getElementById("resetSearch")?.classList.add("d-none");
 
-            const resetSearch = document.getElementById("resetSearch");
-            resetSearch?.classList.add("d-none");
-
-            // Bersihkan query string di URL (tanpa filter/page)
-            const cleanUrl = new URL(
-                window.location.pathname,
-                window.location.origin
+            // Bersihkan query string di URL
+            window.history.replaceState(
+                null, "",
+                new URL(window.location.pathname, window.location.origin).href
             );
-            window.history.replaceState(null, "", cleanUrl.href);
 
-            // Muat tabel tanpa filter (page 1)
-            loadTablePesertaDidik({});
+            // Tabel sudah ada dari server — cukup pasang event handler baris
+            bindRowActions();
         }
 
         if (document.readyState === "loading") {
