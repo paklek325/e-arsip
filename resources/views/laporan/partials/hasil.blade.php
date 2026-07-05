@@ -37,7 +37,7 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
 <div class="laporan-tahunan">
     <div class="card shadow-sm mb-3">
 
-        <div class="print-date-top no-print">
+        <div class="print-date-top">
             <small>Tanggal cetak: {{ $tanggalCetak }}</small>
         </div>
 
@@ -179,7 +179,7 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
 <div class="laporan-bulanan">
     <div class="card shadow-sm">
 
-        <div class="print-date-top no-print">
+        <div class="print-date-top">
             <small>Tanggal cetak: {{ $tanggalCetak }}</small>
         </div>
 

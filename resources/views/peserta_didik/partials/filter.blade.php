@@ -25,7 +25,7 @@
                         id="resetSearch"
                         class="btn btn-light border {{ request('search') ? '' : 'd-none' }}"
                         title="Hapus Pencarian">
-                    <i class="bi bi-x-lg"></i>
+                    <i class="bi bi-x"></i>
                 </button>
             </div>
         </div>

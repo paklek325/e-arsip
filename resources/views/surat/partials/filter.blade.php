@@ -21,7 +21,7 @@
                     id="resetSearch"
                     class="btn btn-light border-start-0 d-none"
                     title="Hapus Pencarian">
-                    <i class="bi bi-x-lg"></i>
+                    <i class="bi bi-x"></i>
                 </button>
 
             </div>
@@ -47,7 +47,7 @@
                     id="resetJenis"
                     class="filter-clear-btn d-none"
                     title="Reset Filter">
-                    <i class="bi bi-x-lg"></i>
+                    <i class="bi bi-x"></i>
                 </button>
                 @endunless
 
@@ -68,7 +68,7 @@
                     id="resetSort"
                     class="filter-clear-btn d-none"
                     title="Reset Sort">
-                    <i class="bi bi-x-lg"></i>
+                    <i class="bi bi-x"></i>
                 </button>
 
             </div>
@@ -76,8 +76,3 @@
 
     </div>
 </div>
-
-
-
-
-

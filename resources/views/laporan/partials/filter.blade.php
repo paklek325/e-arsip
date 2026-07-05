@@ -44,7 +44,7 @@
     </div>
 
     <button type="button" id="btn_reset_filter" class="btn btn-outline-secondary w-100">
-        <i class="bi bi-x-lg me-1"></i> Reset Filter
+        <i class="bi bi-x me-1"></i> Reset Filter
     </button>
 
 </form>

@@ -686,13 +686,55 @@
 }
 
 @media print {
-  @page { size: 330mm 210mm; margin: 8mm 10mm; }
+  /* Portrait dipakai supaya konten tidak melebar; tabel rekap cukup
+     ramping untuk muat dengan baik di lebar kertas portrait.
+     Margin atas & bawah diperbesar (dari 8mm) agar ada jarak napas
+     dari header/footer bawaan browser (judul, URL, nomor halaman)
+     — ini yang sebelumnya membuat kartu statistik & baris TOTAL
+     terlihat nempel/terpotong tepat di tepi kertas. */
+  @page { size: portrait; margin: 10mm 10mm 12mm; }
 
   /* Paksa browser cetak warna persis seperti layar */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-  html, body { margin: 0 !important; padding: 0 !important; }
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-width: 0 !important;
+  }
+  .container, .container-fluid { min-width: 0 !important; }
   .no-print { display: none !important; }
+
+  /* Rekap tahunan selalu ringkas (12 baris) → paksa tetap 1 halaman.
+     Rekap bulanan bisa punya daftar surat panjang, jadi dibiarkan
+     page-break-inside: auto (lihat aturan di bawah) supaya tidak
+     terpaksa membuat halaman kosong saat memang tidak muat. */
+  .laporan-tahunan { page-break-inside: avoid; break-inside: avoid; }
+
+  /* ─────────────────────────────────────────────────────────
+     🚫 ANTI-TERPOTONG — berlaku untuk TAHUNAN & BULANAN
+     Mencegah 1 baris tabel (atau baris TOTAL di tfoot) terbelah
+     di antara dua halaman. Kalau memang tidak muat, browser akan
+     memindahkan baris itu UTUH ke halaman berikutnya, bukan
+     memotongnya di tengah.
+  ───────────────────────────────────────────────────────────── */
+  .table-wrapper table thead {
+    break-after: avoid; page-break-after: avoid;
+  }
+  .table-wrapper table tbody tr {
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .table-wrapper table tfoot,
+  .tfoot-total {
+    break-before: avoid; page-break-before: avoid;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  /* Header bar + stat cards tetap menyatu dengan tabel di bawahnya */
+  .header-bar,
+  .stat-cards {
+    break-after: avoid; page-break-after: avoid;
+  }
 
   /* Pastikan variabel tetap light-mode saat print */
   :root {
@@ -722,20 +764,48 @@
   .card-body { padding: 0 !important; }
   .header-bar { border-radius: 0 !important; }
 
-  /* Header bar — sama dengan web */
+  /* Header bar — sama dengan web, dipadatkan sedikit untuk print */
   .laporan-tahunan .header-bar,
-  .laporan-bulanan .header-bar { background: var(--lap-navy) !important; }
-  .judul-print h4 { font-size: 14px !important; color: #fff !important; }
-  .judul-print h5 { font-size: 12px !important; color: rgba(255,255,255,.9) !important; }
+  .laporan-bulanan .header-bar { background: var(--lap-navy) !important; padding: .45rem 1rem .4rem !important; }
+  .judul-print h4 { font-size: 13px !important; color: #fff !important; }
+  .judul-print h5 { font-size: 11px !important; color: rgba(255,255,255,.9) !important; }
 
-  /* Tabel */
+  /* Tabel — dibuat ringkas agar tetap muat 1 halaman meski browser
+     menambah header/footer cetak sendiri (judul, URL, tanggal, no halaman) */
   .table-wrapper { width: 100% !important; }
   .table-wrapper table { width: 100% !important; table-layout: fixed !important; }
   .table-wrapper table th,
-  .table-wrapper table td { font-size: 10px !important; padding: .3rem .5rem !important; white-space: nowrap; }
+  .table-wrapper table td { font-size: 8.5px !important; padding: .15rem .4rem !important; line-height: 1.25 !important; white-space: nowrap; }
   .table-wrapper table th.col-no,
-  .table-wrapper table td.col-no { width: 30px !important; max-width: 30px !important; }
+  .table-wrapper table td.col-no { width: 26px !important; max-width: 26px !important; }
+  /* Tabel detail surat (bulanan) punya kolom teks panjang (Perihal/Instansi)
+     — di kertas portrait yang lebih sempit, biarkan membungkus baris
+     supaya isinya tidak terpotong, bukan malah melebar/overflow. */
+  .table-wrapper.detail-surat table th,
+  .table-wrapper.detail-surat table td { white-space: normal !important; word-break: break-word; }
   .table-responsive { overflow: visible !important; }
+
+  /* Rekap TAHUNAN selalu tepat 12 baris (tetap, tidak pernah berubah
+     jumlahnya) — jadi barisnya dibuat lebih tinggi/lega supaya tabel
+     mengisi halaman portrait secara merata & rapi, tidak menyisakan
+     ruang kosong besar di bawah. Tabel BULANAN tidak disentuh karena
+     jumlah barisnya bisa bervariasi (tergantung jumlah surat). */
+  .laporan-tahunan .table-wrapper table th,
+  .laporan-tahunan .table-wrapper table td {
+    font-size: 10.5px !important;
+    padding: .4rem .55rem !important;
+    line-height: 1.25 !important;
+  }
+  .laporan-tahunan .table-wrapper table th.col-no,
+  .laporan-tahunan .table-wrapper table td.col-no { width: 32px !important; max-width: 32px !important; }
+  .laporan-tahunan .stat-cards { padding: .5rem .8rem !important; gap: .5rem !important; }
+  .laporan-tahunan .stat-card { padding: .4rem .6rem !important; }
+  .laporan-tahunan .stat-card .stat-num   { font-size: 18px !important; }
+  .laporan-tahunan .stat-card .stat-label { font-size: 9px !important; }
+  .laporan-tahunan .header-bar { padding: .5rem 1rem !important; margin-bottom: 2px; }
+  .laporan-tahunan .judul-print h4 { font-size: 14px !important; }
+  .laporan-tahunan .judul-print h5 { font-size: 11px !important; }
+  .laporan-tahunan .section-sub { font-size: 11px !important; margin: 6px 6mm 4px !important; }
 
   /* Thead — sama dengan web (gelap) */
   .laporan-tahunan .table-wrapper thead.table-primary th,
@@ -750,9 +820,9 @@
   .table-wrapper tbody tr:nth-child(odd)  td { background: var(--lap-surface) !important; }
   .table-wrapper a { text-decoration: none !important; }
 
-  /* Stat cards — tampil seperti web */
-  .stat-cards { padding: .5rem .7rem .4rem !important; gap: .5rem !important; }
-  .stat-card  { padding: .4rem .6rem !important; }
+  /* Stat cards — tampil seperti web (dipadatkan sedikit untuk print) */
+  .stat-cards { padding: .4rem .7rem .3rem !important; gap: .5rem !important; }
+  .stat-card  { padding: .3rem .6rem !important; }
   .stat-card .stat-num   { font-size: 18px !important; }
   .stat-card .stat-label { font-size: 8px !important; }
   .stat-card.masuk  { background: var(--lap-masuk-bg) !important; border-color: var(--lap-masuk) !important; }
@@ -766,8 +836,12 @@
   .laporan-bulanan { page-break-inside: auto; }
   tr, td, th { page-break-inside: avoid; }
 
-  .section-sub { margin: 8px 6mm 4px; font-size: 11px !important; }
+  .section-sub { margin: 5px 6mm 3px; font-size: 10px !important; }
   .detail-pagination-wrap { display: none !important; }
+
+  /* Jarak antara baris TOTAL (tfoot) dan elemen sesudahnya (kalau
+     detail-pagination-wrap tidak disembunyikan, mis. di context lain) */
+  .tfoot-total { margin-bottom: 2mm; }
 }
 
 /* =======================================================

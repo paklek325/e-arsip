@@ -16,11 +16,11 @@
 <div class="py-2" id="page-laporan">
 
     {{-- Page Header --}}
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 laporan-page-header">
 
         <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-file-earmark-bar-graph-fill fs-5 text-primary"></i>
-            <h5 class="fw-bold text-primary mb-0">Laporan Rekapitulasi Surat</h5>
+            <i class="bi bi-file-earmark-bar-graph-fill fs-5 icon-circle"></i>
+            <h5 class="fw-bold mb-0">Laporan Rekapitulasi Surat</h5>
         </div>
 
         <div class="d-flex gap-2 flex-shrink-0">
