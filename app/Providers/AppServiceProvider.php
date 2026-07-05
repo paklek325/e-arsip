@@ -20,9 +20,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Force HTTPS when APP_URL uses https, so route() generates correct URLs
-        // behind Cloudflare even if APP_ENV is not set to production.
-        if (str_starts_with(config('app.url', ''), 'https://')) {
+        // Force HTTPS hanya di production (untuk Cloudflare/reverse proxy).
+        // Di local/testing tidak perlu agar php artisan serve tetap HTTP.
+        if (!app()->isLocal() && str_starts_with(config('app.url', ''), 'https://')) {
             \URL::forceScheme('https');
         }
 
