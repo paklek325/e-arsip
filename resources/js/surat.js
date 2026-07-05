@@ -90,9 +90,10 @@ if (window.SuratApp) {
             });
         }
 
-        const toast = (message, type = "info") => window.AppToast(message, type);
+        const toast = (message, type = "info") =>
+            window.AppToast(message, type);
 
-        const debounce  = window.debounce;
+        const debounce = window.debounce;
         const safeFetch = window.safeFetch;
 
         /* ========== INLINE ALERT DI DALAM MODAL ========== */
@@ -238,7 +239,10 @@ if (window.SuratApp) {
         }
 
         // ===== GENERATE NOMOR SURAT OTOMATIS =====
-        async function generateNoSurat({ jenis = "Keluar", exclude_id = "" } = {}) {
+        async function generateNoSurat({
+            jenis = "Keluar",
+            exclude_id = "",
+        } = {}) {
             try {
                 const params = new URLSearchParams({ jenis });
                 if (exclude_id) params.append("exclude_id", exclude_id);
@@ -462,10 +466,13 @@ if (window.SuratApp) {
 
         function initFilters() {
             const searchInputEl = $("#searchInput");
-            const resetSearchEl  = $("#resetSearch");
+            const resetSearchEl = $("#resetSearch");
 
             function updateResetSearchButton() {
-                resetSearchEl?.classList.toggle("d-none", !searchInputEl?.value.trim());
+                resetSearchEl?.classList.toggle(
+                    "d-none",
+                    !searchInputEl?.value.trim()
+                );
             }
 
             if (searchInputEl) {
@@ -516,21 +523,27 @@ if (window.SuratApp) {
             }
 
             // Sync jenis dropdown dari URL param (mis. link dari dashboard)
-            const urlJenis = new URLSearchParams(window.location.search).get("jenis_surat");
-            const jenisEl  = $("#jenis");
+            const urlJenis = new URLSearchParams(window.location.search).get(
+                "jenis_surat"
+            );
+            const jenisEl = $("#jenis");
             if (urlJenis && jenisEl) {
                 jenisEl.value =
-                    urlJenis.charAt(0).toUpperCase() + urlJenis.slice(1).toLowerCase();
+                    urlJenis.charAt(0).toUpperCase() +
+                    urlJenis.slice(1).toLowerCase();
             }
 
             // Show/hide tombol reset jenis & sort
-            const sortEl       = $("#sort");
+            const sortEl = $("#sort");
             const resetJenisEl = $("#resetJenis");
-            const resetSortEl  = $("#resetSort");
+            const resetSortEl = $("#resetSort");
 
+            // Paksa tampil/sembunyi lewat inline style (bukan cuma toggle class),
+            // supaya visibilitas tombol reset TIDAK bergantung sama sekali pada
+            // CSS eksternal (yang bisa saja ter-cache versi lama di browser user).
             function showResetBtn(el) {
                 if (!el) return;
-                el.style.removeProperty("display");
+                el.style.setProperty("display", "flex", "important");
                 el.classList.remove("d-none");
             }
             function hideResetBtn(el) {
@@ -542,8 +555,12 @@ if (window.SuratApp) {
             function updateResetButtons() {
                 // Tombol reset jenis hanya muncul saat jenis punya nilai DAN tidak di-lock (disabled)
                 const jenisActive = jenisEl?.value && !jenisEl?.disabled;
-                jenisActive ? showResetBtn(resetJenisEl) : hideResetBtn(resetJenisEl);
-                (sortEl?.selectedIndex !== 0) ? showResetBtn(resetSortEl) : hideResetBtn(resetSortEl);
+                jenisActive
+                    ? showResetBtn(resetJenisEl)
+                    : hideResetBtn(resetJenisEl);
+                sortEl?.selectedIndex !== 0
+                    ? showResetBtn(resetSortEl)
+                    : hideResetBtn(resetSortEl);
             }
 
             jenisEl?.addEventListener("change", updateResetButtons);
@@ -615,32 +632,38 @@ if (window.SuratApp) {
             function renderKodeInput() {
                 const val = (jenisAdd.value || "").trim().toLowerCase();
 
-                const kodeSelect  = document.getElementById("kode_surat_select_add");
-                const kodeInput   = document.getElementById("kode_surat_input_add");
-                const kodePlaceholder = document.getElementById("kode_surat_placeholder_add");
-                const reqSpan     = document.getElementById("kode-required-add");
+                const kodeSelect = document.getElementById(
+                    "kode_surat_select_add"
+                );
+                const kodeInput = document.getElementById(
+                    "kode_surat_input_add"
+                );
+                const kodePlaceholder = document.getElementById(
+                    "kode_surat_placeholder_add"
+                );
+                const reqSpan = document.getElementById("kode-required-add");
 
                 if (!kodeSelect || !kodeInput) return;
 
                 // Reset semua ke hidden/disabled dulu
                 kodeSelect.style.display = "none";
-                kodeSelect.disabled      = true;
-                kodeSelect.required      = false;
-                kodeInput.style.display  = "none";
-                kodeInput.disabled       = true;
+                kodeSelect.disabled = true;
+                kodeSelect.required = false;
+                kodeInput.style.display = "none";
+                kodeInput.disabled = true;
                 if (kodePlaceholder) kodePlaceholder.style.display = "none";
                 if (reqSpan) reqSpan.style.display = "none";
 
                 if (val === "keluar") {
                     kodeSelect.style.display = "";
-                    kodeSelect.disabled      = false;
-                    kodeSelect.required      = true;
+                    kodeSelect.disabled = false;
+                    kodeSelect.required = true;
                     if (initialValue) kodeSelect.value = initialValue;
                     if (reqSpan) reqSpan.style.display = "";
                 } else if (val === "masuk") {
                     kodeInput.style.display = "";
-                    kodeInput.disabled      = false;
-                    kodeInput.value         = initialValue || "";
+                    kodeInput.disabled = false;
+                    kodeInput.value = initialValue || "";
                 } else {
                     if (kodePlaceholder) kodePlaceholder.style.display = "";
                 }
@@ -654,8 +677,8 @@ if (window.SuratApp) {
 
             // ── Auto-generate nomor, readonly, & instansi berdasarkan jenis ──
             async function applyNomorBehavior() {
-                const noEl      = document.getElementById("add_no_surat");
-                const btnGen    = document.getElementById("btnGenerateNoSuratAdd");
+                const noEl = document.getElementById("add_no_surat");
+                const btnGen = document.getElementById("btnGenerateNoSuratAdd");
                 const instansiEl = document.getElementById("add_instansi");
                 if (!noEl) return;
 
@@ -668,7 +691,8 @@ if (window.SuratApp) {
                     noEl.placeholder = "";
                     if (btnGen) btnGen.style.display = "";
                     // Instansi default SMABA
-                    if (instansiEl && !instansiEl.value) instansiEl.value = "SMABA";
+                    if (instansiEl && !instansiEl.value)
+                        instansiEl.value = "SMABA";
                     // Generate nomor urut Keluar
                     const nomor = await generateNoSurat({ jenis: "Keluar" });
                     if (nomor) noEl.value = nomor;
@@ -714,7 +738,8 @@ if (window.SuratApp) {
                 const instansi = fd.get("instansi")?.toString().trim() || "";
                 const tanggal_surat =
                     fd.get("tanggal_surat")?.toString().trim() || "";
-                const jenis_surat = fd.get("jenis_surat")?.toString().trim() || "";
+                const jenis_surat =
+                    fd.get("jenis_surat")?.toString().trim() || "";
 
                 try {
                     const isDup = await checkDuplicateSurat({
@@ -809,11 +834,11 @@ if (window.SuratApp) {
 
                     // Sinkronisasi bulan / tahun / tanggal
                     const now = new Date();
-                    const addBulan  = $("#add_bulan");
-                    const addTahun  = $("#add_tahun");
+                    const addBulan = $("#add_bulan");
+                    const addTahun = $("#add_tahun");
                     const addTanggal = $("#add_tanggal");
-                    if (addBulan)  addBulan.value  = String(now.getMonth() + 1);
-                    if (addTahun)  addTahun.value  = String(now.getFullYear());
+                    if (addBulan) addBulan.value = String(now.getMonth() + 1);
+                    if (addTahun) addTahun.value = String(now.getFullYear());
                     syncDateFields(addTanggal, addBulan, addTahun);
 
                     // Tombol Hari Ini
@@ -852,7 +877,9 @@ if (window.SuratApp) {
                     const btnGen = $("#btnGenerateNoSuratAdd");
                     if (btnGen) {
                         btnGen.onclick = async () => {
-                            const jenis = ($("#jenis_surat_add")?.value || "Keluar").trim();
+                            const jenis = (
+                                $("#jenis_surat_add")?.value || "Keluar"
+                            ).trim();
                             const nomor = await generateNoSurat({ jenis });
                             if (nomor) {
                                 const el = $("#add_no_surat");
@@ -1087,8 +1114,8 @@ if (window.SuratApp) {
                 }
 
                 // Sinkronisasi bulan / tahun / tanggal (edit)
-                const editBulan   = $("#edit_bulan");
-                const editTahun   = $("#edit_tahun");
+                const editBulan = $("#edit_bulan");
+                const editTahun = $("#edit_tahun");
                 const editTanggal = $("#edit_tanggal");
                 // Isi bulan & tahun dari tanggal_surat yang sudah di-set
                 if (editTanggal?.value) {
@@ -1134,12 +1161,18 @@ if (window.SuratApp) {
                 const btnGenEdit = $("#btnGenerateNoSuratEdit");
                 if (btnGenEdit) {
                     const editJenisVal = ($("#edit_jenis")?.value || "").trim();
-                    btnGenEdit.style.display = editJenisVal.toLowerCase() === "keluar" ? "" : "none";
+                    btnGenEdit.style.display =
+                        editJenisVal.toLowerCase() === "keluar" ? "" : "none";
 
                     btnGenEdit.onclick = async () => {
-                        const jenis      = ($("#edit_jenis")?.value || "Keluar").trim();
+                        const jenis = (
+                            $("#edit_jenis")?.value || "Keluar"
+                        ).trim();
                         const exclude_id = $("#edit_id")?.value || "";
-                        const nomor = await generateNoSurat({ jenis, exclude_id });
+                        const nomor = await generateNoSurat({
+                            jenis,
+                            exclude_id,
+                        });
                         if (nomor) {
                             const el = $("#edit_no_surat");
                             if (el) {
@@ -1175,7 +1208,8 @@ if (window.SuratApp) {
                 const instansi = fd.get("instansi")?.toString().trim() || "";
                 const tanggal_surat =
                     fd.get("tanggal_surat")?.toString().trim() || "";
-                const jenis_surat = fd.get("jenis_surat")?.toString().trim() || "";
+                const jenis_surat =
+                    fd.get("jenis_surat")?.toString().trim() || "";
 
                 try {
                     const isDup = await checkDuplicateSurat({
@@ -1584,12 +1618,12 @@ if (window.SuratApp) {
         function openPreview(url) {
             if (!url) return;
 
-            const body     = $("#filePreviewBody");
-            const spinner  = $("#file-loading-spinner");
-            const dlLink   = $("#previewDownloadLink");
+            const body = $("#filePreviewBody");
+            const spinner = $("#file-loading-spinner");
+            const dlLink = $("#previewDownloadLink");
 
             // Reset state
-            if (body)    body.innerHTML = "";
+            if (body) body.innerHTML = "";
             if (spinner) spinner.style.display = "flex";
 
             if (dlLink) {
@@ -1632,15 +1666,15 @@ if (window.SuratApp) {
                     </div>`;
                 // Sembunyikan spinner setelah 2 detik (object tidak punya event onload)
                 setTimeout(hideSpinner, 2000);
-
             } else if (["jpg", "jpeg", "png"].includes(ext)) {
                 content = document.createElement("img");
                 content.className = "img-fluid mx-auto d-block";
                 content.style.maxHeight = "75vh";
-                content.onload  = hideSpinner;
+                content.onload = hideSpinner;
                 content.onerror = () => {
                     hideSpinner();
-                    if (body) body.innerHTML = `
+                    if (body)
+                        body.innerHTML = `
                         <div class="p-4 text-center text-muted">
                             <i class="bi bi-image fs-1"></i>
                             <p class="mt-2">Gambar tidak dapat ditampilkan.</p>
@@ -1650,7 +1684,6 @@ if (window.SuratApp) {
                         </div>`;
                 };
                 content.src = url;
-
             } else {
                 // Word, dsb. — tidak bisa di-preview langsung
                 hideSpinner();
@@ -1728,7 +1761,9 @@ if (window.SuratApp) {
                 const w = window.open(url, "_blank");
                 if (w) {
                     w.addEventListener("load", () => {
-                        try { w.print(); } catch (_) {}
+                        try {
+                            w.print();
+                        } catch (_) {}
                     });
                 }
             });
