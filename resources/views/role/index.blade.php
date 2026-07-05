@@ -24,7 +24,7 @@
             <td>
                 <a href="{{ route('role.show',$r->id_role) }}" class="btn btn-info btn-sm">Detail</a>
                 <a href="{{ route('role.edit',$r->id_role) }}" class="btn btn-warning btn-sm">Edit</a>
-                <form action="{{ route('role.destroy',$r->id_role) }}" method="POST" style="display:inline">
+                <form action="{{ route('role.destroy',$r->id_role) }}" method="POST" class="d-inline">
                     @csrf @method('DELETE')
                     <button class="btn btn-danger btn-sm" onclick="return confirm('Hapus role ini?')">Hapus</button>
                 </form>

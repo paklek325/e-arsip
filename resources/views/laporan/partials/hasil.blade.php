@@ -292,7 +292,7 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
                             <th class="col-no">No</th>
                             <th>Jenis</th>
                             <th>No Surat</th>
-                            <th style="min-width:180px;">Perihal</th>
+                            <th class="lap-col-perihal">Perihal</th>
                             <th>Instansi</th>
                             <th>Tgl Surat</th>
                         </tr>

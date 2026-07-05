@@ -91,7 +91,7 @@
                             ])
                         @else
                             <div class="laporan-empty-state">
-                                <i class="bi bi-file-earmark-text" style="font-size:3rem;"></i>
+                                <i class="bi bi-file-earmark-text"></i>
                                 <h6>Belum Ada Data Laporan</h6>
                                 <p class="text-muted mb-0">Pilih filter terlebih dahulu untuk menampilkan laporan.</p>
                             </div>

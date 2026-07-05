@@ -4,13 +4,13 @@
             <table class="table table-bordered table-striped align-middle mb-0 table-hover text-nowrap table-custom">
                 <thead class="table-light">
                     <tr class="text-center">
-                        <th style="width:50px;">No</th>
-                        <th style="min-width:200px;">Nama Peserta Didik</th>
-                        <th style="min-width:110px;">Jenis Kelamin</th>
-                        <th style="min-width:110px;">Tahun Angkatan</th>
-                        <th style="min-width:90px;">Rombel</th>
-                        <th style="min-width:140px;">Status</th>
-                        <th style="width:140px;">Aksi</th>
+                        <th class="pd-col-no">No</th>
+                        <th class="pd-col-nama">Nama Peserta Didik</th>
+                        <th class="pd-col-jk">Jenis Kelamin</th>
+                        <th class="pd-col-tahun">Tahun Angkatan</th>
+                        <th class="pd-col-rombel">Rombel</th>
+                        <th class="pd-col-status">Status</th>
+                        <th class="pd-col-aksi">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -27,11 +27,11 @@
                             <td class="text-center">{{ $item->rombel ?? '-' }}</td>
                             <td class="text-center">
                                 @if(strtolower((string) $item->status) === 'lengkap')
-                                    <span class="badge rounded-pill" style="background:#22c55e;color:#fff;font-size:0.75rem;padding:0.35em 0.75em;">
+                                    <span class="badge rounded-pill badge-status-lengkap">
                                         <i class="bi bi-check-circle me-1"></i>Lengkap
                                     </span>
                                 @else
-                                    <span class="badge rounded-pill" style="background:#f59e0b;color:#fff;font-size:0.75rem;padding:0.35em 0.75em;">
+                                    <span class="badge rounded-pill badge-status-belum">
                                         <i class="bi bi-exclamation-circle me-1"></i>Belum Lengkap
                                     </span>
                                 @endif

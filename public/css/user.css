@@ -246,3 +246,73 @@
 /* ── Crop foto berbentuk lingkaran (CropperJS) ─────────────────────────── */
 #cropFotoModal .cropper-view-box,
 #cropFotoModal .cropper-face { border-radius: 50%; }
+
+/* === PROFIL FOTO === */
+.profil-photo-wrapper {
+  width: 120px;
+  height: 120px;
+}
+.profil-photo {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  object-position: center;
+  border-color: rgba(108,62,171,.4) !important;
+}
+.profil-photo-btn {
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+}
+.profil-camera-icon { font-size: .75rem; }
+
+/* =======================================================
+   🏷 BADGE ROLE (tabel & profil)
+======================================================= */
+.badge-role { font-size: 0.75rem; }
+.badge-role-gradient {
+  background: linear-gradient(135deg, #6C3EAB, #4F46E5);
+  font-size: .75rem;
+}
+
+/* =======================================================
+   📅 KOLOM TANGGAL TABEL USER
+======================================================= */
+.user-date-col { font-size: 0.82rem; white-space: nowrap; }
+
+/* =======================================================
+   💬 EMPTY STATE ICON
+======================================================= */
+.user-empty-icon   { font-size: 2rem;  opacity: .4; }
+.modal-delete-icon { font-size: 3rem; }
+
+/* =======================================================
+   🔑 TOGGLE PASSWORD
+======================================================= */
+.togglePasswordAdd,
+.togglePasswordEdit { cursor: pointer; }
+
+/* =======================================================
+   ✂ MODAL CROP FOTO
+======================================================= */
+.modal-crop-dialog { max-width: 360px; }
+.crop-body {
+  background: #111;
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.crop-img {
+  display: block;
+  max-width: 100%;
+  max-height: 320px;
+}
+
+/* =======================================================
+   👤 HALAMAN PROFIL
+======================================================= */
+.profil-page-wrapper  { max-width: 760px; }
+.profil-format-text   { font-size: .75rem; }
+.profil-crop-container{ max-height: 380px; overflow: hidden; }
+.profil-crop-img      { max-width: 100%; }

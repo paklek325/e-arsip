@@ -123,7 +123,7 @@
 
                             <div class="card-sub">
                                 @if($card['label'] === 'Users')
-                                    <div class="small text-muted" style="font-size:0.76rem;">
+                                    <div class="small text-muted dashboard-card-sub-text">
                                         <i class="bi bi-person-badge me-1"></i>Kepala Staf &amp; Staf
                                     </div>
 
@@ -168,7 +168,7 @@
                                     </div>
 
                                 @elseif($card['label'] === 'Kode')
-                                    <div class="small text-muted" style="font-size:0.76rem;">
+                                    <div class="small text-muted dashboard-card-sub-text">
                                         <i class="bi bi-archive me-1"></i>Kode Arsip <br> Surat Masuk &amp; Surat Keluar
                                     </div>
 
@@ -177,7 +177,7 @@
                                 @endif
                             </div>
 
-                            <div class="progress w-100" style="height:4px;border-radius:2px;background:rgba(0,0,0,0.08);">
+                            <div class="progress w-100 dashboard-progress">
                                 <div class="progress-bar bg-{{ $card['color'] }}" style="width:{{ $progressWidth }}%"></div>
                             </div>
 
@@ -185,7 +185,7 @@
                         @elseif($card['type'] === 'menu')
 
                             <div class="card-sub d-flex flex-column align-items-center justify-content-center">
-                                <p class="small text-muted mb-2 px-1 text-center" style="font-size:0.76rem;line-height:1.4;">
+                                <p class="small text-muted mb-2 px-1 text-center dashboard-rekap-text">
                                     Kelola, filter dan cetak laporan arsip
                                 </p>
                                 <span class="badge badge-info">
@@ -245,7 +245,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body p-3 flex-grow-1" style="min-height:260px; position:relative;">
+                <div class="card-body p-3 flex-grow-1 chart-body">
                     <canvas id="chartSurat"></canvas>
                     <div id="chartSuratEmpty" style="display:none; position:absolute; inset:0;
                          align-items:center; justify-content:center; flex-direction:column;
@@ -286,8 +286,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body p-3 flex-grow-1 d-flex align-items-center justify-content-center" style="min-height:260px;">
-                    <canvas id="chartPesertaDidik" style="max-height:240px;"></canvas>
+                <div class="card-body p-3 flex-grow-1 d-flex align-items-center justify-content-center chart-body-donut">
+                    <canvas id="chartPesertaDidik" class="chart-canvas-donut"></canvas>
                 </div>
             </div>
         </div>
@@ -300,11 +300,11 @@
                         <i class="bi bi-graph-up-arrow text-primary fs-5"></i>
                         <h6 class="fw-bold mb-0 text-primary">
                             Tren Surat Bulanan
-                            <span class="text-muted fw-normal" style="font-size:.82rem;">({{ now()->year }})</span>
+                            <span class="text-muted fw-normal chart-year-label">({{ now()->year }})</span>
                         </h6>
                     </div>
                 </div>
-                <div class="card-body p-3" style="min-height:280px;">
+                <div class="card-body p-3 chart-body-line">
                     <canvas id="chartTren"></canvas>
                 </div>
             </div>
@@ -323,11 +323,11 @@
                 <table class="table align-middle mb-0 users-table">
                     <thead>
                         <tr>
-                            <th class="text-center" style="width:60px;">No</th>
-                            <th style="min-width:200px;">User</th>
-                            <th style="min-width:220px;">Email</th>
-                            <th class="text-center" style="width:120px;">Role</th>
-                            <th class="text-center" style="width:180px;">Dibuat pada</th>
+                            <th class="text-center col-no">No</th>
+                            <th class="col-user">User</th>
+                            <th class="col-email">Email</th>
+                            <th class="text-center col-role">Role</th>
+                            <th class="text-center col-date">Dibuat pada</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -338,15 +338,14 @@
                                     <div class="d-flex align-items-center">
                                         <img src="{{ $user->foto ? asset('storage/foto_admin/' . $user->foto) : asset('assets/img/default_staf.png') }}"
                                              onerror="this.onerror=null;this.src='{{ asset('assets/img/default_staf.png') }}'"
-                                             class="rounded-circle me-3 border shadow-sm"
-                                             style="width:40px;height:40px;object-fit:cover;"
+                                             class="rounded-circle me-3 border shadow-sm users-table-avatar"
                                              alt="{{ $user->name }}">
-                                        <span class="fw-semibold text-truncate" style="max-width:140px;">
+                                        <span class="fw-semibold text-truncate users-table-name">
                                             {{ $user->name }}
                                         </span>
                                     </div>
                                 </td>
-                                <td class="text-muted text-truncate" style="max-width:180px;">
+                                <td class="text-muted text-truncate users-table-email">
                                     {{ $user->email }}
                                 </td>
                                 <td class="text-center">

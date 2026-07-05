@@ -27,12 +27,11 @@
           <td class="fw-medium text-start">{{ $u->name }}</td>
           <td class="text-muted">{{ $u->email }}</td>
           <td>
-            <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-1 rounded-pill"
-                  style="font-size:0.75rem;">
+            <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-1 rounded-pill badge-role">
               {{ $u->role?->name ?? '-' }}
             </span>
           </td>
-          <td class="text-muted" style="font-size:0.82rem;white-space:nowrap;">
+          <td class="text-muted user-date-col">
             {{ $u->created_at ? $u->created_at->format('d M Y') : '-' }}
           </td>
           <td>
@@ -59,7 +58,7 @@
         <tr>
           <td colspan="7" class="py-5 text-center">
             <div class="text-muted">
-              <i class="bi bi-people" style="font-size:2rem;opacity:.4;"></i>
+              <i class="bi bi-people user-empty-icon"></i>
               <p class="mt-2 mb-0">Belum ada data user</p>
             </div>
           </td>

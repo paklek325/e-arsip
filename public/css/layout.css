@@ -17,12 +17,15 @@
   --text-color: #212529;
   --active-color: #0d6efd;
   --card-bg: #ffffff;
+  --border-color: rgba(0, 0, 0, 0.1);
+  --filter-bg: #eef4ff;
+  --table-card-bg: #eef4ff;
   --transition: all 0.3s ease;
 
   /* Table */
   --table-head-bg:    #1f2a44;
   --table-head-color: #e5e7eb;
-  --table-border:     rgba(0, 0, 0, 0.08);
+  --table-border:     rgba(0, 0, 0, 0.18);
   --table-row-hover:  rgba(13, 110, 253, 0.05);
   --table-td-color:   #212529;
 }
@@ -36,11 +39,14 @@
   --text-color: #e5e7eb;
   --active-color: #22d3ee;
   --card-bg: #1f2937;
+  --filter-bg: #1f2937;
+  --table-card-bg: #1f2937;
+  --border-color: rgba(255, 255, 255, 0.08);
 
   /* Table dark */
   --table-head-bg:    #1e293b;
   --table-head-color: #94a3b8;
-  --table-border:     rgba(255, 255, 255, 0.07);
+  --table-border:     rgba(255, 255, 255, 0.18);
   --table-row-hover:  rgba(34, 211, 238, 0.06);
   --table-td-color:   #e2e8f0;
 }
@@ -206,7 +212,8 @@ a { text-decoration: none; color: inherit; }
 ======================================================= */
 .pc-container {
   margin-left: 260px;
-  min-height: 100vh;
+  top: 56px;               /* override template's 74px — header kita 56px */
+  min-height: calc(100vh - 56px);
   background: var(--body-bg);
   transition: var(--transition);
 }
@@ -218,12 +225,21 @@ body.sidebar-collapsed .pc-container { margin-left: 0; }
 .card {
   background: var(--card-bg);
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   transition: var(--transition);
 }
+
+/* Light mode: table card sama dengan filter bar */
+.card.shadow-sm {
+  background: var(--table-card-bg) !important;
+  border: 1px solid rgba(13, 110, 253, 0.12) !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
 .card-header {
   font-weight: 600;
   color: var(--text-color);
@@ -232,63 +248,64 @@ body.sidebar-collapsed .pc-container { margin-left: 0; }
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
-/* === TABLE === */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: transparent;
-  border-radius: 10px;
-  overflow: hidden;
-  font-size: 0.93rem;
-  transition: var(--transition);
+/* =======================================================
+   📋 TABLE — Datta Able Bootstrap 5 Standard
+   Biarkan Bootstrap handle border via .table-bordered.
+   Kita hanya override CSS variable & header style.
+======================================================= */
+
+/* Override CSS variable border color Datta Able */
+.table {
+  --bs-table-border-color: #dee2e6;
+  --bs-table-striped-bg: rgba(0, 0, 0, 0.03);
+  --bs-table-hover-bg: rgba(13, 110, 253, 0.04);
+  font-size: 0.9rem;
 }
 
+/* Header tabel — dark navy sesuai desain */
 thead {
-  background: var(--table-head-bg);
+  background-color: var(--table-head-bg);
   color: var(--table-head-color);
   text-transform: uppercase;
+  vertical-align: bottom;
 }
 thead th {
   font-weight: 600;
-  text-align: left;
-  padding: 0.9rem 1rem;
-  border: none;
-  letter-spacing: 0.3px;
   font-size: 0.8rem;
-  color: var(--table-head-color);
-  /* Pembatas antar kolom header */
-  border-right: 1px solid var(--table-border);
-}
-thead th:last-child {
-  border-right: none;
-}
-
-tbody tr {
-  border-bottom: 1px solid var(--table-border);
-  transition: background 0.25s ease;
-}
-tbody tr:hover { background: var(--table-row-hover); }
-
-td {
-  padding: 0.8rem 1rem;
-  color: var(--table-td-color);
-  /* Pembatas antar kolom body */
-  border-right: 1px solid var(--table-border);
-}
-td:last-child {
-  border-right: none;
+  letter-spacing: 0.4px;
+  color: var(--table-head-color) !important;
+  background-color: var(--table-head-bg) !important;
+  padding: 0.9rem 0.75rem;
+  white-space: nowrap;
 }
 
-/* Dark mode — pastikan teks tabel terbaca jelas */
-[data-theme="dark"] td,
-[data-theme="dark"] th {
+/* Body rows */
+tbody tr { transition: background 0.2s ease; }
+
+/* Dark mode — override Bootstrap CSS variables */
+[data-theme="dark"] .table {
+  --bs-table-color: var(--table-td-color);
+  --bs-table-border-color: rgba(255, 255, 255, 0.12);
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.025);
+  --bs-table-hover-bg: rgba(34, 211, 238, 0.06);
   color: var(--table-td-color);
 }
+
+[data-theme="dark"] .table > :not(caption) > * > * {
+  color: var(--table-td-color);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
 [data-theme="dark"] thead th {
-  color: var(--table-head-color);
+  color: var(--table-head-color) !important;
+  background-color: var(--table-head-bg) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }
-[data-theme="dark"] tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.02);
+
+/* Dark mode — .text-muted di dalam tabel */
+[data-theme="dark"] table .text-muted,
+[data-theme="dark"] .table-responsive .text-muted {
+  color: #94a3b8 !important;
 }
 
 /* === BADGE === */
@@ -343,8 +360,9 @@ td:last-child {
 }
 .btn-warning:hover { filter: brightness(1.1); }
 
-/* === FORM INPUT === */
-input, select {
+/* === FORM INPUT (hanya di dalam sidebar) === */
+.pc-sidebar input,
+.pc-sidebar select {
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
   padding: 0.6rem 0.8rem;
@@ -353,7 +371,8 @@ input, select {
   background: var(--card-bg);
   transition: var(--transition);
 }
-input:focus, select:focus {
+.pc-sidebar input:focus,
+.pc-sidebar select:focus {
   border-color: var(--active-color);
   outline: none;
   box-shadow: 0 0 0 2px rgba(34,211,238,0.15);
@@ -776,11 +795,11 @@ body[data-theme-transition] * { transition: none !important; }
 ======================================================= */
 .filter-bar {
   width: 100%;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 0.75rem;
+  background: var(--filter-bg) !important;
+  border: 1px solid rgba(13, 110, 253, 0.12);
+  border-radius: 16px;
   padding: 1rem 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 4px rgba(13, 110, 253, 0.06);
   margin-bottom: 1rem;
   transition: background 0.3s, border-color 0.3s;
 }
@@ -806,15 +825,40 @@ body[data-theme-transition] * { transition: none !important; }
 }
 
 [data-theme="dark"] .filter-bar {
-  background: var(--card-bg);
-  border-color: var(--border-color);
+  background-color: var(--filter-bg) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
 }
 
 [data-theme="dark"] .filter-bar .form-control,
 [data-theme="dark"] .filter-bar .form-select {
-  background-color: var(--card-bg);
+  background-color: #263349;
   color: var(--text-color);
   border-color: var(--border-color);
+}
+
+[data-theme="dark"] .filter-bar .input-group-text {
+  background-color: #263349;
+  border-color: var(--border-color);
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .filter-bar .btn-light,
+[data-theme="dark"] .filter-bar .reset-input,
+[data-theme="dark"] .filter-bar .reset-input-and-submit,
+[data-theme="dark"] .filter-bar .reset-sort-and-submit {
+  background-color: #2d3f55;
+  border-color: var(--border-color);
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .filter-bar .btn-light:hover,
+[data-theme="dark"] .filter-bar .reset-input:hover,
+[data-theme="dark"] .filter-bar .reset-input-and-submit:hover,
+[data-theme="dark"] .filter-bar .reset-sort-and-submit:hover {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
 }
 
 [data-theme="dark"] .filter-bar .form-control::placeholder {
@@ -1050,31 +1094,65 @@ body[data-theme-transition] * { transition: none !important; }
 }
 
 /* ===== BREADCRUMB ===== */
-.pc-breadcrumb-bar { padding: 0 0 0.25rem; }
+.pc-breadcrumb-bar {
+  padding: 1rem 0 0.2rem;
+}
+
 .pc-breadcrumb-bar .breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   font-size: 0.8rem;
   margin-bottom: 0;
   background: transparent;
   padding: 0;
 }
+
+/* Setiap item jadi inline-flex agar teks & ikon sejajar vertikal */
+.pc-breadcrumb-bar .breadcrumb-item {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+/* Separator tidak lagi float — ikut flow flex */
+.pc-breadcrumb-bar .breadcrumb-item + .breadcrumb-item::before {
+  float: none;
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  padding-right: 0.4rem;
+  color: var(--bs-secondary-color, #8a8a8a);
+  line-height: 1;
+}
+
 .pc-breadcrumb-bar .breadcrumb-item a {
   text-decoration: none;
   color: var(--pc-sidebar-color, #3b82f6);
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  line-height: 1;
 }
+
 .pc-breadcrumb-bar .breadcrumb-item a i {
   font-size: 0.85rem;
   line-height: 1;
 }
+
 .pc-breadcrumb-bar .breadcrumb-item a:hover { text-decoration: underline; }
+
 .pc-breadcrumb-bar .breadcrumb-item.active {
+  display: inline-flex;
+  align-items: center;
   color: var(--bs-body-color);
   font-weight: 500;
+  line-height: 1;
 }
-.pc-breadcrumb-bar .breadcrumb-item + .breadcrumb-item::before {
-  color: var(--bs-secondary-color, #8a8a8a);
+
+/* Override padding-top konten dari template (20px) — beri ruang cukup */
+.pc-container .pc-content {
+  padding-top: 16px;
 }
 
 /* Kurangi min-height bawaan template (55px) supaya gap breadcrumb→konten tidak terlalu jauh */
@@ -1279,3 +1357,201 @@ header.pc-header .toggle-thumb {
 [data-theme="dark"] .btn-logout-navbar:hover .btn-logout-text {
     color: #fff;
 }
+
+/* =======================================================
+   🏷️ PAGE HEADER ICON BADGE — ikon judul halaman (Dashboard, Surat, dll)
+======================================================= */
+.header-icon-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.12);
+    color: var(--bs-primary, #0d6efd);
+    font-size: 1.05rem;
+    line-height: 1;
+}
+
+[data-theme="dark"] .header-icon-badge {
+    background: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.18);
+    color: var(--bs-primary, #0d6efd);
+}
+
+/* =======================================================
+   📋 TABEL — Dark Mode Fix (semua halaman)
+   Bootstrap .table-light, .table-striped, .bg-light, dll
+   override agar warna selaras dengan filter bar (--card-bg).
+======================================================= */
+
+/* tbody rows & striped — samakan dengan card-bg */
+[data-theme="dark"] .table-striped > tbody > tr,
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) {
+  --bs-table-accent-bg: transparent;
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.025);
+  background-color: transparent !important;
+}
+[data-theme="dark"] .table > tbody > tr > td,
+[data-theme="dark"] .table > tbody > tr > th {
+  background-color: transparent !important;
+}
+
+/* .table-bordered border warna lembut */
+[data-theme="dark"] .table-bordered {
+  --bs-table-border-color: rgba(255, 255, 255, 0.12);
+}
+[data-theme="dark"] .table-bordered > :not(caption) > * > * {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Card & tabel wrapper — semua pakai warna sama dengan filter-bar */
+[data-theme="dark"] .card,
+[data-theme="dark"] .user-card {
+  background-color: #1f2937 !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+}
+[data-theme="dark"] .card-body,
+[data-theme="dark"] .card-footer,
+[data-theme="dark"] .card-footer.bg-white,
+[data-theme="dark"] .card-footer.bg-light,
+[data-theme="dark"] .table-responsive {
+  background-color: #1f2937 !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Footer card (pagination area) — bukan bg-white/bg-light */
+[data-theme="dark"] .card-footer,
+[data-theme="dark"] .card-footer.bg-white,
+[data-theme="dark"] .card-footer.bg-light {
+  background-color: var(--card-bg) !important;
+  border-top-color: var(--border-color) !important;
+  color: var(--table-td-color);
+}
+
+/* .bg-light umum di dark mode */
+[data-theme="dark"] .bg-light {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+}
+
+/* Pagination Laravel default (page-link) */
+[data-theme="dark"] .pagination .page-link {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--table-td-color);
+}
+[data-theme="dark"] .pagination .page-item.active .page-link {
+  background-color: var(--active-color);
+  border-color: var(--active-color);
+  color: #0f172a;
+}
+[data-theme="dark"] .pagination .page-item.disabled .page-link {
+  background-color: transparent;
+  color: #475569;
+}
+[data-theme="dark"] .pagination .page-link:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--table-td-color);
+}
+/* =======================================================
+   🧩 KOMPONEN — Pindahan dari inline style blade
+======================================================= */
+
+/* --- Navbar: dropdown header gradient --- */
+.dropdown-user-header {
+  background: linear-gradient(135deg, #6C3EAB, #4F46E5);
+  padding: 14px 16px;
+}
+.dropdown-user-avatar {
+  height: 35px;
+  object-fit: cover;
+  object-position: center;
+  flex-shrink: 0;
+}
+
+/* --- Modal: loader body --- */
+.modal-loader-body  { min-height: 200px; }
+.modal-loader-flex  {
+  display: flex;
+  min-height: 200px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* --- Sidebar Footer --- */
+.sidebar-footer {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin-top: auto;
+}
+.sf-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.sf-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.sf-brand-text { min-width: 0; }
+.sf-brand-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.sf-brand-subtitle {
+  font-size: 0.7rem;
+  color: #7a8499;
+  white-space: nowrap;
+}
+.sf-dev {
+  font-size: 0.72rem;
+  color: #7a8499;
+  margin-bottom: 6px;
+}
+.sf-dev strong { color: #94a3b8; }
+.sf-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+.sf-contact-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.71rem;
+  color: #7a8499;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.sf-contact-link:hover          { color: #94a3b8; }
+.sf-contact-link.whatsapp:hover { color: #25d366; }
+.sf-contact-icon { font-size: 0.75rem; flex-shrink: 0; }
+.sf-contact-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sf-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.05);
+  margin-bottom: 6px;
+}
+.sf-copyright {
+  font-size: 0.68rem;
+  color: #4b5563;
+  text-align: center;
+}
+
+/* ── Alert toast container ──────────────────────────────────────────────── */
+#alert-container { z-index: 9999; }

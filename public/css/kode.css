@@ -46,19 +46,7 @@
 =========================== */
 [data-theme="dark"] .table-custom {
   color: #e5e7eb;
-  background-color: #1f2937;
 }
 
-[data-theme="dark"] .table-custom thead {
-  background-color: #374151 !important;
-  color: #f3f4f6;
-}
-
-[data-theme="dark"] .table-custom tbody tr:hover {
-  background-color: #2d3748 !important;
-}
-
-[data-theme="dark"] .card-footer {
-  background-color: #1f2937 !important;
-  border-color: #374151 !important;
-}
+/* ── Filter search expand ───────────────────────────────────────────────── */
+.kode-filter-search { min-width: 280px; }

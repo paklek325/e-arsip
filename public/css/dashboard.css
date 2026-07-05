@@ -513,12 +513,12 @@
 
 /* ── Card wrapper (shadow-sm) dark mode ─────────────────────────────────── */
 [data-theme="dark"] .card.shadow-sm {
-    background: #141c2c !important;
-    border-color: #27324b !important;
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
 }
 [data-theme="dark"] .card.shadow-sm .card-header {
-    background: #141c2c !important;
-    border-color: #27324b !important;
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
 }
 [data-theme="dark"] .card.shadow-sm .card-header h6.text-primary { color: #93c5fd !important; }
 
@@ -562,3 +562,33 @@
     text-overflow: unset !important; white-space: nowrap !important;
     flex-shrink: 1 !important; min-width: 0;
 }
+
+/* ── Card sub-text sizes ────────────────────────────────────────────────── */
+.dashboard-card-sub-text { font-size: 0.76rem; }
+.dashboard-rekap-text    { font-size: 0.76rem; line-height: 1.4; }
+.chart-year-label        { font-size: 0.82rem; }
+
+/* ── Progress bar ───────────────────────────────────────────────────────── */
+.dashboard-progress {
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(0,0,0,0.08);
+}
+
+/* ── Chart containers ───────────────────────────────────────────────────── */
+.chart-body      { min-height: 260px; position: relative; }
+.chart-body-donut{ min-height: 260px; }
+.chart-canvas-donut { max-height: 240px; }
+.chart-body-line { min-height: 280px; }
+
+/* ── Users table (dashboard) column widths ──────────────────────────────── */
+.users-table .col-no    { width: 60px; }
+.users-table .col-user  { min-width: 200px; }
+.users-table .col-email { min-width: 220px; }
+.users-table .col-role  { width: 120px; }
+.users-table .col-date  { width: 180px; }
+
+/* ── Users table avatar & text constraints ──────────────────────────────── */
+.users-table-avatar  { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
+.users-table-name    { max-width: 140px; }
+.users-table-email   { max-width: 180px; }

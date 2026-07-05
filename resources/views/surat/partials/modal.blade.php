@@ -554,10 +554,9 @@
                 <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
-            <div class="modal-body position-relative p-0" style="min-height: 200px;">
+            <div class="modal-body position-relative p-0 modal-loader-body">
                 <div id="file-loading-spinner"
-                     class="justify-content-center align-items-center"
-                     style="display:flex; min-height: 200px;">
+                     class="justify-content-center align-items-center modal-loader-flex">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Memuat...</span>
                     </div>

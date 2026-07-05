@@ -39,7 +39,7 @@
                         <label class="form-label">Password</label>
                         <div class="input-group">
                             <input type="password" name="password" id="add_password" class="form-control" required>
-                            <span class="input-group-text togglePasswordAdd" style="cursor:pointer;">
+                            <span class="input-group-text togglePasswordAdd">
                                 <i class="bi bi-eye-slash"></i>
                             </span>
                         </div>
@@ -115,7 +115,7 @@
                         <label class="form-label">Password (Opsional)</label>
                         <div class="input-group">
                             <input type="password" name="password" id="edit_password" class="form-control">
-                            <span class="input-group-text togglePasswordEdit" style="cursor:pointer;">
+                            <span class="input-group-text togglePasswordEdit">
                                 <i class="bi bi-eye-slash"></i>
                             </span>
                         </div>
@@ -174,13 +174,13 @@
 
 {{-- =========  Modal Crop Foto ================ --}}
 <div class="modal fade" id="cropFotoModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:360px;">
+    <div class="modal-dialog modal-dialog-centered modal-crop-dialog">
         <div class="modal-content">
             <div class="modal-header py-2">
                 <h6 class="modal-title mb-0"><i class="bi bi-crop me-1"></i>Atur Posisi Foto</h6>
             </div>
-            <div class="modal-body p-0" style="background:#111;min-height:280px;display:flex;align-items:center;justify-content:center;">
-                <img id="cropImage" style="display:block;max-width:100%;max-height:320px;">
+            <div class="modal-body p-0 crop-body">
+                <img id="cropImage" class="crop-img">
             </div>
             <div class="modal-footer py-2 gap-2 justify-content-between">
                 <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Drag untuk atur posisi, scroll untuk zoom</small>
@@ -210,7 +210,7 @@
                 </div>
 
                 <div class="modal-body text-center">
-                    <i class="bi bi-exclamation-triangle text-danger" style="font-size:3rem;"></i>
+                    <i class="bi bi-exclamation-triangle text-danger modal-delete-icon"></i>
                     <h5 class="mt-3">Yakin ingin menghapus user ini?</h5>
                     <p class="text-muted mb-0">User: <strong id="delete_name_label"></strong></p>
                 </div>

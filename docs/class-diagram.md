@@ -38,7 +38,7 @@ classDiagram
         +datetime updated_at
         +role() Role
         +surat() Surat
-        +siswa() Siswa
+        +pesertaDidik() PesertaDidik
         +setPasswordAttribute(value) void
     }
 
@@ -68,14 +68,14 @@ classDiagram
         +getTanggalFormattedAttribute() string
     }
 
-    class Siswa {
-        +int id_siswa PK
-        +string nama_siswa
+    class PesertaDidik {
+        +int id_peserta_didik PK
+        +string nama_peserta_didik
         +enum jenis_kelamin
         +string tempat_lahir
         +date tanggal_lahir
         +text alamat
-        +enum rombel
+        +string rombel
         +string tahun_angkatan
         +string file_ppdb
         +string file_kk
@@ -86,6 +86,7 @@ classDiagram
         +string file_ijazah_smp
         +string file_ijazah_sma
         +enum status
+        +int id_user FK
         +string created_by
         +datetime created_at
         +datetime updated_at
@@ -118,8 +119,8 @@ classDiagram
     User "0..*" --> "1" Role : belongsTo
 
     User "1" --> "0..*" Surat : hasMany
-    User "1" --> "0..*" Siswa : hasMany
-    Siswa "0..*" --> "1" User : belongsTo
+    User "1" --> "0..*" PesertaDidik : hasMany
+    PesertaDidik "0..*" --> "1" User : belongsTo
 
     Kode "1" --> "0..*" Surat : hasMany
     Surat "0..*" --> "1" Kode : belongsTo
@@ -180,26 +181,34 @@ classDiagram
 **Accessor:**
 - `getTanggalFormattedAttribute()` — mengembalikan tanggal dalam format `d-m-Y`
 
-### `Siswa`
+### `PesertaDidik`
 | Kolom | Tipe | Keterangan |
 |---|---|---|
-| `id_siswa` | `bigint` PK | Auto increment |
-| `nama_siswa` | `varchar(150)` | Nama lengkap |
+| `id_peserta_didik` | `bigint` PK | Auto increment |
+| `nama_peserta_didik` | `varchar(150)` | Nama lengkap |
 | `jenis_kelamin` | `enum` | `L` / `P` |
 | `tempat_lahir` | `varchar(100)` | |
 | `tanggal_lahir` | `date` | |
 | `alamat` | `text` | |
-| `rombel` | `enum` | `A` / `B` |
+| `rombel` | `varchar` | Contoh: `A` / `B` |
 | `tahun_angkatan` | `varchar(10)` | Contoh: `2023` |
-| `file_ppdb` … `file_ijazah_sma` | `varchar` | 8 kolom file dokumen, semua nullable |
+| `file_ppdb` | `varchar` | Nullable |
+| `file_kk` | `varchar` | Nullable |
+| `file_akte` | `varchar` | Nullable |
+| `file_ktp` | `varchar` | Nullable |
+| `file_kts` | `varchar` | Nullable |
+| `file_foto` | `varchar` | Nullable |
+| `file_ijazah_smp` | `varchar` | Nullable |
+| `file_ijazah_sma` | `varchar` | Nullable — **opsional**, tidak dihitung dalam `computeStatus()` |
 | `status` | `enum` | `lengkap` / `belum lengkap`, dihitung otomatis |
+| `id_user` | `bigint` FK | → `users.id_user` |
 | `created_by` | `varchar(150)` | Nama user pembuat (string, bukan FK) |
 
 **Model event:**
 - `saving` — otomatis panggil `computeStatus()` sebelum setiap simpan
 
 **Method penting:**
-- `computeStatus()` — cek 8 file: jika semua terisi → `lengkap`, sebaliknya → `belum lengkap`
+- `computeStatus()` — cek 7 file wajib (`file_ppdb`, `file_kk`, `file_akte`, `file_ktp`, `file_kts`, `file_foto`, `file_ijazah_smp`): jika semua terisi → `lengkap`, sebaliknya → `belum lengkap`. `file_ijazah_sma` **tidak** dihitung.
 - `isComplete()` — shortcut boolean
 - `scopeLengkap()` / `scopeBelumLengkap()` — query scope untuk filter status
 
@@ -222,6 +231,6 @@ Bukan entitas database tersendiri — ini adalah **query adapter** yang menunjuk
 |---|---|---|
 | `Role` → `User` | One-to-Many | `users.id_role` → `roles.id_role` |
 | `User` → `Surat` | One-to-Many | `surat.id_user` → `users.id_user` |
-| `User` → `Siswa` | One-to-Many | `siswa.id_user` → `users.id_user` |
+| `User` → `PesertaDidik` | One-to-Many | `peserta_didik.id_user` → `users.id_user` |
 | `Kode` → `Surat` | One-to-Many | `surat.kode_surat` → `kode.kode` |
 | `Laporan` → `Surat` | Uses Table | Bukan relasi Eloquent — query langsung |

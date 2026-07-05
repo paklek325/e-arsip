@@ -28,7 +28,7 @@
   <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
     
     {{-- ðŸ” Form Filter --}}
-    <div class="flex-grow-1" style="min-width: 280px;">
+    <div class="flex-grow-1 kode-filter-search">
       @include('kode.partials.filter')
     </div>
 

@@ -275,3 +275,12 @@
     height: 44px;
   }
 }
+
+/* ── Lebar kolom tabel surat ────────────────────────────────────────────── */
+.surat-col-no      { width: 50px; }
+.surat-col-nomor   { min-width: 230px; }
+.surat-col-kode    { min-width: 120px; }
+.surat-col-jenis   { width: 100px; }
+.surat-col-perihal { min-width: 200px; }
+.surat-col-instansi{ min-width: 160px; }
+.surat-col-aksi    { width: 110px; }

@@ -22,7 +22,7 @@
     <div class="mb-3">
         <label class="form-label fw-semibold" for="bulan">
             Bulan
-            <span class="badge bg-secondary fw-normal ms-1" style="font-size:.7rem;">Opsional</span>
+            <span class="badge bg-secondary fw-normal ms-1 badge-opsional">Opsional</span>
         </label>
         <select name="bulan" id="bulan" class="form-select">
             <option value="">-- Semua Bulan --</option>

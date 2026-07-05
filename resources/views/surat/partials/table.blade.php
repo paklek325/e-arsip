@@ -8,13 +8,13 @@
                 <thead class="table-light">
                     <tr class="text-center">
 
-                        <th style="width:50px;">No</th>
-                        <th style="min-width:230px;">Nomor Surat</th>
-                        <th style="min-width:120px;">Kode</th>
-                        <th style="width:100px;">Jenis</th>
-                        <th style="min-width:200px;">Perihal</th>
-                        <th style="min-width:160px;">Instansi</th>
-                        <th style="width:110px;">Aksi</th>
+                        <th class="surat-col-no">No</th>
+                        <th class="surat-col-nomor">Nomor Surat</th>
+                        <th class="surat-col-kode">Kode</th>
+                        <th class="surat-col-jenis">Jenis</th>
+                        <th class="surat-col-perihal">Perihal</th>
+                        <th class="surat-col-instansi">Instansi</th>
+                        <th class="surat-col-aksi">Aksi</th>
 
                     </tr>
                 </thead>

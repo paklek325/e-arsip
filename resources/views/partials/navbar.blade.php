@@ -65,13 +65,11 @@
                     <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown p-0 overflow-hidden">
 
                         {{-- Header dropdown: foto + nama + role + tombol logout --}}
-                        <div class="dropdown-header d-flex align-items-center gap-3"
-                             style="background: linear-gradient(135deg, #6C3EAB, #4F46E5); padding: 14px 16px;">
+                        <div class="dropdown-header d-flex align-items-center gap-3 dropdown-user-header">
                             <img src="{{ $fotoUrl }}"
                                  onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
                                  alt="{{ $authUser->name }}"
-                                 class="img-radius wid-35"
-                                 style="height:35px; object-fit:cover; object-position:center; flex-shrink:0;">
+                                 class="img-radius wid-35 dropdown-user-avatar">
                             <div class="flex-grow-1 overflow-hidden">
                                 <h6 class="text-white mb-0 text-truncate">{{ $authUser->name }}</h6>
                                 <small class="text-white text-opacity-75">{{ $roleName }}</small>

@@ -84,7 +84,7 @@
   </div>
 
   {{-- ===== ALERT TOAST ===== --}}
-  <div id="alert-container" class="position-fixed bottom-0 end-0 p-3" style="z-index:9999;"></div>
+  <div id="alert-container" class="position-fixed bottom-0 end-0 p-3"></div>
 
   {{-- ===== SCRIPTS ===== --}}
   <script src="{{ asset('template/dist/js/plugins/bootstrap.bundle.min.js') }}"></script>

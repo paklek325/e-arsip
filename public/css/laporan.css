@@ -289,6 +289,7 @@
   text-align: center;
 }
 .laporan-empty-state i {
+  font-size: 3rem;
   opacity: .5;
   color: var(--lap-masuk);
 }
@@ -809,3 +810,7 @@
   .table-wrapper.table-responsive td[data-label]::before { display: none !important; }
   .table-wrapper.table-responsive { overflow-x: auto !important; }
 }
+
+/* ── Misc utilities ─────────────────────────────────────────────────────── */
+.badge-opsional     { font-size: .7rem; }
+.lap-col-perihal    { min-width: 180px; }

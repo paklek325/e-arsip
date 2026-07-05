@@ -12,7 +12,7 @@
 @endsection
 
 @section('content')
-<div class="py-2" style="max-width: 760px;">
+<div class="py-2 profil-page-wrapper">
 
     {{-- Page Header --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -46,20 +46,17 @@
                     <div class="card-body d-flex flex-column align-items-center justify-content-center py-4">
 
                         {{-- Foto preview --}}
-                        <div class="position-relative mb-3" style="width:120px; height:120px;">
+                        <div class="position-relative mb-3 profil-photo-wrapper">
                             <img id="profilFotoPreview"
                                  src="{{ $user->foto ? asset('storage/foto_admin/' . $user->foto) : asset('assets/img/default_staf.png') }}"
                                  onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
                                  alt="Foto Profil"
-                                 class="rounded-circle border border-3"
-                                 style="width:120px; height:120px; object-fit:cover; object-position:center;
-                                        border-color: rgba(108,62,171,.4) !important;">
+                                 class="rounded-circle border border-3 profil-photo">
                             {{-- Tombol ganti foto --}}
                             <label for="fotoInput"
-                                   class="position-absolute bottom-0 end-0 btn btn-sm btn-primary rounded-circle p-0 d-flex align-items-center justify-content-center"
-                                   style="width:30px; height:30px; cursor:pointer;"
+                                   class="position-absolute bottom-0 end-0 btn btn-sm btn-primary rounded-circle p-0 d-flex align-items-center justify-content-center profil-photo-btn"
                                    title="Ganti Foto">
-                                <i class="bi bi-camera-fill" style="font-size:.75rem;"></i>
+                                <i class="bi bi-camera-fill profil-camera-icon"></i>
                             </label>
                         </div>
 
@@ -73,12 +70,11 @@
                         @enderror
 
                         <h6 class="fw-bold mb-1 mt-2">{{ $user->name }}</h6>
-                        <span class="badge rounded-pill"
-                              style="background: linear-gradient(135deg, #6C3EAB, #4F46E5); font-size:.75rem;">
+                        <span class="badge rounded-pill badge-role-gradient">
                             {{ $user->role->name ?? '-' }}
                         </span>
 
-                        <small class="text-muted mt-3" style="font-size:.75rem;">
+                        <small class="text-muted mt-3 profil-format-text">
                             Format JPG/PNG, maks. 4MB
                         </small>
 
@@ -188,8 +184,8 @@
                     <button type="button" class="btn-close" id="cancelCropProfil"></button>
                 </div>
                 <div class="modal-body text-center p-3">
-                    <div style="max-height:380px; overflow:hidden;">
-                        <img id="cropProfilImage" src="" alt="Crop" style="max-width:100%;">
+                    <div class="profil-crop-container">
+                        <img id="cropProfilImage" src="" alt="Crop" class="profil-crop-img">
                     </div>
                 </div>
                 <div class="modal-footer">
