@@ -20,9 +20,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Force HTTPS for all URLs when running in production (behind Cloudflare proxy).
-        // Skipped in local dev, since the local server doesn't speak SSL/TLS.
-        if (! $this->app->environment('local')) {
+        // Force HTTPS when APP_URL uses https, so route() generates correct URLs
+        // behind Cloudflare even if APP_ENV is not set to production.
+        if (str_starts_with(config('app.url', ''), 'https://')) {
             \URL::forceScheme('https');
         }
 

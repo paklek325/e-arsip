@@ -35,7 +35,7 @@ class UserController extends Controller
         }
 
         $exists = User::where('id_role', $kepalaRoleId)
-            ->when($ignoreUserId, fn ($q) => $q->where('id_user', '!=', $ignoreUserId))
+            ->when($ignoreUserId, fn($q) => $q->where('id_user', '!=', $ignoreUserId))
             ->exists();
 
         if ($exists) {
@@ -61,7 +61,7 @@ class UserController extends Controller
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -276,7 +276,8 @@ class UserController extends Controller
 
     public function updateProfil(Request $request)
     {
-        $user = auth()->user();
+        $user   = auth()->user();
+        $isAjax = $request->ajax() || $request->wantsJson();
 
         $validator = Validator::make($request->all(), [
             'name'     => 'required|max:150',
@@ -288,6 +289,14 @@ class UserController extends Controller
         ]);
 
         if ($validator->fails()) {
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validasi gagal',
+                    'errors'  => $validator->errors(),
+                ], 422);
+            }
+
             return back()->withErrors($validator)->withInput();
         }
 
@@ -311,6 +320,23 @@ class UserController extends Controller
         }
 
         $user->update($data);
+        $user->refresh()->load('role');
+
+        if ($isAjax) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profil berhasil diperbarui.',
+                'user'    => [
+                    'name'      => $user->name,
+                    'email'     => $user->email,
+                    'foto'      => $user->foto,
+                    'foto_url'  => $user->foto
+                        ? asset('storage/foto_admin/' . $user->foto)
+                        : asset('assets/img/default_staf.png'),
+                    'role_name' => $user->role->name ?? 'User',
+                ],
+            ]);
+        }
 
         return redirect()->route('dashboard.index')
             ->with('success', 'Profil berhasil diperbarui.');

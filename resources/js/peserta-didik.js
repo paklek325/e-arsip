@@ -37,9 +37,45 @@ if (window.PesertaDidikApp) {
         const token = $('meta[name="csrf-token"]')?.getAttribute("content");
 
         // ============================================================
+        // HELPER: Format tanggal ke format Indonesia (contoh: 12 Juli 2026)
+        // Menerima string tanggal dari server, format "YYYY-MM-DD" atau
+        // "YYYY-MM-DD HH:mm:ss". Mengembalikan "-" bila tidak valid.
+        // ============================================================
+        const NAMA_BULAN_ID = [
+            "Januari",
+            "Februari",
+            "Maret",
+            "April",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
+            "September",
+            "Oktober",
+            "November",
+            "Desember",
+        ];
+
+        function formatTanggalIndonesia(tanggal) {
+            if (!tanggal) return "-";
+
+            // Ambil bagian YYYY-MM-DD saja (buang jam bila ada)
+            const match = String(tanggal).match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (!match) return "-";
+
+            const [, tahun, bulan, hari] = match;
+            const namaBulan = NAMA_BULAN_ID[parseInt(bulan, 10) - 1];
+            if (!namaBulan) return "-";
+
+            return `${parseInt(hari, 10)} ${namaBulan} ${tahun}`;
+        }
+
+        // ============================================================
         // TOAST
         // ============================================================
-        function toast(message, type = "info") { window.AppToast(message, type); }
+        function toast(message, type = "info") {
+            window.AppToast(message, type);
+        }
 
         // ============================================================
         // ALERT FORM
@@ -72,7 +108,8 @@ if (window.PesertaDidikApp) {
             if (!warn) {
                 warn = document.createElement("div");
                 warn.className = "__file-warn text-danger small mt-1";
-                warn.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i>Isi file terlebih dahulu';
+                warn.innerHTML =
+                    '<i class="bi bi-exclamation-triangle-fill me-1"></i>Isi file terlebih dahulu';
                 input.insertAdjacentElement("afterend", warn);
             }
             input.classList.add("is-invalid");
@@ -184,7 +221,7 @@ if (window.PesertaDidikApp) {
                 const url = query ? `${baseUrl}?${query}` : baseUrl;
                 const res = await fetch(url, {
                     headers: { "X-Requested-With": "XMLHttpRequest" },
-                    credentials: "same-origin"
+                    credentials: "same-origin",
                 });
                 if (!res.ok) throw new Error("Gagal memuat tabel");
                 wrapper.innerHTML = await res.text();
@@ -426,14 +463,14 @@ if (window.PesertaDidikApp) {
                 if (!j?.success || !fileUrl)
                     return toast("File tidak ditemukan.", "error");
 
-                const modalEl  = $("#modalPreviewFile");
-                const body     = $("#pd-preview-container");
-                const spinner  = $("#pd-file-loading-spinner");
-                const dlLink   = $("#pd_previewDownloadLink");
-                const label    = $("#pd_preview_filename_label");
+                const modalEl = $("#modalPreviewFile");
+                const body = $("#pd-preview-container");
+                const spinner = $("#pd-file-loading-spinner");
+                const dlLink = $("#pd_previewDownloadLink");
+                const label = $("#pd_preview_filename_label");
 
                 // Reset
-                if (body)    body.innerHTML = "";
+                if (body) body.innerHTML = "";
                 if (spinner) spinner.style.display = "flex";
 
                 // Download link
@@ -442,13 +479,20 @@ if (window.PesertaDidikApp) {
                     dlLink.removeAttribute("download");
                 }
                 if (label) {
-                    label.textContent = field.replace("file_", "").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+                    label.textContent = field
+                        .replace("file_", "")
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (c) => c.toUpperCase());
                 }
 
                 modalEl.dataset.pesertaDidikId = id;
                 modalEl.dataset.field = field;
 
-                const ext = fileUrl.split("?")[0].split(".").pop().toLowerCase();
+                const ext = fileUrl
+                    .split("?")[0]
+                    .split(".")
+                    .pop()
+                    .toLowerCase();
 
                 let timerId;
                 const hideSpinner = () => {
@@ -476,15 +520,17 @@ if (window.PesertaDidikApp) {
                             </a>
                         </div>`;
                     setTimeout(hideSpinner, 2000);
-
-                } else if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
+                } else if (
+                    ["jpg", "jpeg", "png", "gif", "webp"].includes(ext)
+                ) {
                     content = document.createElement("img");
                     content.className = "img-fluid mx-auto d-block";
                     content.style.maxHeight = "75vh";
-                    content.onload  = hideSpinner;
+                    content.onload = hideSpinner;
                     content.onerror = () => {
                         hideSpinner();
-                        if (body) body.innerHTML = `
+                        if (body)
+                            body.innerHTML = `
                             <div class="p-4 text-center text-muted">
                                 <i class="bi bi-image fs-1"></i>
                                 <p class="mt-2">Gambar tidak dapat ditampilkan.</p>
@@ -494,7 +540,6 @@ if (window.PesertaDidikApp) {
                             </div>`;
                     };
                     content.src = fileUrl;
-
                 } else {
                     hideSpinner();
                     content = document.createElement("div");
@@ -509,7 +554,6 @@ if (window.PesertaDidikApp) {
 
                 if (body) body.appendChild(content);
                 new bootstrap.Modal(modalEl).show();
-
             } catch (err) {
                 console.error(err);
                 toast("Gagal memuat file.", "error");
@@ -736,7 +780,10 @@ if (window.PesertaDidikApp) {
                             hideFileWarning(input);
                         } else {
                             input.dataset.replace = "0";
-                            if (check.checked && input.dataset.serverFile !== "1")
+                            if (
+                                check.checked &&
+                                input.dataset.serverFile !== "1"
+                            )
                                 showFileWarning(input);
                         }
                         refreshEditDownloadAll();
@@ -787,13 +834,19 @@ if (window.PesertaDidikApp) {
                     "jenis_kelamin",
                     "tahun_angkatan",
                     "tempat_lahir",
-                    "tanggal_lahir",
                     "rombel",
                     "alamat",
                 ].forEach((f) => {
                     const el = $(`#detail_${f}`);
                     if (el) el.textContent = s[f] || "-";
                 });
+
+                const tglLahirEl = $("#detail_tanggal_lahir");
+                if (tglLahirEl) {
+                    tglLahirEl.textContent = formatTanggalIndonesia(
+                        s.tanggal_lahir
+                    );
+                }
 
                 const fileFields = [
                     "file_ppdb",
@@ -827,10 +880,18 @@ if (window.PesertaDidikApp) {
                               <i class="bi bi-download"></i> Unduh
                             </button>
                           </div>`;
-                            const previewBtn = btn.querySelector(`[data-peserta-didik-preview]`);
-                            const downloadBtn = btn.querySelector(`[data-peserta-didik-download]`);
-                            if (previewBtn) previewBtn.onclick = () => previewFile(id, field);
-                            if (downloadBtn) downloadBtn.onclick = () => openDownload(id, field);
+                            const previewBtn = btn.querySelector(
+                                `[data-peserta-didik-preview]`
+                            );
+                            const downloadBtn = btn.querySelector(
+                                `[data-peserta-didik-download]`
+                            );
+                            if (previewBtn)
+                                previewBtn.onclick = () =>
+                                    previewFile(id, field);
+                            if (downloadBtn)
+                                downloadBtn.onclick = () =>
+                                    openDownload(id, field);
                             if (checkbox) {
                                 checkbox.disabled = false;
                                 checkbox.checked = false;
@@ -927,23 +988,38 @@ if (window.PesertaDidikApp) {
                 hideFormAlert("#alertTambahPesertaDidik");
 
                 const fieldLabels = {
-                    file_ppdb: 'Formulir PPDB', file_kk: 'Kartu Keluarga',
-                    file_akte: 'Akte Kelahiran', file_ktp: 'KTP Orang Tua',
-                    file_kts: 'Kartu Peserta Didik', file_foto: 'Foto 3x4',
-                    file_ijazah_smp: 'Ijazah SMP', file_ijazah_sma: 'Ijazah SMA',
+                    file_ppdb: "Formulir PPDB",
+                    file_kk: "Kartu Keluarga",
+                    file_akte: "Akte Kelahiran",
+                    file_ktp: "KTP Orang Tua",
+                    file_kts: "Kartu Peserta Didik",
+                    file_foto: "Foto 3x4",
+                    file_ijazah_smp: "Ijazah SMP",
+                    file_ijazah_sma: "Ijazah SMA",
                 };
                 let firstInvalid = null;
                 for (const [field] of Object.entries(fieldLabels)) {
                     const check = $(`#add_check_${field}`);
                     const input = $(`#add_${field}`);
-                    if (check?.checked && (!input?.files || input.files.length === 0)) {
+                    if (
+                        check?.checked &&
+                        (!input?.files || input.files.length === 0)
+                    ) {
                         showFileWarning(input);
                         if (!firstInvalid) firstInvalid = input;
                     }
                 }
                 if (firstInvalid) {
-                    showFormAlert("#alertTambahPesertaDidik", "❌ Beberapa file yang dicentang belum diisi.");
-                    firstInvalid.closest(".file-item")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    showFormAlert(
+                        "#alertTambahPesertaDidik",
+                        "❌ Beberapa file yang dicentang belum diisi."
+                    );
+                    firstInvalid
+                        .closest(".file-item")
+                        ?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                        });
                     return;
                 }
 
@@ -997,23 +1073,39 @@ if (window.PesertaDidikApp) {
                     return toast("ID peserta_didik tidak ditemukan.", "error");
 
                 const fieldLabels = {
-                    file_ppdb: 'Formulir PPDB', file_kk: 'Kartu Keluarga',
-                    file_akte: 'Akte Kelahiran', file_ktp: 'KTP Orang Tua',
-                    file_kts: 'Kartu Peserta Didik', file_foto: 'Foto 3x4',
-                    file_ijazah_smp: 'Ijazah SMP', file_ijazah_sma: 'Ijazah SMA',
+                    file_ppdb: "Formulir PPDB",
+                    file_kk: "Kartu Keluarga",
+                    file_akte: "Akte Kelahiran",
+                    file_ktp: "KTP Orang Tua",
+                    file_kts: "Kartu Peserta Didik",
+                    file_foto: "Foto 3x4",
+                    file_ijazah_smp: "Ijazah SMP",
+                    file_ijazah_sma: "Ijazah SMA",
                 };
                 let firstInvalidEdit = null;
                 for (const [field] of Object.entries(fieldLabels)) {
                     const check = $(`#edit_check_${field}`);
                     const input = $(`#edit_${field}`);
-                    if (check?.checked && input?.dataset.serverFile !== "1" && (!input?.files || input.files.length === 0)) {
+                    if (
+                        check?.checked &&
+                        input?.dataset.serverFile !== "1" &&
+                        (!input?.files || input.files.length === 0)
+                    ) {
                         showFileWarning(input);
                         if (!firstInvalidEdit) firstInvalidEdit = input;
                     }
                 }
                 if (firstInvalidEdit) {
-                    showFormAlert("#alertEditPesertaDidik", "❌ Beberapa file yang dicentang belum diisi.");
-                    firstInvalidEdit.closest(".file-item")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    showFormAlert(
+                        "#alertEditPesertaDidik",
+                        "❌ Beberapa file yang dicentang belum diisi."
+                    );
+                    firstInvalidEdit
+                        .closest(".file-item")
+                        ?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                        });
                     return;
                 }
 
@@ -1122,7 +1214,8 @@ if (window.PesertaDidikApp) {
                     target.disabled = false;
                     showFileWarning(target);
                     target.onchange = () => {
-                        if (target.files && target.files.length > 0) hideFileWarning(target);
+                        if (target.files && target.files.length > 0)
+                            hideFileWarning(target);
                         else showFileWarning(target);
                     };
                 } else {
@@ -1232,10 +1325,7 @@ if (window.PesertaDidikApp) {
         const RE_YEAR_STRIP = /[^A-Za-z0-9 \/-]+/g;
         const RE_ADDR_STRIP = /[^A-Za-z0-9 .,\/-]+/g;
 
-        const PD_TEXT_FIELDS = new Set([
-            "nama_peserta_didik",
-            "tempat_lahir",
-        ]);
+        const PD_TEXT_FIELDS = new Set(["nama_peserta_didik", "tempat_lahir"]);
 
         function sanitizePesertaField(el) {
             if (!el || (el.tagName !== "INPUT" && el.tagName !== "TEXTAREA")) {
