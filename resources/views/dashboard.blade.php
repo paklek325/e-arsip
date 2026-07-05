@@ -340,6 +340,7 @@
                                              onerror="this.onerror=null;this.src='{{ asset('assets/img/default_staf.png') }}'"
                                              class="rounded-circle me-3 border shadow-sm users-table-avatar"
                                              loading="lazy" decoding="async"
+                                             width="35" height="35"
                                              alt="{{ $user->name }}">
                                         <span class="fw-semibold text-truncate users-table-name">
                                             {{ $user->name }}

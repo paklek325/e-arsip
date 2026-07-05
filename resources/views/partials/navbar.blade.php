@@ -50,6 +50,7 @@
                             role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false">
                             <img src="{{ $fotoUrl }}" onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
                                 alt="Foto {{ $authUser->name }}" class="user-avatar"
+                                width="35" height="35"
                                 loading="eager" fetchpriority="high" decoding="sync">
                         </a>
 
@@ -61,6 +62,7 @@
                                 <img src="{{ $fotoUrl }}"
                                     onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
                                     alt="{{ $authUser->name }}" class="img-radius wid-35 dropdown-user-avatar"
+                                    width="35" height="35"
                                     loading="lazy" decoding="async">
                                 <div class="flex-grow-1 overflow-hidden">
                                     <h6 class="text-white mb-0 text-truncate">{{ $authUser->name }}</h6>
@@ -123,7 +125,9 @@
                             <div class="foto-preview-wrapper mx-auto mb-2">
                                 <img id="previewFotoProfil" src="{{ $fotoUrl }}"
                                     data-default="{{ asset('assets/img/default_staf.png') }}"
-                                    onerror="this.src='{{ asset('assets/img/default_staf.png') }}'; this.onerror=null;">
+                                    onerror="this.src='{{ asset('assets/img/default_staf.png') }}'; this.onerror=null;"
+                                    width="100" height="100"
+                                    loading="lazy" decoding="async">
                             </div>
                             <input type="file" name="foto" id="profil_foto" class="form-control mt-2"
                                 accept="image/jpeg,image/png,image/jpg">

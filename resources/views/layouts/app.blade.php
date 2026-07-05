@@ -19,6 +19,17 @@
   {{-- Favicon --}}
   <link rel="icon" href="{{ asset('template/dist/images/logo.png') }}" type="image/x-icon">
 
+  {{-- Preload critical above-fold images --}}
+  <link rel="preload" as="image" href="{{ asset('template/dist/images/logo-1.png') }}" fetchpriority="high">
+  @auth
+  @php
+    $__preloadFoto = auth()->user()->foto
+      ? asset('storage/foto_admin/' . auth()->user()->foto)
+      : asset('assets/img/default_staf.png');
+  @endphp
+  <link rel="preload" as="image" href="{{ $__preloadFoto }}" fetchpriority="high">
+  @endauth
+
   {{-- Fonts & Icons --}}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

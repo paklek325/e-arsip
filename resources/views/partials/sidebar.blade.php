@@ -12,7 +12,11 @@
            rel="noopener noreferrer">
             <img src="{{ asset('template/dist/images/logo-1.png') }}"
                  alt="Logo SMA Babussalam"
-                 class="logo logo-lg">
+                 class="logo logo-lg"
+                 width="40" height="40"
+                 loading="eager"
+                 fetchpriority="high"
+                 decoding="sync">
         </a>
 
         <a href="{{ route('dashboard.index') }}" class="b-brand">
