@@ -115,8 +115,10 @@ a { text-decoration: none; color: inherit; }
 .b-brand {
   display: flex;
   flex-direction: column;
-  line-height: 1.1;
+  align-items: flex-start;
+  line-height: 1;
   text-decoration: none;
+  gap: 1px;
 }
 .brand-sub {
   font-size: 0.65rem;
