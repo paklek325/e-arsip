@@ -286,8 +286,10 @@
 }
 
 /* ── DARK MODE — semua override untuk [data-theme="dark"] ───────────────── */
-[data-theme="dark"] .dashboard-label { color: #cbd5e1; }
-[data-theme="dark"] .dashboard-number { color: #f1f5f9; }
+[data-theme="dark"] .dashboard-label { color: #cbd5e1 !important; }
+[data-theme="dark"] .dashboard-number { color: #f1f5f9 !important; }
+[data-theme="dark"] .dashboard-card .text-muted { color: #a0aec0 !important; }
+[data-theme="dark"] .dashboard-card .small { color: #a0aec0; }
 [data-theme="dark"] .icon-wrapper {
     background: rgba(255, 255, 255, .08);
     box-shadow: 0 2px 8px rgba(0,0,0,.3);

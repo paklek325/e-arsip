@@ -49,6 +49,21 @@
   --table-border:     rgba(255, 255, 255, 0.18);
   --table-row-hover:  rgba(34, 211, 238, 0.06);
   --table-td-color:   #e2e8f0;
+
+  /* Bootstrap 5 CSS variable overrides — supaya utility class BS ikut dark mode */
+  --bs-body-color:          #e5e7eb;
+  --bs-body-color-rgb:      229, 231, 235;
+  --bs-body-bg:             #0f172a;
+  --bs-secondary-color:     rgba(229, 231, 235, 0.65);
+  --bs-secondary-color-rgb: 229, 231, 235;
+  --bs-card-color:          #e5e7eb;
+  --bs-card-bg:             #1f2937;
+  --bs-card-cap-bg:         rgba(255, 255, 255, 0.03);
+  --bs-card-border-color:   rgba(255, 255, 255, 0.08);
+  --bs-border-color:        rgba(255, 255, 255, 0.12);
+  --bs-heading-color:       #f1f5f9;
+  --bs-link-color:          #93c5fd;
+  --bs-link-hover-color:    #bfdbfe;
 }
 
 /* =======================================================
@@ -401,6 +416,31 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 body[data-theme-transition] * { transition: none !important; }
+
+/* =======================================================
+   🌙 DARK MODE — GLOBAL TEXT COLOR OVERRIDES
+   Bootstrap utility class pakai !important sendiri, jadi
+   harus di-override dengan selector + !important agar
+   semua teks halaman (label, heading, muted, dll) ikut
+   berubah saat dark mode aktif.
+======================================================= */
+[data-theme="dark"] .text-muted        { color: #94a3b8 !important; }
+[data-theme="dark"] .text-body         { color: #e5e7eb !important; }
+[data-theme="dark"] .text-dark         { color: #e2e8f0 !important; }
+[data-theme="dark"] .text-secondary    { color: #94a3b8 !important; }
+[data-theme="dark"] .text-black        { color: #f1f5f9 !important; }
+[data-theme="dark"] h1, [data-theme="dark"] h2,
+[data-theme="dark"] h3, [data-theme="dark"] h4,
+[data-theme="dark"] h5, [data-theme="dark"] h6 { color: #f1f5f9; }
+[data-theme="dark"] p,
+[data-theme="dark"] span:not(.badge):not(.toggle-thumb),
+[data-theme="dark"] label,
+[data-theme="dark"] small              { color: inherit; }
+[data-theme="dark"] .card-body        { color: #e2e8f0; }
+[data-theme="dark"] .card-title       { color: #f1f5f9 !important; }
+[data-theme="dark"] .card-text        { color: #cbd5e1 !important; }
+[data-theme="dark"] .small            { color: inherit; }
+[data-theme="dark"] .fw-bold          { color: inherit; }
 
 /* =======================================================
    📱 RESPONSIVE FIX
