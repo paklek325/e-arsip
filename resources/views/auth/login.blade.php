@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Login </title>
+    <title>E-Arsip – Login</title>
 
     <link rel="icon" href="{{ asset('template/dist/images/logo.png') }}" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -532,9 +532,9 @@
                 </div>
             </div>
 
-            <p class="welcome-text">Selamat Datang </p>
-            <p class="app-name">SISTEM ARSIP DIGITAL
-                <br> SMA BABUSSALAM </P> 
+            <p class="welcome-text">Selamat Datang di</p>
+            <p class="app-name">E-Arsip
+                <br><small style="font-size:.8em;font-weight:600;opacity:.75;">SMA Babussalam</small></p>
 
             <h4 class="login-title">LOGIN</h4>
 
@@ -581,7 +581,7 @@
                 </button>
             </form>
 
-            <p class="login-footer">© {{ date('Y') }} SMA Babussalam &mdash; Sistem Arsip Digital</p>
+            <p class="login-footer">© {{ date('Y') }} SMA Babussalam &mdash; E-Arsip</p>
 
         </div>
     </div>
