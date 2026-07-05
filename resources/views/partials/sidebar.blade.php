@@ -23,6 +23,7 @@
             <span class="brand-text">
                 E-<span>Arsip</span>
             </span>
+            <span class="brand-sub">SMA Babussalam</span>
         </a>
 
     </div>
