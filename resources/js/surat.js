@@ -510,6 +510,7 @@ if (window.SuratApp) {
 
                     lapParams = { bulan: null, tahun: null, jenis_surat: null };
                     _initTanggal = null;
+                    updateResetButtons();
                     loadTable();
                 });
             }
@@ -527,9 +528,22 @@ if (window.SuratApp) {
             const resetJenisEl = $("#resetJenis");
             const resetSortEl  = $("#resetSort");
 
+            function showResetBtn(el) {
+                if (!el) return;
+                el.style.removeProperty("display");
+                el.classList.remove("d-none");
+            }
+            function hideResetBtn(el) {
+                if (!el) return;
+                el.style.setProperty("display", "none", "important");
+                el.classList.add("d-none");
+            }
+
             function updateResetButtons() {
-                resetJenisEl?.classList.toggle("d-none", !jenisEl?.value);
-                resetSortEl?.classList.toggle("d-none", sortEl?.selectedIndex === 0);
+                // Tombol reset jenis hanya muncul saat jenis punya nilai DAN tidak di-lock (disabled)
+                const jenisActive = jenisEl?.value && !jenisEl?.disabled;
+                jenisActive ? showResetBtn(resetJenisEl) : hideResetBtn(resetJenisEl);
+                (sortEl?.selectedIndex !== 0) ? showResetBtn(resetSortEl) : hideResetBtn(resetSortEl);
             }
 
             jenisEl?.addEventListener("change", updateResetButtons);

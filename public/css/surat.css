@@ -147,6 +147,11 @@
   color: #dc3545 !important;
 }
 
+/* Pastikan d-none menang atas display:flex di filter-clear-btn */
+.filter-clear-btn.d-none {
+  display: none !important;
+}
+
 [data-theme="dark"] .filter-clear-btn { color: #64748b !important; }
 [data-theme="dark"] .filter-clear-btn:hover {
   background-color: #334155 !important;

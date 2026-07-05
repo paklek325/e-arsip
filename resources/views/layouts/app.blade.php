@@ -36,16 +36,16 @@
   {{-- Flatpickr --}}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
-  {{-- App CSS --}}
-  <link rel="stylesheet" href="/css/app.css">
-  <link rel="stylesheet" href="/css/layout.css">
-  <link rel="stylesheet" href="/css/kode.css">
-  <link rel="stylesheet" href="/css/dashboard.css">
-  <link rel="stylesheet" href="/css/user.css">
-  <link rel="stylesheet" href="/css/surat.css">
-  <link rel="stylesheet" href="/css/peserta-didik.css">
-  <link rel="stylesheet" href="/css/laporan.css">
-  <link rel="stylesheet" href="/css/chat.css">
+  {{-- App CSS (v= filemtime agar browser selalu ambil versi terbaru) --}}
+  <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/layout.css') }}?v={{ filemtime(public_path('css/layout.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/kode.css') }}?v={{ filemtime(public_path('css/kode.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ filemtime(public_path('css/dashboard.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/user.css') }}?v={{ filemtime(public_path('css/user.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/surat.css') }}?v={{ filemtime(public_path('css/surat.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/peserta-didik.css') }}?v={{ filemtime(public_path('css/peserta-didik.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/laporan.css') }}?v={{ filemtime(public_path('css/laporan.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/chat.css') }}?v={{ filemtime(public_path('css/chat.css')) }}">
 
   {{-- Aset dari Vite --}}
   @vite([
