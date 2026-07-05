@@ -20,7 +20,10 @@ class RoleController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate(['name' => 'required|max:100']);
+        $validated = $request->validate([
+            'name'        => 'required|max:100',
+            'description' => 'nullable|string|max:255',
+        ]);
         Role::create($validated);
         return redirect()->route('role.index')->with('success', 'Role berhasil ditambahkan.');
     }
@@ -37,14 +40,21 @@ class RoleController extends Controller
 
     public function update(Request $request, Role $role)
     {
-        $validated = $request->validate(['name' => 'required|max:100']);
+        $validated = $request->validate([
+            'name'        => 'required|max:100',
+            'description' => 'nullable|string|max:255',
+        ]);
         $role->update($validated);
         return redirect()->route('role.index')->with('success', 'Role berhasil diperbarui.');
     }
 
     public function destroy(Role $role)
     {
-        $role->delete();
-        return redirect()->route('role.index')->with('success', 'Role berhasil dihapus.');
+        try {
+            $role->delete();
+            return redirect()->route('role.index')->with('success', 'Role berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->route('role.index')->with('error', 'Role tidak dapat dihapus karena masih digunakan oleh user.');
+        }
     }
 }

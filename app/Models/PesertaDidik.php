@@ -32,8 +32,6 @@ class PesertaDidik extends Model
         'file_ijazah_smp',
         'file_ijazah_sma',
         'status',
-        'created_at',
-        'updated_at',
         'id_user',
     ];
 

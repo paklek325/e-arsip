@@ -552,8 +552,8 @@ PROMPT
         $zipName = 'tmp_' . uniqid() . '_' . $zipDownloadName;
         $tempDir = 'temp';
 
-        Storage::disk('public')->makeDirectory($tempDir);
-        $zipPath = storage_path("app/public/{$tempDir}/{$zipName}");
+        Storage::disk('local')->makeDirectory($tempDir);
+        $zipPath = storage_path("app/{$tempDir}/{$zipName}");
 
         $zip = new ZipArchive();
 
@@ -585,7 +585,7 @@ PROMPT
         $zip->close();
 
         if ($filesAdded === 0) {
-            Storage::disk('public')->delete("{$tempDir}/{$zipName}");
+            Storage::disk('local')->delete("{$tempDir}/{$zipName}");
             return response()->json(['success' => false, 'message' => 'Tidak ada file untuk diunduh'], 404);
         }
 
@@ -626,7 +626,7 @@ PROMPT
 
         $folder  = $this->pathFolder($peserta_didik);
         $tempDir = 'temp';
-        Storage::disk('public')->makeDirectory($tempDir);
+        Storage::disk('local')->makeDirectory($tempDir);
 
         // Buat label untuk nama ZIP
         $labels = array_map(function ($field) {
@@ -643,7 +643,7 @@ PROMPT
         );
 
         $zipName = 'tmp_' . uniqid() . '_' . $zipDownloadName;
-        $zipPath = storage_path("app/public/{$tempDir}/{$zipName}");
+        $zipPath = storage_path("app/{$tempDir}/{$zipName}");
 
         Log::info("ZIP Path: {$zipPath}");
 
@@ -710,7 +710,7 @@ PROMPT
         }
 
         if ($filesAdded === 0) {
-            Storage::disk('public')->delete("{$tempDir}/{$zipName}");
+            Storage::disk('local')->delete("{$tempDir}/{$zipName}");
 
             $message = 'Tidak ada file yang dapat diunduh.';
             if (!empty($filesNotFound)) {

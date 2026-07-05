@@ -182,13 +182,15 @@
                     body: new FormData(e.target),
                 });
                 const data = await res.json();
-                if (data.errors) {
-                    displayValidationErrors(data.errors, "add");
-                } else {
+                if (data.success) {
                     bootstrap.Modal.getInstance($("#addKodeModal"))?.hide();
                     e.target.reset();
                     loadTable();
-                    toast("Kode berhasil ditambahkan", "success");
+                    toast(data.message || "Kode berhasil ditambahkan", "success");
+                } else if (data.errors) {
+                    displayValidationErrors(data.errors, "add");
+                } else {
+                    toast(data.message || "Gagal menambahkan kode.", "error");
                 }
             } catch (err) {
                 console.error(err);
@@ -241,12 +243,14 @@
                     body: fd,
                 });
                 const data = await res.json();
-                if (data.errors) {
-                    displayValidationErrors(data.errors, "edit");
-                } else {
+                if (data.success) {
                     bootstrap.Modal.getInstance($("#editKodeModal"))?.hide();
                     loadTable();
-                    toast("Kode berhasil diperbarui", "success");
+                    toast(data.message || "Kode berhasil diperbarui", "success");
+                } else if (data.errors) {
+                    displayValidationErrors(data.errors, "edit");
+                } else {
+                    toast(data.message || "Gagal memperbarui kode.", "error");
                 }
             } catch (err) {
                 console.error(err);
@@ -267,10 +271,15 @@
             const fd = new FormData();
             fd.append("_method", "DELETE");
             try {
-                await window.safeFetch(`${baseUrl}/kode/${id}`, { method: "POST", body: fd });
-                bootstrap.Modal.getInstance($("#deleteKodeModal"))?.hide();
-                loadTable();
-                toast("Kode berhasil dihapus", "success");
+                const res = await window.safeFetch(`${baseUrl}/kode/${id}`, { method: "POST", body: fd });
+                const data = await res.json().catch(() => ({}));
+                if (data.success) {
+                    bootstrap.Modal.getInstance($("#deleteKodeModal"))?.hide();
+                    loadTable();
+                    toast(data.message || "Kode berhasil dihapus", "success");
+                } else {
+                    toast(data.message || "Gagal menghapus kode.", "error");
+                }
             } catch (err) {
                 console.error(err);
                 toast(err.message || "Terjadi kesalahan saat hapus kode", "error");

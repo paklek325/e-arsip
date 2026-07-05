@@ -73,7 +73,7 @@ class ChatController extends Controller
             Log::error('ChatController ask Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+                'message' => 'Layanan AI sedang tidak tersedia. Silakan coba lagi.',
             ], 500);
         }
     }
@@ -166,7 +166,7 @@ class ChatController extends Controller
             return response()->json(['success' => true, 'message' => $reply, 'mode' => 'file']);
         } catch (\Throwable $e) {
             Log::error('ChatController uploadFile Error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Gagal menganalisis file: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Gagal menganalisis file. Silakan coba lagi.'], 500);
         }
     }
 

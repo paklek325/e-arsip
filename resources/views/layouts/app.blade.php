@@ -95,14 +95,14 @@
   @if(session('success'))
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      window.AppToast?.('{{ addslashes(session('success')) }}', 'success');
+      window.AppToast?.(@json(session('success')), 'success');
     });
   </script>
   @endif
   @if(session('error'))
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      window.AppToast?.('{{ addslashes(session('error')) }}', 'error');
+      window.AppToast?.(@json(session('error')), 'error');
     });
   </script>
   @endif

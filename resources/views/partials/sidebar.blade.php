@@ -114,7 +114,7 @@
 
                 {{-- SECTION: ADMIN (ROLE 1) --}}
                 @auth
-                    @if(auth()->user()->id_role == 1)
+                    @if(strtolower(auth()->user()->role?->name ?? '') === 'kepala staf')
                         <li class="pc-item pc-caption mt-1">
                             <i class="bi bi-shield-lock" aria-hidden="true"></i>
                             <span>Admin</span>

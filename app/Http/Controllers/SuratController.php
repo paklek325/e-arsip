@@ -722,6 +722,7 @@ class SuratController extends Controller
 
                 if (
                     is_string($file) &&
+                    in_array($file, $oldFiles) &&
                     Storage::disk('public')->exists($file)
                 ) {
 

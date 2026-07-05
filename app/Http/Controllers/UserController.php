@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 
 class UserController extends Controller
@@ -158,7 +159,7 @@ class UserController extends Controller
 
         if ($request->hasFile('foto')) {
             $file = $request->file('foto');
-            $filename = time() . '-' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+            $filename = time() . '-' . Str::random(8) . '.' . $file->getClientOriginalExtension();
             $file->storeAs('foto_admin', $filename, 'public');
             $validated['foto'] = $filename;
         }
@@ -252,7 +253,7 @@ class UserController extends Controller
             }
 
             $file = $request->file('foto');
-            $filename = time() . '-' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+            $filename = time() . '-' . Str::random(8) . '.' . $file->getClientOriginalExtension();
             $file->storeAs('foto_admin', $filename, 'public');
             $data['foto'] = $filename;
         }
@@ -314,7 +315,7 @@ class UserController extends Controller
                 Storage::disk('public')->delete('foto_admin/' . $user->foto);
             }
             $file     = $request->file('foto');
-            $filename = time() . '-' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+            $filename = time() . '-' . Str::random(8) . '.' . $file->getClientOriginalExtension();
             $file->storeAs('foto_admin', $filename, 'public');
             $data['foto'] = $filename;
         }
@@ -347,15 +348,24 @@ class UserController extends Controller
     // =========================
     public function destroy(User $user)
     {
-        if ($user->foto) {
-            Storage::disk('public')->delete('foto_admin/' . $user->foto);
+        try {
+            $foto = $user->foto;
+
+            $user->delete();
+
+            if ($foto) {
+                Storage::disk('public')->delete('foto_admin/' . $foto);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User berhasil dihapus',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus user: ' . $e->getMessage(),
+            ], 500);
         }
-
-        $user->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'User berhasil dihapus',
-        ]);
     }
 }

@@ -22,7 +22,7 @@
     </div>
 
     @php
-        $currentRole = strtolower(auth()->user()->role->name ?? '');
+        $currentRole = strtolower(auth()->user()->role?->name ?? '');
         $isKepala    = $currentRole === 'kepala staf';
         $isStaf      = $currentRole === 'staf';
     @endphp

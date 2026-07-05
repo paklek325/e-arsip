@@ -329,7 +329,7 @@
     function openDeleteModal(id, name) {
         $("#delete_id").value = id;
         $("#delete_name_label").textContent = name;
-        new bootstrap.Modal($("#deleteUserModal")).show();
+        bootstrap.Modal.getOrCreateInstance($("#deleteUserModal")).show();
     }
 
     $("#formDeleteUser")?.addEventListener("submit", async (e) => {
@@ -348,7 +348,7 @@
                 bootstrap.Modal.getInstance($("#deleteUserModal")).hide();
                 toast("User berhasil dihapus", "success");
                 loadTable();
-            } else toast("Gagal menghapus user", "error");
+            } else toast(result.message || "Gagal menghapus user", "error");
         } catch (err) {
             console.error(err);
             toast("Gagal menghapus user", "error");
@@ -368,7 +368,7 @@
             $("#detail_email").textContent = data.email;
             $("#detail_role").textContent = data.role?.name ?? "-";
 
-            new bootstrap.Modal($("#detailUserModal")).show();
+            bootstrap.Modal.getOrCreateInstance($("#detailUserModal")).show();
         } catch (err) {
             console.error(err);
             toast("Gagal memuat detail user", "error");

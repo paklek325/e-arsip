@@ -21,7 +21,7 @@ Route::redirect('/', '/login');
 */
 Route::controller(LoginController::class)->group(function () {
     Route::get('login', 'showLoginForm')->name('login');
-    Route::post('login', 'login')->name('login.process');
+    Route::post('login', 'login')->name('login.process')->middleware('throttle:5,1');
     Route::post('logout', 'logout')->name('logout');
 });
 
@@ -67,7 +67,7 @@ Route::middleware('auth')->group(function () {
     | USER
     |--------------------------------------------------------------------------
     */
-    Route::prefix('user')->name('user.')->controller(UserController::class)->group(function () {
+    Route::prefix('user')->name('user.')->controller(UserController::class)->middleware('role:Kepala Staf')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/', 'store')->name('store');
         Route::get('/{user}', 'show')->name('show');
@@ -103,7 +103,7 @@ Route::middleware('auth')->group(function () {
     | ROLE
     |--------------------------------------------------------------------------
     */
-    Route::prefix('role')->name('role.')->controller(RoleController::class)->group(function () {
+    Route::prefix('role')->name('role.')->controller(RoleController::class)->middleware('role:Kepala Staf')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/', 'store')->name('store');
         Route::get('/{role}', 'show')->name('show');
@@ -131,11 +131,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/filter/masuk', 'masuk')->name('masuk');
         Route::get('/filter/keluar', 'keluar')->name('keluar');
 
+        Route::post('/download-multiple', 'downloadMultiple')->name('downloadMultiple');
+
         Route::get('/{surat}', 'show')->name('show');
         Route::put('/{surat}', 'update')->name('update');
         Route::delete('/{surat}', 'destroy')->name('destroy');
-
-        Route::post('/download-multiple', 'downloadMultiple')->name('downloadMultiple');
     });
 
     /*

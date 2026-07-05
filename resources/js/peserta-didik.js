@@ -1014,12 +1014,10 @@ if (window.PesertaDidikApp) {
                         "#alertTambahPesertaDidik",
                         "❌ Beberapa file yang dicentang belum diisi."
                     );
-                    firstInvalid
-                        .closest(".file-item")
-                        ?.scrollIntoView({
-                            behavior: "smooth",
-                            block: "center",
-                        });
+                    firstInvalid.closest(".file-item")?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                    });
                     return;
                 }
 
@@ -1044,16 +1042,26 @@ if (window.PesertaDidikApp) {
                         },
                         body: new FormData(e.target),
                     });
-                    const j = await res.json().catch(() => ({}));
-                    toast(
-                        j.message || "✅ Peserta didik berhasil ditambahkan",
-                        j.success ? "success" : "error"
-                    );
-                    bootstrap.Modal.getInstance(modalTambah)?.hide();
-                    await loadTablePesertaDidik(getCurrentFilters());
+
+                    let j = {};
+                    try { j = await res.json(); } catch (_) {}
+
+                    if (j.success) {
+                        toast(j.message || "✅ Peserta didik berhasil ditambahkan", "success");
+                        bootstrap.Modal.getInstance(modalTambah)?.hide();
+                        await loadTablePesertaDidik(getCurrentFilters());
+                    } else if (res.status === 422 && j.errors) {
+                        const firstError = Object.values(j.errors).flat()[0];
+                        showFormAlert("#alertTambahPesertaDidik", "❌ " + (firstError || j.message || "Validasi gagal."));
+                    } else if (res.status === 419) {
+                        showFormAlert("#alertTambahPesertaDidik", "❌ Sesi CSRF kedaluwarsa. Silakan refresh halaman lalu coba lagi.");
+                    } else {
+                        const msg = j.message || `❌ Gagal menyimpan data (HTTP ${res.status}).`;
+                        showFormAlert("#alertTambahPesertaDidik", msg);
+                    }
                 } catch (err) {
                     console.error(err);
-                    toast("Terjadi kesalahan server.", "error");
+                    toast("Terjadi kesalahan jaringan saat menyimpan.", "error");
                 }
             });
         }
@@ -1100,12 +1108,10 @@ if (window.PesertaDidikApp) {
                         "#alertEditPesertaDidik",
                         "❌ Beberapa file yang dicentang belum diisi."
                     );
-                    firstInvalidEdit
-                        .closest(".file-item")
-                        ?.scrollIntoView({
-                            behavior: "smooth",
-                            block: "center",
-                        });
+                    firstInvalidEdit.closest(".file-item")?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                    });
                     return;
                 }
 
@@ -1150,18 +1156,26 @@ if (window.PesertaDidikApp) {
                         },
                         body: formData,
                     });
-                    const j = await res.json().catch(() => ({}));
-                    toast(
-                        j.message || "✅ Data diperbarui",
-                        j.success ? "success" : "error"
-                    );
-                    bootstrap.Modal.getInstance(
-                        $("#modalEditPesertaDidik")
-                    )?.hide();
-                    await loadTablePesertaDidik(getCurrentFilters());
+
+                    let j = {};
+                    try { j = await res.json(); } catch (_) {}
+
+                    if (j.success) {
+                        toast(j.message || "✅ Data diperbarui", "success");
+                        bootstrap.Modal.getInstance($("#modalEditPesertaDidik"))?.hide();
+                        await loadTablePesertaDidik(getCurrentFilters());
+                    } else if (res.status === 422 && j.errors) {
+                        const firstError = Object.values(j.errors).flat()[0];
+                        showFormAlert("#alertEditPesertaDidik", "❌ " + (firstError || j.message || "Validasi gagal."));
+                    } else if (res.status === 419) {
+                        showFormAlert("#alertEditPesertaDidik", "❌ Sesi CSRF kedaluwarsa. Silakan refresh halaman lalu coba lagi.");
+                    } else {
+                        const msg = j.message || `❌ Gagal memperbarui data (HTTP ${res.status}).`;
+                        showFormAlert("#alertEditPesertaDidik", msg);
+                    }
                 } catch (err) {
                     console.error(err);
-                    toast("Terjadi kesalahan saat update.", "error");
+                    toast("Terjadi kesalahan jaringan saat update.", "error");
                 } finally {
                     if (idInput) idInput.disabled = false;
                 }
@@ -1184,21 +1198,21 @@ if (window.PesertaDidikApp) {
                         "X-Requested-With": "XMLHttpRequest",
                     },
                 });
-                const j = await res.json().catch(() => ({}));
-                toast(
-                    j.message || "✅ Data dihapus",
-                    j.success ? "success" : "error"
-                );
-                bootstrap.Modal.getInstance(
-                    $("#modalHapusPesertaDidik")
-                )?.hide();
-                await loadTablePesertaDidik(getCurrentFilters());
+                let j = {};
+                try { j = await res.json(); } catch (_) {}
+
+                if (j.success) {
+                    toast(j.message || "✅ Data dihapus", "success");
+                    bootstrap.Modal.getInstance($("#modalHapusPesertaDidik"))?.hide();
+                    await loadTablePesertaDidik(getCurrentFilters());
+                } else if (res.status === 419) {
+                    toast("❌ Sesi CSRF kedaluwarsa. Silakan refresh halaman.", "error");
+                } else {
+                    toast(j.message || `❌ Gagal menghapus data (HTTP ${res.status}).`, "error");
+                }
             } catch (err) {
                 console.error(err);
-                toast(
-                    "Terjadi kesalahan saat menghapus peserta_didik",
-                    "error"
-                );
+                toast("Terjadi kesalahan jaringan saat menghapus.", "error");
             }
         });
 
