@@ -74,9 +74,9 @@ class Laporan extends Model
         $rows = DB::table('surat')
             ->selectRaw('MONTH(tanggal_surat) as bulan')
             // Hitung total_masuk dari jenis_surat = 'masuk'
-            ->selectRaw('SUM(CASE WHEN jenis_surat = 'Masuk' THEN 1 ELSE 0 END) as total_masuk')
+            ->selectRaw("SUM(CASE WHEN jenis_surat = 'Masuk' THEN 1 ELSE 0 END) as total_masuk")
             // Hitung total_keluar dari jenis_surat = 'Keluar'
-            ->selectRaw('SUM(CASE WHEN jenis_surat = 'Keluar' THEN 1 ELSE 0 END) as total_keluar')
+            ->selectRaw("SUM(CASE WHEN jenis_surat = 'Keluar' THEN 1 ELSE 0 END) as total_keluar")
             ->whereYear('tanggal_surat', $year)
             ->groupBy('bulan')
             ->orderBy('bulan', 'asc')
@@ -94,10 +94,10 @@ class Laporan extends Model
     public static function getMonthlyTotals(int $year, int $month): stdClass
     {
         $result = DB::table('surat')
-            ->selectRaw('
+            ->selectRaw("
                 SUM(CASE WHEN jenis_surat = 'Masuk' THEN 1 ELSE 0 END) as total_masuk,
                 SUM(CASE WHEN jenis_surat = 'Keluar' THEN 1 ELSE 0 END) as total_keluar
-            ')
+            ")
             ->whereYear('tanggal_surat', $year)
             ->whereMonth('tanggal_surat', $month)
             ->first();
