@@ -137,6 +137,11 @@
         sessionStorage.removeItem(HKEY);
         sessionStorage.removeItem(MKEY);
         sessionStorage.removeItem(PKEY);
+        // Reset rekap tab secara eksplisit (mencegah DOM lama tampil via bfcache)
+        const _rb = document.getElementById('eac-rekap-body');
+        if (_rb) _rb.innerHTML = '<div class="eac-empty">📋 Pilih periode lalu klik <strong>Tampilkan</strong></div>';
+        const _eb = document.getElementById('eac-export-btns');
+        if (_eb) _eb.classList.remove('show');
     }
     sessionStorage.setItem('eac_user', CURRENT_USER);
 
@@ -397,36 +402,6 @@
         .finally(()=>{ isTyping=false; sendBtn.disabled=false; input.focus(); });
     }
 
-    function fetchStream(text, typingEl) {
-        fetchWithCsrf('/chat/ask', {
-            method:'POST',
-            headers:{'Content-Type':'application/json','Accept':'text/event-stream'},
-            body: JSON.stringify({ message:text, history:history.slice(-6), page:window.location.pathname })
-        })
-        .then(r => {
-            typingEl.remove();
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            const wrapper = addBotBubble('');
-            const textEl  = wrapper.querySelector('.eac-bubble-text');
-            let full = '';
-            const reader = r.body.getReader(), dec = new TextDecoder();
-            function read() {
-                reader.read().then(({done,value})=>{
-                    if (done) { history.push({role:'user',content:text}); history.push({role:'assistant',content:full}); persistHistory(); isTyping=false; sendBtn.disabled=false; input.focus(); return; }
-                    dec.decode(value).split('\n').forEach(line=>{
-                        if (!line.startsWith('data: ')) return;
-                        const raw = line.slice(6).trim();
-                        if (raw==='[DONE]') return;
-                        try { const d=JSON.parse(raw).choices?.[0]?.delta?.content; if(d){full+=d;textEl.innerHTML=md(full);msgs.scrollTop=msgs.scrollHeight;} } catch(_){}
-                    });
-                    read();
-                });
-            }
-            read();
-        })
-        .catch(()=>{ typingEl.remove(); addErrorBubble('Koneksi bermasalah. Coba lagi.'); isTyping=false; sendBtn.disabled=false; });
-    }
-
     /* ── bubble helpers ── */
     function addUserBubble(t, files) {
         const d=document.createElement('div'); d.className='eac-bubble user';
@@ -546,171 +521,126 @@
         exportBtns.classList.remove('show');
 
         if (bulan) {
-            /* ── MODE BULANAN: detail surat ── */
-            const params = new URLSearchParams({
-                tipe: 'Bulan',
-                tahun: tahun,
-                bulan: bulan,
-                ...(jenis ? { jenis } : {}),
-                page: page,
-            });
-
-            fetch('/laporan/generate?' + params.toString(), {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html', 'X-CSRF-TOKEN': csrf() }
-            })
-            .then(r => r.text())
-            .then(html => {
-                /* Parse partial view — ambil data dari response HTML */
-                renderBulan(html, bulan, tahun, jenis, page);
-            })
-            .catch(() => {
-                body.innerHTML = '<div class="eac-empty" style="color:#c00">⚠️ Gagal memuat data.</div>';
+            fetchRekapJSON(bulan, tahun, jenis, page, (err, data) => {
+                if (err || !data) {
+                    body.innerHTML = '<div class="eac-empty" style="color:#c00">⚠️ Gagal memuat data.</div>';
+                    return;
+                }
+                renderBulan(data, bulan, tahun, jenis, page);
             });
         } else {
-            /* ── MODE TAHUNAN: ringkasan per bulan ── */
-            const params = new URLSearchParams({
-                tipe: 'Tahun',
-                tahun: tahun,
-                ...(jenis ? { jenis } : {}),
-            });
-
-            fetch('/laporan/generate?' + params.toString(), {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html', 'X-CSRF-TOKEN': csrf() }
-            })
-            .then(r => r.text())
-            .then(html => {
-                renderTahunan(html, tahun, jenis);
-            })
-            .catch(() => {
-                body.innerHTML = '<div class="eac-empty" style="color:#c00">⚠️ Gagal memuat data.</div>';
+            fetchRekapTahunanJSON(tahun, jenis, (err, data) => {
+                if (err || !data) {
+                    body.innerHTML = '<div class="eac-empty" style="color:#c00">⚠️ Gagal memuat data.</div>';
+                    return;
+                }
+                renderTahunan(data, tahun, jenis);
             });
         }
     };
 
-    /* Render detail bulanan — parse data dari partial */
-    function renderBulan(html, bulan, tahun, jenis, page) {
-        const body   = document.getElementById('eac-rekap-body');
-        const parser = new DOMParser();
-        const doc    = parser.parseFromString(html, 'text/html');
+    /* Render detail bulanan */
+    function renderBulan(data, bulan, tahun, jenis, page) {
+        const body = document.getElementById('eac-rekap-body');
+        const { surat, total_masuk, total_keluar, current_page, last_page } = data;
+        const bulanNama = MONTHS[parseInt(bulan)];
+        const jenisLabel = jenis === 'masuk' ? ' — Masuk' : jenis === 'keluar' ? ' — Keluar' : '';
 
-        /* Coba ambil dari partial blade via endpoint JSON fallback */
-        fetchRekapJSON(bulan, tahun, jenis, page, (err, data) => {
-            if (err || !data) {
-                body.innerHTML = '<div class="eac-empty" style="color:#c00">⚠️ Gagal memuat data.</div>';
-                return;
-            }
+        let html = `<div class="eac-rekap-info">
+            <span>📋 <strong>${bulanNama} ${tahun}${jenisLabel}</strong></span>
+            <div class="eac-rekap-badges">`;
+        if (!jenis || jenis==='masuk')  html += `<span class="eac-badge masuk">Masuk: ${total_masuk}</span>`;
+        if (!jenis || jenis==='keluar') html += `<span class="eac-badge keluar">Keluar: ${total_keluar}</span>`;
+        html += `</div></div>`;
 
-            const { surat, total_masuk, total_keluar, current_page, last_page, total } = data;
-            const bulanNama = MONTHS[parseInt(bulan)];
-            const jenisLabel = jenis === 'masuk' ? ' — Masuk' : jenis === 'keluar' ? ' — Keluar' : '';
-
-            let html = `<div class="eac-rekap-info">
-                <span>📋 <strong>${bulanNama} ${tahun}${jenisLabel}</strong></span>
-                <div class="eac-rekap-badges">`;
-            if (!jenis || jenis==='masuk')  html += `<span class="eac-badge masuk">Masuk: ${total_masuk}</span>`;
-            if (!jenis || jenis==='keluar') html += `<span class="eac-badge keluar">Keluar: ${total_keluar}</span>`;
-            html += `</div></div>`;
-
-            if (!surat || surat.length === 0) {
-                html += `<div class="eac-empty">Tidak ada surat untuk periode ini.</div>`;
-                body.innerHTML = html;
-                exportBtns.classList.remove('show');
-                return;
-            }
-
-            html += `<table class="eac-tbl">
-                <thead><tr>
-                    <th>#</th>
-                    <th>No. Surat</th>
-                    <th>Perihal</th>
-                    <th>Tgl</th>
-                    <th>Jenis</th>
-                </tr></thead><tbody>`;
-
-            const offset = (current_page - 1) * 10;
-            surat.forEach((s, i) => {
-                const badge = s.jenis_surat === 'Masuk'
-                    ? `<span class="eac-badge masuk">Masuk</span>`
-                    : `<span class="eac-badge keluar">Keluar</span>`;
-                const tgl = s.tanggal_surat ? new Date(s.tanggal_surat).toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'}) : '-';
-                html += `<tr>
-                    <td>${offset + i + 1}</td>
-                    <td><a class="eac-tbl-link" href="/surat/${s.id}" onclick="window.location.href='/surat/${s.id}';return false;">${esc(s.no_surat||'-')}</a></td>
-                    <td>${esc(s.perihal||'-')}</td>
-                    <td style="white-space:nowrap;font-size:11px">${tgl}</td>
-                    <td>${badge}</td>
-                </tr>`;
-            });
-            html += `</tbody></table>`;
-
-            /* Pagination */
-            if (last_page > 1) {
-                html += `<div class="eac-pagination">`;
-                if (current_page > 1) html += `<button class="eac-pg-btn" onclick="eacLoadRekap(${current_page-1})">‹ Prev</button>`;
-                for (let p = Math.max(1,current_page-2); p <= Math.min(last_page,current_page+2); p++) {
-                    html += `<button class="eac-pg-btn${p===current_page?' active':''}" onclick="eacLoadRekap(${p})">${p}</button>`;
-                }
-                if (current_page < last_page) html += `<button class="eac-pg-btn" onclick="eacLoadRekap(${current_page+1})">Next ›</button>`;
-                html += `</div>`;
-            }
-
+        if (!surat || surat.length === 0) {
+            html += `<div class="eac-empty">Tidak ada surat untuk periode ini.</div>`;
             body.innerHTML = html;
-            exportBtns.classList.add('show');
+            exportBtns.classList.remove('show');
+            return;
+        }
+
+        html += `<table class="eac-tbl">
+            <thead><tr>
+                <th>#</th>
+                <th>No. Surat</th>
+                <th>Perihal</th>
+                <th>Tgl</th>
+                <th>Jenis</th>
+            </tr></thead><tbody>`;
+
+        const offset = (current_page - 1) * 10;
+        surat.forEach((s, i) => {
+            const badge = s.jenis_surat === 'Masuk'
+                ? `<span class="eac-badge masuk">Masuk</span>`
+                : `<span class="eac-badge keluar">Keluar</span>`;
+            const tgl = s.tanggal_surat ? new Date(s.tanggal_surat).toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'}) : '-';
+            html += `<tr>
+                <td>${offset + i + 1}</td>
+                <td><a class="eac-tbl-link" href="/surat/${s.id}" onclick="window.location.href='/surat/${s.id}';return false;">${esc(s.no_surat||'-')}</a></td>
+                <td>${esc(s.perihal||'-')}</td>
+                <td style="white-space:nowrap;font-size:11px">${tgl}</td>
+                <td>${badge}</td>
+            </tr>`;
         });
+        html += `</tbody></table>`;
+
+        if (last_page > 1) {
+            html += `<div class="eac-pagination">`;
+            if (current_page > 1) html += `<button class="eac-pg-btn" onclick="eacLoadRekap(${current_page-1})">‹ Prev</button>`;
+            for (let p = Math.max(1,current_page-2); p <= Math.min(last_page,current_page+2); p++) {
+                html += `<button class="eac-pg-btn${p===current_page?' active':''}" onclick="eacLoadRekap(${p})">${p}</button>`;
+            }
+            if (current_page < last_page) html += `<button class="eac-pg-btn" onclick="eacLoadRekap(${current_page+1})">Next ›</button>`;
+            html += `</div>`;
+        }
+
+        body.innerHTML = html;
+        exportBtns.classList.add('show');
     }
 
     /* Render tahunan */
-    function renderTahunan(html, tahun, jenis) {
+    function renderTahunan(data, tahun, jenis) {
         const body = document.getElementById('eac-rekap-body');
+        const { bulan_data, total_masuk_all, total_keluar_all } = data;
+        const jenisLabel = jenis === 'masuk' ? ' — Masuk' : jenis === 'keluar' ? ' — Keluar' : '';
 
-        fetchRekapTahunanJSON(tahun, jenis, (err, data) => {
-            if (err || !data) {
-                body.innerHTML = '<div class="eac-empty" style="color:#c00">⚠️ Gagal memuat data.</div>';
-                return;
-            }
+        let out = `<div class="eac-rekap-info">
+            <span>📅 <strong>Rekap Tahunan ${tahun}${jenisLabel}</strong></span>
+            <div class="eac-rekap-badges">
+                <span class="eac-badge total">Total: ${total_masuk_all + total_keluar_all}</span>
+            </div>
+        </div>`;
 
-            const { bulan_data, total_masuk_all, total_keluar_all } = data;
-            const jenisLabel = jenis === 'masuk' ? ' — Masuk' : jenis === 'keluar' ? ' — Keluar' : '';
+        out += `<table class="eac-tbl eac-tbl-year">
+            <thead><tr>
+                <th>Bulan</th>`;
+        if (!jenis || jenis==='masuk')  out += `<th>Masuk</th>`;
+        if (!jenis || jenis==='keluar') out += `<th>Keluar</th>`;
+        if (!jenis) out += `<th>Total</th>`;
+        out += `</tr></thead><tbody>`;
 
-            let out = `<div class="eac-rekap-info">
-                <span>📅 <strong>Rekap Tahunan ${tahun}${jenisLabel}</strong></span>
-                <div class="eac-rekap-badges">
-                    <span class="eac-badge total">Total: ${total_masuk_all + total_keluar_all}</span>
-                </div>
-            </div>`;
+        let totalM = 0, totalK = 0;
+        bulan_data.forEach(row => {
+            const m = row.total_masuk || 0;
+            const k = row.total_keluar || 0;
+            totalM += m; totalK += k;
 
-            out += `<table class="eac-tbl eac-tbl-year">
-                <thead><tr>
-                    <th>Bulan</th>`;
-            if (!jenis || jenis==='masuk')  out += `<th>Masuk</th>`;
-            if (!jenis || jenis==='keluar') out += `<th>Keluar</th>`;
-            if (!jenis) out += `<th>Total</th>`;
-            out += `</tr></thead><tbody>`;
-
-            let totalM = 0, totalK = 0;
-            bulan_data.forEach(row => {
-                /* Filter: jika jenis spesifik, sembunyikan baris nol */
-                const m = row.total_masuk || 0;
-                const k = row.total_keluar || 0;
-                totalM += m; totalK += k;
-
-                out += `<tr>
-                    <td><strong>${row.bulan_nama}</strong></td>`;
-                if (!jenis || jenis==='masuk')  out += `<td>${m > 0 ? `<strong style="color:#2d7a4f">${m}</strong>` : '<span style="color:#ccc">0</span>'}</td>`;
-                if (!jenis || jenis==='keluar') out += `<td>${k > 0 ? `<strong style="color:#856404">${k}</strong>` : '<span style="color:#ccc">0</span>'}</td>`;
-                if (!jenis) out += `<td>${m+k > 0 ? m+k : '<span style="color:#ccc">0</span>'}</td>`;
-                out += `</tr>`;
-            });
-
-            out += `<tr class="total-row"><td>TOTAL</td>`;
-            if (!jenis || jenis==='masuk')  out += `<td>${totalM}</td>`;
-            if (!jenis || jenis==='keluar') out += `<td>${totalK}</td>`;
-            if (!jenis) out += `<td>${totalM + totalK}</td>`;
-            out += `</tr></tbody></table>`;
-
-            body.innerHTML = out;
-            exportBtns.classList.add('show');
+            out += `<tr><td><strong>${row.bulan_nama}</strong></td>`;
+            if (!jenis || jenis==='masuk')  out += `<td>${m > 0 ? `<strong style="color:#2d7a4f">${m}</strong>` : '<span style="color:#ccc">0</span>'}</td>`;
+            if (!jenis || jenis==='keluar') out += `<td>${k > 0 ? `<strong style="color:#856404">${k}</strong>` : '<span style="color:#ccc">0</span>'}</td>`;
+            if (!jenis) out += `<td>${m+k > 0 ? m+k : '<span style="color:#ccc">0</span>'}</td>`;
+            out += `</tr>`;
         });
+
+        out += `<tr class="total-row"><td>TOTAL</td>`;
+        if (!jenis || jenis==='masuk')  out += `<td>${totalM}</td>`;
+        if (!jenis || jenis==='keluar') out += `<td>${totalK}</td>`;
+        if (!jenis) out += `<td>${totalM + totalK}</td>`;
+        out += `</tr></tbody></table>`;
+
+        body.innerHTML = out;
+        exportBtns.classList.add('show');
     }
 
     /* ── FETCH JSON untuk rekap bulanan ── */
@@ -738,6 +668,7 @@
     /* ══ EXPORT ══ */
     window.eacExport = function(format) {
         const { bulan, tahun, jenis } = lastFilter;
+        if (!tahun) return;
         const params = new URLSearchParams({
             format,
             tipe: bulan ? 'Bulan' : 'Tahun',
@@ -751,6 +682,7 @@
     /* ══ CETAK ══ */
     window.eacCetak = function() {
         const { bulan, tahun, jenis } = lastFilter;
+        if (!tahun) return;
         const params = new URLSearchParams({
             format: 'pdf',
             tipe: bulan ? 'Bulan' : 'Tahun',
@@ -781,6 +713,16 @@
         });
         messagesObserver.observe(msgs, { childList: true, subtree: true, characterData: true });
     } catch (_) {}
+
+    /* ── bfcache: reset rekap & CSRF saat halaman dipulihkan via tombol Back ── */
+    window.addEventListener('pageshow', function(e) {
+        if (!e.persisted) return;
+        lastFilter = {};
+        const rekapBody = document.getElementById('eac-rekap-body');
+        if (rekapBody) rekapBody.innerHTML = '<div class="eac-empty">📋 Pilih periode lalu klik <strong>Tampilkan</strong></div>';
+        exportBtns.classList.remove('show');
+        refreshCsrf();
+    });
 
     // Pulihkan percakapan & status panel dari halaman sebelumnya
     (function restoreChatState() {
