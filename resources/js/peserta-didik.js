@@ -1264,10 +1264,10 @@ if (window.PesertaDidikApp) {
                     b.onclick = () => {
                         const hapusId = $("#hapus_id");
                         if (hapusId) hapusId.value = b.dataset.id;
-                        const nama = b
-                            .closest("tr")
-                            ?.querySelector(".nama-peserta-didik")
-                            ?.textContent?.trim();
+                        const nama = b.dataset.nama ||
+                            b.closest("tr")
+                                ?.querySelector(".nama-peserta-didik")
+                                ?.textContent?.trim();
                         const hapusNama = $("#hapus_nama_peserta_didik");
                         if (nama && hapusNama) hapusNama.textContent = nama;
                         new bootstrap.Modal(

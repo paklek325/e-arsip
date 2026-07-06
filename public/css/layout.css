@@ -479,6 +479,41 @@ body[data-theme-transition] * { transition: none !important; }
     font-size: 1.2rem;
   }
 
+  /* Pastikan tombol hamburger mobile selalu tampil */
+  .pc-header .pc-h-item.pc-sidebar-popup {
+    display: list-item !important;
+  }
+  .pc-header .pc-h-item.pc-sidebar-collapse {
+    display: none !important;
+  }
+  .pc-header .pc-mob-drp {
+    display: flex !important;
+    align-items: center;
+  }
+  .pc-header .pc-mob-drp ul {
+    display: flex !important;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+  }
+  #mobile-collapse {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    font-size: 1.3rem;
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 8px;
+  }
+  #mobile-collapse:hover {
+    background: rgba(0,0,0,0.06);
+  }
+  [data-theme="dark"] #mobile-collapse:hover {
+    background: rgba(255,255,255,0.08);
+  }
+
   .pc-sidebar {
     position: fixed;
     top: 0;
@@ -569,7 +604,9 @@ body[data-theme-transition] * { transition: none !important; }
 
   /* Header row dengan tombol Tambah — wrap rapi */
   .d-flex.justify-content-between.align-items-center.mb-4,
-  .d-flex.justify-content-between.align-items-start.mb-4 {
+  .d-flex.justify-content-between.align-items-start.mb-4,
+  .d-flex.justify-content-between.align-items-center.mb-3,
+  .d-flex.justify-content-between.align-items-start.mb-3 {
     flex-wrap: wrap !important;
     gap: 0.5rem !important;
     margin-bottom: 0.75rem !important;
@@ -599,6 +636,30 @@ body[data-theme-transition] * { transition: none !important; }
     padding: 0.6rem !important;
     margin-bottom: 0.6rem !important;
     border-radius: 10px !important;
+  }
+
+  /* Filter select — full width di mobile agar tidak cramped */
+  .filter-bar .col-6 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Form select di filter lebih kompak di mobile */
+  .filter-bar .form-select {
+    font-size: 0.83rem !important;
+    padding: 0.4rem 2.2rem 0.4rem 0.65rem !important;
+  }
+
+  /* Chat widget tombol lebih kecil agar tidak menutupi konten */
+  #earsipchat-btn {
+    width: 44px !important;
+    height: 44px !important;
+    bottom: 16px !important;
+    right: 14px !important;
+  }
+  #earsipchat-btn svg {
+    width: 20px !important;
+    height: 20px !important;
   }
 
   /* Kurangi mb-4 dan mb-3 di mobile — kecuali di halaman laporan */
@@ -1051,25 +1112,27 @@ body[data-theme-transition] * { transition: none !important; }
    📱 MOBILE CARD-VIEW TABLE (≤576px)
    responsif.js menambahkan data-label ke setiap <td>,
    CSS ini yang mengubah tabel menjadi tampilan kartu.
+   Tambahkan class "no-mobile-card" ke .table-responsive
+   untuk opt-out dari transformasi ini.
 ======================================================= */
 @media (max-width: 576px) {
 
   /* Sembunyikan header tabel */
-  .table-responsive table thead {
+  .table-responsive:not(.no-mobile-card) table thead {
     display: none !important;
   }
 
   /* Ubah struktur tabel menjadi block */
-  .table-responsive table,
-  .table-responsive tbody,
-  .table-responsive tr,
-  .table-responsive td {
+  .table-responsive:not(.no-mobile-card) table,
+  .table-responsive:not(.no-mobile-card) tbody,
+  .table-responsive:not(.no-mobile-card) tr,
+  .table-responsive:not(.no-mobile-card) td {
     display: block !important;
     width: 100% !important;
   }
 
   /* Setiap baris jadi kartu */
-  .table-responsive tbody tr {
+  .table-responsive:not(.no-mobile-card) tbody tr {
     border: 1px solid var(--table-border, rgba(0,0,0,.1)) !important;
     border-radius: 10px !important;
     margin-bottom: 0.85rem !important;
@@ -1079,7 +1142,7 @@ body[data-theme-transition] * { transition: none !important; }
   }
 
   /* Setiap sel jadi baris label : nilai */
-  .table-responsive td {
+  .table-responsive:not(.no-mobile-card) td {
     display: flex !important;
     align-items: flex-start !important;
     justify-content: space-between !important;
@@ -1091,46 +1154,47 @@ body[data-theme-transition] * { transition: none !important; }
     word-break: break-word !important;
   }
 
-  .table-responsive td:last-child {
+  .table-responsive:not(.no-mobile-card) td:last-child {
     border-bottom: none !important;
   }
 
   /* Label kolom dari data-label */
-  .table-responsive td[data-label]::before {
+  .table-responsive:not(.no-mobile-card) td[data-label]::before {
     content: attr(data-label);
     font-weight: 700;
     color: var(--table-head-color, #6b7280);
     text-transform: uppercase;
-    font-size: 0.68rem;
-    letter-spacing: 0.5px;
+    font-size: 0.72rem;
+    letter-spacing: 0.4px;
     flex-shrink: 0;
-    margin-right: 0.6rem;
+    margin-right: 0.5rem;
     padding-top: 2px;
     text-align: left;
-    min-width: 90px;
+    min-width: 115px;
+    max-width: 115px;
   }
 
   /* Override nowrap bawaan Bootstrap & table-custom */
-  .table-responsive table,
-  .table-responsive .table-custom th,
-  .table-responsive .table-custom td {
+  .table-responsive:not(.no-mobile-card) table,
+  .table-responsive:not(.no-mobile-card) .table-custom th,
+  .table-responsive:not(.no-mobile-card) .table-custom td {
     white-space: normal !important;
   }
 
   /* Tombol aksi tetap bisa dibaca */
-  .table-responsive td .d-flex {
+  .table-responsive:not(.no-mobile-card) td .d-flex {
     justify-content: flex-end !important;
     flex-wrap: wrap !important;
     gap: 4px !important;
   }
 
   /* Dark mode card-view */
-  [data-theme="dark"] .table-responsive tbody tr {
+  [data-theme="dark"] .table-responsive:not(.no-mobile-card) tbody tr {
     background: var(--card-bg, #1f2937) !important;
     border-color: rgba(255,255,255,.08) !important;
   }
 
-  [data-theme="dark"] .table-responsive td {
+  [data-theme="dark"] .table-responsive:not(.no-mobile-card) td {
     border-bottom-color: rgba(255,255,255,.05) !important;
   }
 }

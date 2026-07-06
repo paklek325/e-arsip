@@ -11,6 +11,22 @@
   #earsipchat-panel { display: none !important; }
 }
 
+/* Sembunyikan chat widget saat modal Bootstrap sedang terbuka */
+body.modal-open #earsipchat-btn,
+body.modal-open #earsipchat-panel {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+/* Pastikan chat panel tidak menghalangi scroll pada mobile */
+#earsipchat-panel {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+#earsipchat-panel:not(.open) {
+  touch-action: none;
+}
+
 /* ── Container ── */
 #chat-widget {
     position: fixed;
@@ -474,4 +490,25 @@
 .eac-pg-btn:hover { background:#6C3EAB; color:#fff; border-color:#6C3EAB; }
 .eac-pg-btn.active { background:#6C3EAB; color:#fff; border-color:#6C3EAB; font-weight:700; }
 .eac-pg-btn:disabled { opacity:.4; cursor:default; }
-@media (max-width:440px) { #earsipchat-panel { right:8px; left:8px; width:auto; bottom:76px; height:min(520px, calc(100vh - 96px)); } }
+@media (max-width:440px) {
+  #earsipchat-panel {
+    right: 8px;
+    left: 8px;
+    width: auto;
+    bottom: 68px;
+    height: min(520px, calc(100vh - 88px));
+    border-radius: 14px;
+  }
+  /* Panel rekap toolbar — bungkus selects agar tidak overflow */
+  .eac-rekap-row1 {
+    flex-wrap: wrap !important;
+  }
+  .eac-rekap-toolbar select#eac-r-bulan {
+    min-width: 100% !important;
+  }
+  .eac-rekap-toolbar select#eac-r-tahun,
+  .eac-rekap-toolbar select#eac-r-jenis {
+    flex: 1 !important;
+    min-width: 70px !important;
+  }
+}

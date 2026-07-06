@@ -319,7 +319,8 @@
                 <i class="bi bi-people-fill text-primary fs-5"></i>
                 <h6 class="fw-bold mb-0 text-primary">Daftar Pengguna</h6>
             </div>
-            <div class="table-responsive">
+            {{-- Desktop: tabel biasa | Mobile: user-card list --}}
+            <div class="table-responsive no-mobile-card d-none d-sm-block">
                 <table class="table align-middle mb-0 users-table">
                     <thead>
                         <tr>
@@ -342,21 +343,15 @@
                                              loading="lazy" decoding="async"
                                              width="35" height="35"
                                              alt="{{ $user->name }}">
-                                        <span class="fw-semibold text-truncate users-table-name">
-                                            {{ $user->name }}
-                                        </span>
+                                        <span class="fw-semibold text-truncate users-table-name">{{ $user->name }}</span>
                                     </div>
                                 </td>
-                                <td class="text-muted text-truncate users-table-email">
-                                    {{ $user->email }}
-                                </td>
+                                <td class="text-muted users-table-email">{{ $user->email }}</td>
                                 <td class="text-center">
-                                    <span class="badge badge-secondary">
-                                        {{ $user->role->name ?? 'N/A' }}
-                                    </span>
+                                    <span class="badge badge-secondary">{{ $user->role->name ?? 'N/A' }}</span>
                                 </td>
                                 <td class="text-center text-muted small">
-                                    {{ $user->created_at ? $user->created_at->format('d M Y H:i') : '-' }}
+                                    {{ $user->created_at ? $user->created_at->format('d M Y') : '-' }}
                                 </td>
                             </tr>
                         @empty
@@ -368,6 +363,31 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Mobile: kartu per user (≤576px) --}}
+            <div class="d-block d-sm-none p-2">
+                @forelse($recentUsers ?? [] as $user)
+                <div class="d-flex align-items-center gap-3 p-3 mb-2 rounded-3 border" style="background:var(--card-bg,#fff)">
+                    <img src="{{ $user->foto ? asset('storage/foto_admin/' . $user->foto) : asset('assets/img/default_staf.png') }}"
+                         onerror="this.onerror=null;this.src='{{ asset('assets/img/default_staf.png') }}'"
+                         class="rounded-circle border shadow-sm flex-shrink-0"
+                         loading="lazy" width="44" height="44" alt="{{ $user->name }}"
+                         style="object-fit:cover">
+                    <div class="flex-grow-1 min-width-0" style="min-width:0">
+                        <div class="fw-semibold text-truncate" style="font-size:.9rem">{{ $user->name }}</div>
+                        <div class="text-muted text-truncate" style="font-size:.78rem">{{ $user->email }}</div>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <span class="badge badge-secondary" style="font-size:.7rem">{{ $user->role->name ?? 'N/A' }}</span>
+                            <span class="text-muted" style="font-size:.72rem">{{ $user->created_at ? $user->created_at->format('d M Y') : '-' }}</span>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-exclamation-circle me-2"></i>Tidak ada pengguna.
+                </div>
+                @endforelse
             </div>
         </div>
     @endif

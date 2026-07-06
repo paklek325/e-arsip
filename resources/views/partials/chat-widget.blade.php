@@ -711,7 +711,7 @@
                 try { sessionStorage.setItem(MKEY, msgs.innerHTML); } catch (_) {}
             }
         });
-        messagesObserver.observe(msgs, { childList: true, subtree: true, characterData: true });
+        messagesObserver.observe(msgs, { childList: true });
     } catch (_) {}
 
     /* ── bfcache: reset rekap & CSRF saat halaman dipulihkan via tombol Back ── */

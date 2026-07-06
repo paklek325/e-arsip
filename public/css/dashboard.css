@@ -594,3 +594,58 @@
 .users-table-avatar  { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
 .users-table-name    { max-width: 140px; }
 .users-table-email   { max-width: 180px; }
+
+/* Email span — desktop: truncate; mobile: break-all via override below */
+.user-email-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+}
+
+/* ── Users table — mobile card view override (≤576px) ───────────────────── */
+@media (max-width: 576px) {
+  /* Sembunyikan baris "No" — redundan di tampilan kartu */
+  .table-responsive .users-table td:first-child {
+    display: none !important;
+  }
+
+  /* Avatar lebih kecil agar muat bersama nama di sisi kanan */
+  .table-responsive .users-table .users-table-avatar {
+    width: 30px !important;
+    height: 30px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Baris user — avatar + nama rata kanan */
+  .table-responsive .users-table td:nth-child(2) .d-flex {
+    justify-content: flex-end !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+  }
+
+  /* Nama tidak terpotong terlalu sempit */
+  .table-responsive .users-table .users-table-name {
+    max-width: 120px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Email — ganti truncate dengan break-all agar tidak pecah antar karakter */
+  .table-responsive .users-table .user-email-text {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    max-width: 100% !important;
+    word-break: break-all !important;
+    overflow-wrap: anywhere !important;
+    text-align: right;
+  }
+
+  /* Tanggal — kompak */
+  .table-responsive .users-table td:last-child {
+    font-size: 0.78rem !important;
+  }
+}
