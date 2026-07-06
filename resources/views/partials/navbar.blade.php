@@ -236,6 +236,18 @@
                     let cropper = null;
                     let croppedFile = null;
                     let reopenProfil = false;
+                    let pendingShowCrop = false;
+
+                    // Bootstrap bisa gagal membersihkan modal-open dari <body> saat
+                    // transisi antar-modal dipotong (tap cepat di HP). Fungsi ini
+                    // memastikan body bersih setelah semua modal benar-benar tertutup.
+                    function cleanupBodyModal() {
+                        if (!document.querySelector('.modal.show')) {
+                            document.body.classList.remove('modal-open');
+                            document.body.style.overflow = '';
+                            document.body.style.paddingRight = '';
+                        }
+                    }
 
                     const fieldMap = {
                         name: "name",
@@ -270,6 +282,18 @@
                         croppedFile = null;
                     });
 
+                    // ── Setelah navProfilModal sepenuhnya tertutup ───────────────
+                    // Buka cropModal hanya setelah animasi close selesai agar
+                    // Bootstrap bisa membersihkan state-nya terlebih dahulu.
+                    modalEl.addEventListener("hidden.bs.modal", () => {
+                        if (pendingShowCrop) {
+                            pendingShowCrop = false;
+                            cropModal.show();
+                        } else {
+                            cleanupBodyModal();
+                        }
+                    });
+
                     // ── Pilih foto baru → buka modal crop ───────────────────────
                     fotoInput?.addEventListener("change", (e) => {
                         const file = e.target.files[0];
@@ -278,8 +302,10 @@
                         reader.onload = (ev) => {
                             cropImage.src = ev.target.result;
                             reopenProfil = true;
+                            pendingShowCrop = true;
                             profilModal.hide();
-                            cropModal.show();
+                            // cropModal.show() dipanggil di hidden.bs.modal agar
+                            // animasi close navProfilModal selesai dulu.
                         };
                         reader.readAsDataURL(file);
                     });
@@ -327,6 +353,8 @@
                         if (reopenProfil) {
                             reopenProfil = false;
                             profilModal.show();
+                        } else {
+                            cleanupBodyModal();
                         }
                     });
 

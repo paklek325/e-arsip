@@ -28,6 +28,7 @@
   --table-border:     rgba(0, 0, 0, 0.18);
   --table-row-hover:  rgba(13, 110, 253, 0.05);
   --table-td-color:   #212529;
+  --mobile-label-color: #6b7280;
 }
 
 [data-theme="dark"] {
@@ -49,6 +50,7 @@
   --table-border:     rgba(255, 255, 255, 0.18);
   --table-row-hover:  rgba(34, 211, 238, 0.06);
   --table-td-color:   #e2e8f0;
+  --mobile-label-color: #94a3b8;
 
   /* Bootstrap 5 CSS variable overrides — supaya utility class BS ikut dark mode */
   --bs-body-color:          #e5e7eb;
@@ -1162,7 +1164,7 @@ body[data-theme-transition] * { transition: none !important; }
   .table-responsive:not(.no-mobile-card) td[data-label]::before {
     content: attr(data-label);
     font-weight: 700;
-    color: var(--table-head-color, #6b7280);
+    color: var(--mobile-label-color, #6b7280);
     text-transform: uppercase;
     font-size: 0.72rem;
     letter-spacing: 0.4px;
