@@ -260,6 +260,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     processAllTables(document);
 
+    // Expose supaya script lain (mis. surat.js setelah reload AJAX)
+    // bisa langsung memasang data-label TANPA menunggu debounce
+    // MutationObserver di bawah → menghindari "flick" tata letak
+    // kartu mobile (label muncul telat sesaat setelah render).
+    window.EArsipApplyTableLabels = processAllTables;
+
     const tableObserver = new MutationObserver(() => {
         clearTimeout(window.__earsipTableLabelTimer);
         window.__earsipTableLabelTimer = setTimeout(

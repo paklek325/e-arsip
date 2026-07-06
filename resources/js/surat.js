@@ -401,6 +401,11 @@ if (window.SuratApp) {
                 const container = $("#tableContainer");
                 if (container) {
                     container.innerHTML = html;
+                    // Pasang data-label SEKARANG (sinkron), jangan tunggu
+                    // MutationObserver di tampilan.js yang di-debounce 50ms —
+                    // itu penyebab tampilan kartu mobile "flick" (label
+                    // muncul telat setelah tabel sempat ke-render tanpa label).
+                    window.EArsipApplyTableLabels?.(container);
                     bindPaginationLinks();
                     rebindResetButtons();
                     rebindRowActionButtons();
@@ -1891,7 +1896,18 @@ if (window.SuratApp) {
 
         document.addEventListener("DOMContentLoaded", () => {
             initFilters();
-            loadTable();
+            // CATATAN: sengaja TIDAK memanggil loadTable() di sini.
+            // Tabel awal sudah dirender lengkap oleh server (Blade,
+            // sudah termasuk filter dari query string) saat halaman
+            // dimuat. Memanggil loadTable() lagi di sini hanya
+            // mengulang fetch yang sama persis via AJAX, menyebabkan:
+            //   1) "flick" — tabel yang sudah benar sempat diganti lagi
+            //      dengan hasil fetch (padahal isinya sama).
+            //   2) kalau fetch itu gagal, tabel yang tadinya sudah
+            //      benar malah ditimpa pesan error, padahal sebenarnya
+            //      tidak ada masalah dengan datanya.
+            // loadTable() tetap dipanggil normal untuk interaksi
+            // berikutnya (search, filter, pagination, reset, dll).
             rebindRowActionButtons();
 
             setupAddSuratForm();
