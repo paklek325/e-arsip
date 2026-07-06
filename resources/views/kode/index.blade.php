@@ -59,7 +59,7 @@
 @endsection
 
 @push('page-css')
-<link rel="stylesheet" href="{{ asset('css/kode.css') }}?v={{ filemtime(public_path('css/kode.css')) }}">
+<link rel="stylesheet" href="{{ asset('css/kode.css') }}?v={{ file_exists(public_path('css/kode.css')) ? filemtime(public_path('css/kode.css')) : '1' }}">
 @endpush
 @push('page-js')
   @vite(['resources/js/kode.js'])
