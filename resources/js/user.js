@@ -10,9 +10,14 @@
 
     if (!document.querySelector("#page-user")) return;
 
-    const baseUrl = document
+    const metaBase = document
         .querySelector('meta[name="base-url"]')
-        .getAttribute("content");
+        ?.getAttribute("content")
+        ?.replace(/\/$/, "") ?? "";
+    // Gunakan origin browser agar selalu cocok di hosting, abaikan APP_URL
+    const baseUrl = window.location.origin === new URL(metaBase || window.location.href).origin
+        ? metaBase
+        : window.location.origin;
     const csrf = document
         .querySelector('meta[name="csrf-token"]')
         .getAttribute("content");

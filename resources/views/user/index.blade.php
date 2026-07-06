@@ -33,7 +33,7 @@
 </div>
 @endsection
 @push('page-css')
-<link rel="stylesheet" href="{{ asset('css/user.css') }}?v={{ filemtime(public_path('css/user.css')) }}">
+<link rel="stylesheet" href="{{ asset('css/user.css') }}?v={{ file_exists(public_path('css/user.css')) ? filemtime(public_path('css/user.css')) : '1' }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 @endpush
 @push('page-js')

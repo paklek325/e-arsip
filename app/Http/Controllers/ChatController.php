@@ -101,8 +101,18 @@ class ChatController extends Controller
                 $path     = $file->getRealPath();
 
                 if ($ext === 'pdf') {
-                    $text = trim(shell_exec("pdftotext " . escapeshellarg($path) . " - 2>/dev/null") ?? '');
-                    $textParts[] = "=== File: {$origName} ===\n" . mb_substr($text ?: '[PDF tidak bisa dibaca]', 0, 4000);
+                    try {
+                        $parser = new \Smalot\PdfParser\Parser();
+                        $text   = trim($parser->parseFile($path)->getText());
+                    } catch (\Throwable $e) {
+                        $text = '';
+                    }
+
+                    if ($text === '') {
+                        $text = '[PDF tidak berisi teks yang bisa dibaca — kemungkinan hasil scan/gambar, sistem belum mendukung OCR]';
+                    }
+
+                    $textParts[] = "=== File: {$origName} ===\n" . mb_substr($text, 0, 10000);
                     continue;
                 }
 
@@ -306,14 +316,52 @@ class ChatController extends Controller
         }
 
         // Data surat — hanya jika ada keyword pencarian spesifik (bukan sekadar kata "surat")
-        $suratSearchKeywords = ['surat masuk', 'surat keluar', 'nomor', 'no.', 'nomer', 'perihal', 'dari', 'instansi',
-            'wisuda', 'undangan', 'izin', 'keputusan', 'edaran', 'pemberitahuan', 'permohonan', 'pengantar',
-            'rapat', 'pengumuman', 'tugas', 'rekomendasi', 'dispensasi', 'ujian', 'proposal',
-            'bulan ini', 'bulan lalu', 'tahun ini', 'januari', 'februari', 'maret', 'april', 'mei', 'juni',
-            'juli', 'agustus', 'september', 'oktober', 'november', 'desember'];
+        $suratSearchKeywords = [
+            'surat masuk',
+            'surat keluar',
+            'nomor',
+            'no.',
+            'nomer',
+            'perihal',
+            'dari',
+            'instansi',
+            'wisuda',
+            'undangan',
+            'izin',
+            'keputusan',
+            'edaran',
+            'pemberitahuan',
+            'permohonan',
+            'pengantar',
+            'rapat',
+            'pengumuman',
+            'tugas',
+            'rekomendasi',
+            'dispensasi',
+            'ujian',
+            'proposal',
+            'bulan ini',
+            'bulan lalu',
+            'tahun ini',
+            'januari',
+            'februari',
+            'maret',
+            'april',
+            'mei',
+            'juni',
+            'juli',
+            'agustus',
+            'september',
+            'oktober',
+            'november',
+            'desember'
+        ];
         $suratSearchActive = false;
         foreach ($suratSearchKeywords as $kw) {
-            if (str_contains($msg, $kw)) { $suratSearchActive = true; break; }
+            if (str_contains($msg, $kw)) {
+                $suratSearchActive = true;
+                break;
+            }
         }
         if ($suratSearchActive) {
             [$suratData, $suratMeta, $suratUrlSemua] = $this->querySurat($message);
@@ -326,7 +374,10 @@ class ChatController extends Controller
         $pdSearchKeywords = ['peserta_didik', 'peserta didik', 'bernama', 'cari', 'rombel', 'angkatan', 'belum lengkap', 'dokumen'];
         $pdSearchActive = false;
         foreach ($pdSearchKeywords as $kw) {
-            if (str_contains($msg, $kw)) { $pdSearchActive = true; break; }
+            if (str_contains($msg, $kw)) {
+                $pdSearchActive = true;
+                break;
+            }
         }
         if ($pdSearchActive) {
             $pesertaDidikData = $this->queryPesertaDidik($message);
@@ -583,7 +634,7 @@ PROMPT;
             'nama'    => $s->nama_peserta_didik,
             'jk'      => $s->jenis_kelamin === 'L' ? 'L' : 'P',
             'rombel'  => $s->rombel,
-            'angkatan'=> $s->tahun_angkatan,
+            'angkatan' => $s->tahun_angkatan,
             'status'  => $s->status,
         ])->toArray();
     }
@@ -691,4 +742,3 @@ PROMPT;
         return response()->json(['bulan_data' => $bulanData, 'total_masuk_all' => $totalM, 'total_keluar_all' => $totalK]);
     }
 }
-

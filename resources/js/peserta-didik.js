@@ -25,13 +25,21 @@ if (window.PesertaDidikApp) {
             Array.from(ctx.querySelectorAll(sel));
 
         // WAJIB: set data-base-url pada wrapper di HTML
-        const baseUrl = wrapper.dataset.baseUrl;
-        if (!baseUrl) {
+        const rawBase = wrapper.dataset.baseUrl;
+        if (!rawBase) {
             console.error(
                 "[peserta-didik.js] data-base-url tidak ditemukan pada wrapper. " +
                     "Pastikan ada: <div id='wrapper-table-peserta_didik' data-base-url='{{ route('peserta-didik.index') }}'>"
             );
             return;
+        }
+        // Gunakan origin browser agar selalu cocok di hosting, abaikan APP_URL
+        let baseUrl;
+        try {
+            const parsed = new URL(rawBase);
+            baseUrl = window.location.origin + parsed.pathname.replace(/\/$/, "");
+        } catch {
+            baseUrl = rawBase;
         }
 
         const token = $('meta[name="csrf-token"]')?.getAttribute("content");

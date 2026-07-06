@@ -108,7 +108,7 @@
 @endsection
 
 @push('page-css')
-<link rel="stylesheet" href="{{ asset('css/laporan.css') }}?v={{ filemtime(public_path('css/laporan.css')) }}">
+<link rel="stylesheet" href="{{ asset('css/laporan.css') }}?v={{ file_exists(public_path('css/laporan.css')) ? filemtime(public_path('css/laporan.css')) : '1' }}">
 @endpush
 @push('page-js')
   @vite(['resources/js/laporan.js'])

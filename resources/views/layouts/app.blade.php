@@ -53,9 +53,9 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
   {{-- App CSS global (semua halaman) --}}
-  <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
-  <link rel="stylesheet" href="{{ asset('css/layout.css') }}?v={{ filemtime(public_path('css/layout.css')) }}">
-  <link rel="stylesheet" href="{{ asset('css/chat.css') }}?v={{ filemtime(public_path('css/chat.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ file_exists(public_path('css/app.css')) ? filemtime(public_path('css/app.css')) : '1' }}">
+  <link rel="stylesheet" href="{{ asset('css/layout.css') }}?v={{ file_exists(public_path('css/layout.css')) ? filemtime(public_path('css/layout.css')) : '1' }}">
+  <link rel="stylesheet" href="{{ asset('css/chat.css') }}?v={{ file_exists(public_path('css/chat.css')) ? filemtime(public_path('css/chat.css')) : '1' }}">
 
   {{-- CSS khusus per-halaman (di-push dari masing-masing view) --}}
   @stack('page-css')

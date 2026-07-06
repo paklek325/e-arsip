@@ -41,7 +41,7 @@
 </div>{{-- /py-2 --}}
 @endsection
 @push('page-css')
-<link rel="stylesheet" href="{{ asset('css/peserta-didik.css') }}?v={{ filemtime(public_path('css/peserta-didik.css')) }}">
+<link rel="stylesheet" href="{{ asset('css/peserta-didik.css') }}?v={{ file_exists(public_path('css/peserta-didik.css')) ? filemtime(public_path('css/peserta-didik.css')) : '1' }}">
 @endpush
 @push('page-js')
   @vite(['resources/js/peserta-didik.js'])

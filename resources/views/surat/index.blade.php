@@ -61,7 +61,7 @@
 @endsection
 
 @push('page-css')
-<link rel="stylesheet" href="{{ asset('css/surat.css') }}?v={{ filemtime(public_path('css/surat.css')) }}">
+<link rel="stylesheet" href="{{ asset('css/surat.css') }}?v={{ file_exists(public_path('css/surat.css')) ? filemtime(public_path('css/surat.css')) : '1' }}">
 @endpush
 @push('page-js')
   @vite(['resources/js/surat.js'])
