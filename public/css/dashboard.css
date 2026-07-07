@@ -566,61 +566,76 @@
 }
 
 /* ── FIX MOBILE: chart-header-controls (badge Total/L/P + filter Tahun) ──
-     Tetap SEJAJAR 1 baris (tidak wrap) seperti desktop, tapi akar masalah
-     di layar sempit diperbaiki: sebelumnya badge & input punya
-     flex-shrink:0 + width tetap, sehingga total lebar melebihi kontainer
-     dan overflow:hidden pada parent MEMOTONG badge "L:" / "P:" / input
-     Tahun secara fisik (hilang, bukan mengecil).
-     Solusi: izinkan semua elemen benar-benar MENYUSUT (min-width:0 +
-     flex-shrink) dengan teks di-ellipsis kalau kepepet, perkecil
-     font/padding, dan sembunyikan label "Tahun" supaya lebih hemat ruang —
-     hasilnya semua elemen tetap sebaris & tidak ada yang hilang. ───────── */
-@media (max-width: 576px) {
+     STRATEGI BARU: sebelumnya semua elemen dipaksa 1 baris (nowrap) dan
+     hanya diizinkan "menyusut" — begitu total lebar konten (bahkan pada
+     ukuran minimum) masih lebih besar dari kontainer, browser TIDAK bisa
+     menyusutkan lagi dan elemen jadi TUMPANG TINDIH satu sama lain
+     (terlihat jelas: badge Total/L/P menimpa label "(Tahun)" & input
+     "Semua"). Ini tidak bisa diperbaiki hanya dengan memperkecil ukuran,
+     karena di layar yang sangat sempit (< ~360px) kombinasi teks + 3
+     badge + input tetap tidak akan pernah muat dalam 1 baris.
+
+     Solusi robust: izinkan kontainer WRAP ke baris ke-2 (flex-wrap: wrap)
+     ketika layar sempit. Baris 1 = badge Total/L/P, baris 2 = filter
+     Tahun rata kanan. Dengan begini tidak akan PERNAH ada elemen yang
+     saling menimpa, di ukuran layar berapa pun. ───────────────────────── */
+@media (max-width: 767.98px) {
     .chart-card .chart-header-controls {
-        flex-wrap: nowrap !important;
-        overflow: hidden;
-        gap: 0.25rem;
+        flex-wrap: wrap !important;
+        overflow: visible !important;
+        row-gap: 0.4rem;
+        column-gap: 0.35rem;
     }
 
-    /* Badge (Total / L / P) — boleh menyusut, teks di-ellipsis bila perlu */
+    /* Badge (Total / L / P) tetap tidak wrap teksnya sendiri,
+       tapi boleh menyusut dan tidak dipotong (overflow visible) */
     .chart-card .chart-header-controls .badge {
-        font-size: 0.62rem !important;
-        padding: .18rem .32rem !important;
+        font-size: 0.68rem !important;
+        padding: .22rem .42rem !important;
         min-width: 0;
         flex-shrink: 1 !important;
         max-width: none !important;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        overflow: visible;
         white-space: nowrap;
     }
-    /* Badge Total (teks paling panjang) menyusut paling agresif duluan */
     .chart-card .chart-header-controls .badge:first-child {
-        flex-shrink: 3 !important;
-        max-width: 42% !important;
+        flex-shrink: 2 !important;
     }
-    /* Badge gender L/P tetap sebaris, boleh menyusut secukupnya saja */
     #badgePesertaDidikLaki,
-    #badgePesertaDidikPerempuan {
-        flex-shrink: 1 !important;
-        min-width: 0 !important;
-        max-width: 62px !important;
+    #badgePesertaDidikPerempuan,
+    #badgeSiswaLaki,
+    #badgeSiswaPerempuan {
+        flex-shrink: 0 !important;
     }
 
-    /* Wrapper filter Tahun — tetap sebaris di ujung kanan, tidak menyusut */
+    /* Wrapper filter Tahun — pindah ke baris baru, penuh lebar, rata kanan.
+       Karena ini elemen flex baru (wrap), dia otomatis turun ke baris 2
+       begitu baris 1 sudah penuh — tidak akan menimpa badge di atasnya. */
     .chart-card .chart-header-controls > .ms-auto {
         flex-shrink: 0 !important;
-        gap: .2rem !important;
+        flex-grow: 1 !important;
+        justify-content: flex-end !important;
+        gap: .3rem !important;
+        margin-left: 0 !important;
     }
-    /* Sembunyikan label "Tahun" di layar sempit supaya hemat ruang,
-       input tetap ada & tetap bisa dipakai untuk filter */
     .chart-card .chart-header-controls label.small {
-        display: none !important;
+        font-size: 0.7rem !important;
+        white-space: nowrap;
     }
     .chart-card .chart-header-controls .form-control-sm {
-        width: 52px !important;
-        min-width: 52px !important;
-        padding: .1rem .2rem !important;
-        font-size: 0.68rem !important;
+        width: 66px !important;
+        min-width: 66px !important;
+        padding: .12rem .3rem !important;
+        font-size: 0.7rem !important;
+    }
+}
+
+/* Layar sangat sempit (≤360px): sembunyikan label "Tahun" agar input tetap
+   nyaman dipakai, tapi TIDAK PERNAH menyembunyikan/memotong badge apa pun —
+   badge sudah aman karena sudah pindah baris di atas. */
+@media (max-width: 360px) {
+    .chart-card .chart-header-controls label.small {
+        display: none !important;
     }
 }
 
@@ -641,6 +656,44 @@
 .chart-body-donut{ min-height: 260px; }
 .chart-canvas-donut { max-height: 240px; }
 .chart-body-line { min-height: 280px; }
+
+/* ── FIX MOBILE: teks legend donut (mis. "Rombel A: 1 (L:0 P:0)") terpotong
+     di tepi layar sempit karena container legend tidak membatasi lebar teks.
+     Pastikan teks legend boleh membungkus (wrap) dan tidak pernah melebihi
+     lebar kartu, di layar seukuran apa pun. Selector dibuat generik supaya
+     tetap berfungsi meski markup legend menggunakan class yang berbeda. ── */
+.chart-body-donut,
+.chart-card .card-body {
+    max-width: 100%;
+}
+.chart-body-donut * ,
+.chart-card .card-body > div {
+    min-width: 0;
+}
+.chart-body-donut span,
+.chart-body-donut p,
+.chart-body-donut div {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+@media (max-width: 767.98px) {
+    .chart-body-donut {
+        flex-wrap: wrap;
+    }
+}
+
+/* ── FIX GLOBAL MOBILE: cegah scroll horizontal tak sengaja akibat elemen
+     yang melebihi lebar viewport (badge/legend/tabel yang belum sepenuhnya
+     responsif). Ini jaring pengaman terakhir, tidak mengubah layout desktop. */
+@media (max-width: 767.98px) {
+    html, body {
+        overflow-x: hidden;
+    }
+    .dashboard-card,
+    .chart-card {
+        max-width: 100%;
+    }
+}
 
 /* ── Users table (dashboard) column widths ──────────────────────────────── */
 .users-table .col-no    { width: 60px; }

@@ -234,7 +234,7 @@
                     </div>
                     <div class="chart-header-controls">
                         <span class="badge badge-success" id="badgeTotalSurat">
-                            Total: {{ ($totalSuratMasukAll ?? 0) + ($totalSuratKeluarAll ?? 0) }}
+                            Total<span class="d-none d-md-inline"> Semua Surat</span>: {{ ($totalSuratMasukAll ?? 0) + ($totalSuratKeluarAll ?? 0) }}
                         </span>
                         <div class="d-flex align-items-center gap-1 ms-auto">
                             <label for="filterTahunSurat" class="small text-muted mb-0">Tahun</label>
@@ -267,7 +267,7 @@
                     </div>
                     <div class="chart-header-controls">
                         <span class="badge badge-warning text-nowrap" id="badgeTotalPesertaDidik">
-                            Total: {{ $totalPesertaDidikAll ?? 0 }} peserta_didik
+                            Total: {{ $totalPesertaDidikAll ?? 0 }}<span class="d-none d-md-inline"> Peserta Didik</span>
                         </span>
                         <span class="badge badge-gender-laki d-inline-flex align-items-center gap-1" id="badgePesertaDidikLaki">
                             <i class="bi bi-gender-male"></i>
@@ -573,12 +573,12 @@ document.addEventListener('DOMContentLoaded', function () {
             // Kosong = semua tahun
             masuk      = dataSurat.semua_tahun.masuk;
             keluar     = dataSurat.semua_tahun.keluar;
-            labelBadge = 'Total: ' + (masuk + keluar);
+            labelBadge = 'Total<span class="d-none d-md-inline"> Semua Surat</span>: ' + (masuk + keluar);
         } else if (dataSuratPerTahun[tahunVal]) {
             // Tahun ada datanya
             masuk      = dataSuratPerTahun[tahunVal].masuk  || 0;
             keluar     = dataSuratPerTahun[tahunVal].keluar || 0;
-            labelBadge = `Total: ${masuk + keluar} (${tahunVal})`;
+            labelBadge = `Total<span class="d-none d-md-inline"> Semua Surat</span>: ${masuk + keluar} (${tahunVal})`;
         } else {
             // Tahun tidak ada data
             masuk      = 0;
@@ -594,7 +594,7 @@ document.addEventListener('DOMContentLoaded', function () {
         chartSurat.data.datasets[0].data = [masuk, keluar];
         chartSurat.update();
         if (badgeTotalSurat) {
-            badgeTotalSurat.textContent = labelBadge;
+            badgeTotalSurat.innerHTML = labelBadge;
         }
     }
 
@@ -674,9 +674,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (d.kosong) {
                 badgePesertaDidik.textContent = `Tidak ada data${d.labelTahun ? ' • Angk. ' + d.labelTahun.trim() : ''}`;
             } else if (d.labelTahun) {
-                badgePesertaDidik.textContent = `Total: ${d.total} Peserta Didik • Angk. ${d.labelTahun.trim()}`;
+                badgePesertaDidik.innerHTML = `Total: ${d.total}<span class="d-none d-md-inline"> Peserta Didik</span> • Angk. ${d.labelTahun.trim()}`;
             } else {
-                badgePesertaDidik.textContent = `Total: ${d.total} Peserta Didik (Semua)`;
+                badgePesertaDidik.innerHTML = `Total: ${d.total}<span class="d-none d-md-inline"> Peserta Didik</span> (Semua)`;
             }
         }
 
