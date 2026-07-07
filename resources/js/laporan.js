@@ -97,6 +97,78 @@
     }
 
     /**
+     * isMobileDevice — deteksi perangkat mobile
+     * ─────────────────────────────────────────────────────────
+     * Dipakai untuk menentukan alur Cetak:
+     *  - Desktop → window.print() langsung di halaman (perilaku lama)
+     *  - Mobile  → cetak lewat <iframe> tersembunyi (lihat printViaIframe)
+     *    karena di banyak browser/webview mobile, window.print() pada
+     *    halaman utama (yang punya sidebar/layout kompleks) tidak
+     *    memicu dialog cetak dengan benar, dan window.open(url,"_blank")
+     *    untuk tab baru sering diblokir popup blocker mobile.
+     */
+    function isMobileDevice() {
+        const ua = navigator.userAgent || navigator.vendor || window.opera || "";
+        const uaMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(ua);
+        const touchSmall = ("ontouchstart" in window) && window.innerWidth <= 992;
+        return uaMobile || touchSmall;
+    }
+
+    /**
+     * printViaIframe — cetak lewat <iframe> tersembunyi (khusus mobile)
+     * ─────────────────────────────────────────────────────────
+     * ALUR:
+     *  1. Buat (atau pakai ulang) <iframe> tersembunyi di halaman
+     *  2. Set src iframe ke URL export format PDF (view print rapi,
+     *     sama seperti yang dipakai tombol Download → PDF)
+     *  3. Setelah iframe selesai load, panggil iframe.contentWindow.print()
+     *     → dialog cetak native browser/OS mobile muncul, tanpa perlu
+     *       buka tab baru (yang rawan diblokir popup blocker)
+     *  4. Kalau gagal (mis. browser tidak izinkan print dari iframe),
+     *     fallback ke window.open(url, "_blank")
+     */
+    function printViaIframe(url) {
+        let iframe = document.getElementById("laporan-print-iframe");
+        if (iframe) iframe.remove();
+
+        iframe = document.createElement("iframe");
+        iframe.id = "laporan-print-iframe";
+        iframe.setAttribute("aria-hidden", "true");
+        iframe.style.position = "fixed";
+        iframe.style.right = "0";
+        iframe.style.bottom = "0";
+        iframe.style.width = "0";
+        iframe.style.height = "0";
+        iframe.style.border = "0";
+        iframe.style.visibility = "hidden";
+
+        let triggered = false;
+        const triggerPrint = function () {
+            if (triggered) return;
+            triggered = true;
+            try {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            } catch (err) {
+                window.open(url, "_blank");
+            }
+        };
+
+        iframe.addEventListener("load", function () {
+            // beri jeda sedikit supaya konten PDF/HTML benar-benar siap sebelum print()
+            setTimeout(triggerPrint, 300);
+        });
+
+        // Fallback kalau event "load" tidak pernah terpicu (mis. dibatasi browser)
+        setTimeout(function () {
+            if (!triggered) triggerPrint();
+        }, 3000);
+
+        document.body.appendChild(iframe);
+        iframe.src = url;
+    }
+
+    /**
      * Build URL export berdasarkan URL AKTIF + format (pdf/excel/word).
      * Supaya ketika sedang lihat detail bulan (tipe=Bulan&bulan=...&jenis=...),
      * export juga ikut pakai filter yang sama.
@@ -109,11 +181,19 @@
             form.getAttribute("data-export-url") || form.getAttribute("action");
         if (!base) return null;
 
-        // Ambil semua query param dari URL saat ini (tipe, tahun, bulan, jenis, page, dll)
+        // 1. Ambil query param dari URL saat ini (seperti page, jenis)
         const currentUrl = new URL(window.location.href);
         const params = new URLSearchParams(currentUrl.search);
 
-        // Pastikan format diset/di-override
+        // 2. Timpa/lengkapi dengan nilai dari FORM aktif saat ini (tahun, bulan, tipe)
+        const fd = new FormData(form);
+        for (const [key, value] of fd.entries()) {
+            if (value && String(value).trim() !== "") {
+                params.set(key, value);
+            }
+        }
+
+        // 3. Pastikan format diset/di-override
         params.set("format", format);
 
         return `${base}?${params.toString()}`;
@@ -312,14 +392,32 @@
      * MENU    : Laporan — header halaman (laporan/index.blade.php)
      * TOMBOL  : #btn_print  (btn btn-outline-light "Cetak")
      * ALUR:
-     *  1. Tambahkan class "laporan-print-mode" ke <body>
-     *  2. CSS @media print di laporan.css membaca class ini:
-     *     - sembunyikan sidebar, navbar, filter card, page header
-     *     - perlebar kolom hasil laporan ke 100%
-     *  3. Panggil window.print() → dialog cetak browser muncul
-     *  4. Setelah selesai (event afterprint) → hapus class dari <body>
+     *  DESKTOP:
+     *   1. Tambahkan class "laporan-print-mode" ke <body>
+     *   2. CSS @media print di laporan.css membaca class ini:
+     *      - sembunyikan sidebar, navbar, filter card, page header
+     *      - perlebar kolom hasil laporan ke 100%
+     *   3. Panggil window.print() → dialog cetak browser muncul
+     *   4. Setelah selesai (event afterprint) → hapus class dari <body>
+     *
+     *  MOBILE:
+     *   window.print() pada halaman utama (sidebar + layout kompleks)
+     *   sering tidak memicu dialog cetak dengan baik di browser/webview
+     *   mobile. Jadi di mobile, Cetak memakai <iframe> tersembunyi yang
+     *   me-load view export format PDF (rapi, siap cetak, tanpa sidebar)
+     *   lalu memanggil print() dari dalam iframe tsb — lihat printViaIframe().
      */
     function handlePrint() {
+        if (isMobileDevice()) {
+            const url = buildExportUrl("pdf");
+            if (!url) {
+                window.AppToast("Tidak dapat membuat URL cetak.", "error");
+                return;
+            }
+            printViaIframe(url);
+            return;
+        }
+
         document.body.classList.add("laporan-print-mode");
         window.addEventListener(
             "afterprint",

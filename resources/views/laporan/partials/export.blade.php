@@ -51,7 +51,7 @@
         }
         div.Section1 { page: Section1; }
 
-        html, body { margin: 0; padding: 0; background: var(--clr-surface); color: var(--clr-text-body); color-scheme: light; }
+        html, body { margin: 0; padding: 0; background: #ffffff; color: #1f2937; color-scheme: light; }
         body { font-family: Arial, sans-serif; font-size: 10.5pt; }
         .Section1 { padding: 8mm 10mm; }
 
@@ -59,7 +59,7 @@
         .print-date-top {
             text-align: right;
             font-size: 9.5pt;
-            color: var(--clr-print-date);
+            color: #374151;
             margin-bottom: 4px;
         }
 
@@ -70,11 +70,11 @@
             margin-top: 0;
         }
         th, td {
-            border: 1px solid var(--clr-border-light);
+            border: 1px solid #cbd5e1;
             padding: 6px 9px;
             text-align: center;
             vertical-align: middle;
-            color: var(--clr-text);
+            color: #1e293b;
         }
         thead th {
             font-weight: bold;
@@ -90,13 +90,13 @@
         th.col-no, td.col-no { width: 36px; }
 
         /* zebra */
-        tbody tr:nth-child(even) td { background: var(--clr-row-even); }
-        tbody tr:nth-child(odd)  td { background: var(--clr-surface); }
-        tbody tr.row-empty td { background: var(--clr-row-empty-bg) !important; color: var(--clr-row-empty-text) !important; }
+        tbody tr:nth-child(even) td { background: #f0f4fa; }
+        tbody tr:nth-child(odd)  td { background: #ffffff; }
+        tbody tr.row-empty td { background: #e5e7eb !important; color: #4b5563 !important; }
 
         /* tfoot */
-        .tfoot-tahunan td { background: var(--clr-header-tahunan); color: #fff !important; font-weight: bold; font-size: 9.5pt; border-color: #2a4e7a; padding: 7px 9px; }
-        .tfoot-bulanan  td { background: var(--clr-header-bulanan); color: #fff !important; font-weight: bold; font-size: 9.5pt; border-color: #22613e; padding: 7px 9px; }
+        .tfoot-tahunan td { background: #1e3a5f; color: #fff !important; font-weight: bold; font-size: 9.5pt; border-color: #2a4e7a; padding: 7px 9px; }
+        .tfoot-bulanan  td { background: #1a4731; color: #fff !important; font-weight: bold; font-size: 9.5pt; border-color: #22613e; padding: 7px 9px; }
 
         /* ========== BADGE BULAT (sama seperti hasil_blade.php) ========== */
         .badge-masuk, .badge-keluar, .badge-total, .badge-zero {
@@ -108,20 +108,20 @@
             text-decoration: none;
             white-space: nowrap;
         }
-        .badge-masuk  { background: var(--clr-masuk-bg);  color: var(--clr-masuk);  border: 1.5px solid var(--clr-masuk); }
-        .badge-keluar { background: var(--clr-keluar-bg); color: var(--clr-keluar); border: 1.5px solid var(--clr-keluar); }
-        .badge-total  { background: var(--clr-total-bg);  color: var(--clr-total);  border: 1.5px solid var(--clr-total); }
+        .badge-masuk  { background: #dbeafe;  color: #0369a1;  border: 1.5px solid #0369a1; }
+        .badge-keluar { background: #d1fae5; color: #047857; border: 1.5px solid #047857; }
+        .badge-total  { background: #ede9fe;  color: #4338ca;  border: 1.5px solid #4338ca; }
         .badge-zero   {
-            background: var(--clr-badge-zero-bg);
-            color: var(--clr-badge-zero-text);
-            border: 1.5px solid var(--clr-badge-zero-bdr);
+            background: #e2e8f0;
+            color: #475569;
+            border: 1.5px solid #94a3b8;
             font-weight: 600;
         }
 
         /* badge solid putih di tfoot */
-        .tfoot-tahunan .badge-masuk,  .tfoot-bulanan .badge-masuk  { background: var(--clr-masuk)  !important; color: #fff !important; border-color: var(--clr-masuk)  !important; }
-        .tfoot-tahunan .badge-keluar, .tfoot-bulanan .badge-keluar { background: var(--clr-keluar) !important; color: #fff !important; border-color: var(--clr-keluar) !important; }
-        .tfoot-tahunan .badge-total,  .tfoot-bulanan .badge-total  { background: var(--clr-total)  !important; color: #fff !important; border-color: var(--clr-total)  !important; }
+        .tfoot-tahunan .badge-masuk,  .tfoot-bulanan .badge-masuk  { background: #0369a1  !important; color: #fff !important; border-color: #0369a1  !important; }
+        .tfoot-tahunan .badge-keluar, .tfoot-bulanan .badge-keluar { background: #047857 !important; color: #fff !important; border-color: #047857 !important; }
+        .tfoot-tahunan .badge-total,  .tfoot-bulanan .badge-total  { background: #4338ca  !important; color: #fff !important; border-color: #4338ca  !important; }
         .tfoot-tahunan .badge-zero,   .tfoot-bulanan .badge-zero   { background: rgba(255,255,255,.15) !important; color: rgba(255,255,255,.85) !important; border-color: rgba(255,255,255,.3) !important; }
 
         /* Section sub-title */
@@ -130,13 +130,13 @@
             margin-top: 14px; margin-bottom: 4px;
             border-left: 3px solid #1e3a5f;
             padding-left: 7px;
-            color: var(--clr-text);
+            color: #1e293b;
         }
         .section-sub.bulanan { border-left-color: #1a4731; }
 
         /* jenis surat di detail (bukan badge, cukup teks warna) */
-        .txt-masuk  { color: var(--clr-masuk);  font-weight: 700; }
-        .txt-keluar { color: var(--clr-keluar); font-weight: 700; }
+        .txt-masuk  { color: #0369a1;  font-weight: 700; }
+        .txt-keluar { color: #047857; font-weight: 700; }
 
         /* ========== HEADER BAR + TOMBOL KEMBALI ==========
            Catatan: dipakai table-layout (bukan flexbox) karena flexbox terbukti
@@ -154,8 +154,8 @@
             padding: .7rem 1rem .6rem;
             vertical-align: middle;
         }
-        table.export-header-bar.tahunan td { background: var(--clr-header-tahunan); }
-        table.export-header-bar.bulanan td { background: var(--clr-header-bulanan); }
+        table.export-header-bar.tahunan td { background: #1e3a5f; }
+        table.export-header-bar.bulanan td { background: #1a4731; }
 
         .export-header-bar .col-badge  { width: 140px; text-align: left; }
         .export-header-bar .col-tombol { width: 110px; text-align: right; }

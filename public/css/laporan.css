@@ -686,12 +686,9 @@
 }
 
 @media print {
-  /* Portrait dipakai supaya konten tidak melebar; tabel rekap cukup
-     ramping untuk muat dengan baik di lebar kertas portrait.
+  /* Portrait dipakai supaya konten tidak melebar.
      Margin atas & bawah diperbesar (dari 8mm) agar ada jarak napas
-     dari header/footer bawaan browser (judul, URL, nomor halaman)
-     — ini yang sebelumnya membuat kartu statistik & baris TOTAL
-     terlihat nempel/terpotong tepat di tepi kertas. */
+     dari header/footer bawaan browser (judul, URL, nomor halaman). */
   @page { size: portrait; margin: 10mm 10mm 12mm; }
 
   /* Paksa browser cetak warna persis seperti layar */
@@ -702,22 +699,21 @@
     padding: 0 !important;
     height: auto !important;
     min-width: 0 !important;
+    background: #ffffff !important;
+    color: #1e293b !important;
   }
+  body.laporan-print-mode { background: #ffffff !important; }
+  body.laporan-print-mode .pc-container { background: #ffffff !important; min-height: auto !important; }
   .container, .container-fluid { min-width: 0 !important; }
   .no-print { display: none !important; }
-
-  /* Rekap tahunan selalu ringkas (12 baris) → paksa tetap 1 halaman.
-     Rekap bulanan bisa punya daftar surat panjang, jadi dibiarkan
-     page-break-inside: auto (lihat aturan di bawah) supaya tidak
-     terpaksa membuat halaman kosong saat memang tidak muat. */
-  .laporan-tahunan { page-break-inside: avoid; break-inside: avoid; }
 
   /* ─────────────────────────────────────────────────────────
      🚫 ANTI-TERPOTONG — berlaku untuk TAHUNAN & BULANAN
      Mencegah 1 baris tabel (atau baris TOTAL di tfoot) terbelah
      di antara dua halaman. Kalau memang tidak muat, browser akan
      memindahkan baris itu UTUH ke halaman berikutnya, bukan
-     memotongnya di tengah.
+     memotongnya di tengah. Laporan boleh melebihi 1 halaman kalau
+     memang isinya panjang — tidak dipaksa muat 1 halaman.
   ───────────────────────────────────────────────────────────── */
   .table-wrapper table thead {
     break-after: avoid; page-break-after: avoid;
@@ -730,13 +726,13 @@
     break-before: avoid; page-break-before: avoid;
     break-inside: avoid; page-break-inside: avoid;
   }
-  /* Header bar + stat cards tetap menyatu dengan tabel di bawahnya */
   .header-bar,
   .stat-cards {
     break-after: avoid; page-break-after: avoid;
   }
 
-  /* Pastikan variabel tetap light-mode saat print */
+  /* Pastikan variabel tetap light-mode saat print, biar warna sama
+     persis dengan tampilan layar terang meski lagi dark mode */
   :root {
     --lap-masuk:          #0369a1;
     --lap-masuk-bg:       #dbeafe;
@@ -757,61 +753,130 @@
     --lap-badge-zero-bg:  #e2e8f0;
     --lap-badge-zero-txt: #475569;
     --lap-badge-zero-bdr: #94a3b8;
+    --lap-text-muted:     #374151;
+    --lap-row-empty-bg:   #e5e7eb;
+    --lap-row-empty-text: #4b5563;
+    --lap-footer-bg:      #f9fafb;
+    --lap-input-ph:       #6c757d;
   }
 
-  /* Layout card */
-  .card { box-shadow: none !important; border: none !important; margin: 0 !important; }
-  .card-body { padding: 0 !important; }
-  .header-bar { border-radius: 0 !important; }
+  /* Paksa variabel agar tetap light-mode meskipun data-theme="dark" aktif pada html/body saat print */
+  [data-theme="dark"] {
+    /* 1. Reset variabel global & Bootstrap dari layout.css ke nilai mode terang */
+    --body-bg:            #f8f9fa !important;
+    --card-bg:            #ffffff !important;
+    --text-color:         #212529 !important;
+    --border-color:       rgba(0, 0, 0, 0.1) !important;
+    --active-color:       #0d6efd !important;
+    --filter-bg:          #eef4ff !important;
+    --table-card-bg:      #eef4ff !important;
 
-  /* Header bar — sama dengan web, dipadatkan sedikit untuk print */
-  .laporan-tahunan .header-bar,
-  .laporan-bulanan .header-bar { background: var(--lap-navy) !important; padding: .45rem 1rem .4rem !important; }
-  .judul-print h4 { font-size: 13px !important; color: #fff !important; }
-  .judul-print h5 { font-size: 11px !important; color: rgba(255,255,255,.9) !important; }
+    --table-head-bg:      #1f2a44 !important;
+    --table-head-color:   #e5e7eb !important;
+    --table-border:       rgba(0, 0, 0, 0.18) !important;
+    --table-row-hover:    rgba(13, 110, 253, 0.05) !important;
+    --table-td-color:     #212529 !important;
+    --mobile-label-color: #374151 !important;
 
-  /* Tabel — dibuat ringkas agar tetap muat 1 halaman meski browser
-     menambah header/footer cetak sendiri (judul, URL, tanggal, no halaman) */
-  .table-wrapper { width: 100% !important; }
-  .table-wrapper table { width: 100% !important; table-layout: fixed !important; }
-  .table-wrapper table th,
-  .table-wrapper table td { font-size: 8.5px !important; padding: .15rem .4rem !important; line-height: 1.25 !important; white-space: nowrap; }
-  .table-wrapper table th.col-no,
-  .table-wrapper table td.col-no { width: 26px !important; max-width: 26px !important; }
-  /* Tabel detail surat (bulanan) punya kolom teks panjang (Perihal/Instansi)
-     — di kertas portrait yang lebih sempit, biarkan membungkus baris
-     supaya isinya tidak terpotong, bukan malah melebar/overflow. */
-  .table-wrapper.detail-surat table th,
-  .table-wrapper.detail-surat table td { white-space: normal !important; word-break: break-word; }
-  .table-responsive { overflow: visible !important; }
+    --bs-body-color:          #212529 !important;
+    --bs-body-color-rgb:      33, 37, 41 !important;
+    --bs-body-bg:             #ffffff !important;
+    --bs-secondary-color:     rgba(33, 37, 41, 0.65) !important;
+    --bs-card-color:          #212529 !important;
+    --bs-card-bg:             #ffffff !important;
+    --bs-card-cap-bg:         rgba(0, 0, 0, 0.03) !important;
+    --bs-card-border-color:   rgba(0, 0, 0, 0.08) !important;
+    --bs-border-color:        rgba(0, 0, 0, 0.12) !important;
+    --bs-heading-color:       #212529 !important;
+    --bs-link-color:          #0d6efd !important;
+    --bs-link-hover-color:    #0a58ca !important;
 
-  /* Rekap TAHUNAN selalu tepat 12 baris (tetap, tidak pernah berubah
-     jumlahnya) — jadi barisnya dibuat lebih tinggi/lega supaya tabel
-     mengisi halaman portrait secara merata & rapi, tidak menyisakan
-     ruang kosong besar di bawah. Tabel BULANAN tidak disentuh karena
-     jumlah barisnya bisa bervariasi (tergantung jumlah surat). */
-  .laporan-tahunan .table-wrapper table th,
-  .laporan-tahunan .table-wrapper table td {
-    font-size: 10.5px !important;
-    padding: .4rem .55rem !important;
-    line-height: 1.25 !important;
+    /* 2. Reset variabel laporan specific ke nilai mode terang */
+    --lap-masuk:          #0369a1 !important;
+    --lap-masuk-bg:       #dbeafe !important;
+    --lap-keluar:         #047857 !important;
+    --lap-keluar-bg:      #d1fae5 !important;
+    --lap-total:          #4338ca !important;
+    --lap-total-bg:       #ede9fe !important;
+    --lap-navy:           #1e3a5f !important;
+    --lap-green:          #1a4731 !important;
+    --lap-thead-navy:     #26446e !important;
+    --lap-thead-green:    #1e5438 !important;
+    --lap-text:           #1e293b !important;
+    --lap-surface:        #ffffff !important;
+    --lap-surface-alt:    #f1f5f9 !important;
+    --lap-row-even:       #f0f4fa !important;
+    --lap-border:         #cbd5e1 !important;
+    --lap-stat-label:     #1f2937 !important;
+    --lap-badge-zero-bg:  #e2e8f0 !important;
+    --lap-badge-zero-txt: #475569 !important;
+    --lap-badge-zero-bdr: #94a3b8 !important;
+    --lap-text-muted:     #374151 !important;
+    --lap-row-empty-bg:   #e5e7eb !important;
+    --lap-row-empty-text: #4b5563 !important;
+    --lap-footer-bg:      #f9fafb !important;
+    --lap-input-ph:       #6c757d !important;
   }
-  .laporan-tahunan .table-wrapper table th.col-no,
-  .laporan-tahunan .table-wrapper table td.col-no { width: 32px !important; max-width: 32px !important; }
-  .laporan-tahunan .stat-cards { padding: .5rem .8rem !important; gap: .5rem !important; }
-  .laporan-tahunan .stat-card { padding: .4rem .6rem !important; }
-  .laporan-tahunan .stat-card .stat-num   { font-size: 18px !important; }
-  .laporan-tahunan .stat-card .stat-label { font-size: 9px !important; }
-  .laporan-tahunan .header-bar { padding: .5rem 1rem !important; margin-bottom: 2px; }
-  .laporan-tahunan .judul-print h4 { font-size: 14px !important; }
-  .laporan-tahunan .judul-print h5 { font-size: 11px !important; }
-  .laporan-tahunan .section-sub { font-size: 11px !important; margin: 6px 6mm 4px !important; }
 
-  /* Thead — sama dengan web (gelap) */
+  /* Reset rule spesifik yang memakai hardcoded color gelap agar berwarna terang */
+  [data-theme="dark"] .laporan-tahunan .header-bar,
+  [data-theme="dark"] .laporan-bulanan .header-bar {
+    background: #1e3a5f !important; /* warna var(--lap-navy) terang */
+  }
+
+  html[data-theme="dark"],
+  html[data-theme="dark"] body,
+  html[data-theme="dark"] body.laporan-print-mode,
+  html[data-theme="dark"] .pc-container,
+  html[data-theme="dark"] .pc-content,
+  html[data-theme="dark"] .page-wrapper,
+  html[data-theme="dark"] .main-content,
+  html[data-theme="dark"] .content-wrapper,
+  html[data-theme="dark"] .card-laporan,
+  html[data-theme="dark"] .card-hasil,
+  html[data-theme="dark"] .col-lg-8,
+  html[data-theme="dark"] .row,
+  html[data-theme="dark"] #laporan_hasil_container,
+  html[data-theme="dark"] .laporan-tahunan,
+  html[data-theme="dark"] .laporan-bulanan {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+  }
+
+  /* Baris "row-empty" (bulan/data kosong) & pesan "tidak ada data" —
+     variabelnya tidak ikut ter-reset otomatis lewat :root di atas kalau
+     atribut [data-theme="dark"] masih menempel di <html>/<body> saat
+     window.print() dipanggil (class laporan-print-mode tidak mengubah
+     data-theme). Maka dipaksa ulang di sini secara eksplisit. */
+  .table-wrapper tbody tr.row-empty td {
+    background: #e5e7eb !important;
+    color: #4b5563 !important;
+  }
+  .detail-surat-empty { color: #4b5563 !important; }
+
+  /* Card dibiarkan seperti tampilan layar (rounded + shadow tipis),
+     tapi background dipaksa putih — kalau tidak, .card masih pakai
+     var(--card-bg) yang gelap saat dark mode aktif */
+  .card { margin: 0 !important; background: #ffffff !important; }
+  .card.shadow-sm { background: #ffffff !important; border-color: rgba(13, 110, 253, 0.12) !important; }
+  .card-laporan, .card-hasil { background: #ffffff !important; }
+
+  /* Card bagian dalam (.laporan-tahunan .card / .laporan-bulanan .card)
+     masih punya border & box-shadow dari dark mode (via var(--border-color)
+     dan aturan [data-theme="dark"]) yang tidak ikut ke-reset di atas —
+     dipaksa terang di sini juga */
+  .laporan-tahunan .card,
+  .laporan-bulanan .card {
+    background: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 1px 6px rgba(0,0,0,.06) !important;
+  }
+
+  /* Thead & tfoot — sama dengan web */
   .laporan-tahunan .table-wrapper thead.table-primary th,
   .laporan-bulanan .table-wrapper thead.table-primary th { background: var(--lap-thead-navy) !important; color: #fff !important; }
 
-  /* Tfoot — sama dengan web */
   .laporan-tahunan .tfoot-total td,
   .laporan-bulanan .tfoot-total td { background: var(--lap-navy) !important; color: #fff !important; }
 
@@ -820,28 +885,22 @@
   .table-wrapper tbody tr:nth-child(odd)  td { background: var(--lap-surface) !important; }
   .table-wrapper a { text-decoration: none !important; }
 
-  /* Stat cards — tampil seperti web (dipadatkan sedikit untuk print) */
-  .stat-cards { padding: .4rem .7rem .3rem !important; gap: .5rem !important; }
-  .stat-card  { padding: .3rem .6rem !important; }
-  .stat-card .stat-num   { font-size: 18px !important; }
-  .stat-card .stat-label { font-size: 8px !important; }
+  /* Stat cards — warna sama seperti web */
   .stat-card.masuk  { background: var(--lap-masuk-bg) !important; border-color: var(--lap-masuk) !important; }
   .stat-card.keluar { background: var(--lap-keluar-bg) !important; border-color: var(--lap-keluar) !important; }
   .stat-card.total  { background: var(--lap-total-bg) !important; border-color: var(--lap-total) !important; }
 
-  /* Print date */
-  .print-date-top { font-size: 9px !important; color: #374151 !important; }
+  /* Header bar — warna sama seperti web */
+  .laporan-tahunan .header-bar,
+  .laporan-bulanan .header-bar { background: var(--lap-navy) !important; }
+  .judul-print h4 { color: #fff !important; }
+  .judul-print h5 { color: rgba(255,255,255,.9) !important; }
 
   /* Page break */
   .laporan-bulanan { page-break-inside: auto; }
   tr, td, th { page-break-inside: avoid; }
 
-  .section-sub { margin: 5px 6mm 3px; font-size: 10px !important; }
   .detail-pagination-wrap { display: none !important; }
-
-  /* Jarak antara baris TOTAL (tfoot) dan elemen sesudahnya (kalau
-     detail-pagination-wrap tidak disembunyikan, mis. di context lain) */
-  .tfoot-total { margin-bottom: 2mm; }
 }
 
 /* =======================================================

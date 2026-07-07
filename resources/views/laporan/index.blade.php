@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Laporan Rekapitulasi Surat')
 
@@ -34,14 +34,16 @@
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li>
                         <a href="#" class="dropdown-item download-link" data-format="pdf">
-                            <i class="bi bi-filetype-pdf text-danger me-2"></i> PDF
+                            <i class="bi bi-file-earmark-pdf text-danger me-2"></i> PDF
                         </a>
                     </li>
+                    {{--
                     <li>
                         <a href="#" class="dropdown-item download-link" data-format="excel">
                             <i class="bi bi-file-earmark-excel text-success me-2"></i> Excel
                         </a>
                     </li>
+                    --}}
                     <li>
                         <a href="#" class="dropdown-item download-link" data-format="word">
                             <i class="bi bi-file-earmark-word text-primary me-2"></i> Word
