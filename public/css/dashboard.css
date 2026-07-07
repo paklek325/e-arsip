@@ -565,6 +565,65 @@
     flex-shrink: 1 !important; min-width: 0;
 }
 
+/* ── FIX MOBILE: chart-header-controls (badge Total/L/P + filter Tahun) ──
+     Tetap SEJAJAR 1 baris (tidak wrap) seperti desktop, tapi akar masalah
+     di layar sempit diperbaiki: sebelumnya badge & input punya
+     flex-shrink:0 + width tetap, sehingga total lebar melebihi kontainer
+     dan overflow:hidden pada parent MEMOTONG badge "L:" / "P:" / input
+     Tahun secara fisik (hilang, bukan mengecil).
+     Solusi: izinkan semua elemen benar-benar MENYUSUT (min-width:0 +
+     flex-shrink) dengan teks di-ellipsis kalau kepepet, perkecil
+     font/padding, dan sembunyikan label "Tahun" supaya lebih hemat ruang —
+     hasilnya semua elemen tetap sebaris & tidak ada yang hilang. ───────── */
+@media (max-width: 576px) {
+    .chart-card .chart-header-controls {
+        flex-wrap: nowrap !important;
+        overflow: hidden;
+        gap: 0.25rem;
+    }
+
+    /* Badge (Total / L / P) — boleh menyusut, teks di-ellipsis bila perlu */
+    .chart-card .chart-header-controls .badge {
+        font-size: 0.62rem !important;
+        padding: .18rem .32rem !important;
+        min-width: 0;
+        flex-shrink: 1 !important;
+        max-width: none !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    /* Badge Total (teks paling panjang) menyusut paling agresif duluan */
+    .chart-card .chart-header-controls .badge:first-child {
+        flex-shrink: 3 !important;
+        max-width: 42% !important;
+    }
+    /* Badge gender L/P tetap sebaris, boleh menyusut secukupnya saja */
+    #badgePesertaDidikLaki,
+    #badgePesertaDidikPerempuan {
+        flex-shrink: 1 !important;
+        min-width: 0 !important;
+        max-width: 62px !important;
+    }
+
+    /* Wrapper filter Tahun — tetap sebaris di ujung kanan, tidak menyusut */
+    .chart-card .chart-header-controls > .ms-auto {
+        flex-shrink: 0 !important;
+        gap: .2rem !important;
+    }
+    /* Sembunyikan label "Tahun" di layar sempit supaya hemat ruang,
+       input tetap ada & tetap bisa dipakai untuk filter */
+    .chart-card .chart-header-controls label.small {
+        display: none !important;
+    }
+    .chart-card .chart-header-controls .form-control-sm {
+        width: 52px !important;
+        min-width: 52px !important;
+        padding: .1rem .2rem !important;
+        font-size: 0.68rem !important;
+    }
+}
+
 /* ── Card sub-text sizes ────────────────────────────────────────────────── */
 .dashboard-card-sub-text { font-size: 0.76rem; }
 .dashboard-rekap-text    { font-size: 0.76rem; line-height: 1.4; }
