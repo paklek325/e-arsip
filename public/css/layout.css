@@ -640,16 +640,36 @@ body[data-theme-transition] * { transition: none !important; }
     border-radius: 10px !important;
   }
 
-  /* Filter select — full width di mobile agar tidak cramped */
+  /* Filter select — full width di mobile agar tidak cramped (default semua halaman) */
   .filter-bar .col-6 {
     flex: 0 0 100% !important;
     max-width: 100% !important;
+  }
+
+  /* PENGECUALIAN: Peserta Didik pakai grid 2x2 (50% per kolom) */
+  #page-peserta-didik .filter-bar .col-6 {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
   }
 
   /* Form select di filter lebih kompak di mobile */
   .filter-bar .form-select {
     font-size: 0.83rem !important;
     padding: 0.4rem 2.2rem 0.4rem 0.65rem !important;
+  }
+
+  /* Pastikan input-group tetap inline (icon + input dalam satu baris) */
+  .filter-bar .input-group {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+  }
+  .filter-bar .input-group .input-group-text {
+    flex-shrink: 0 !important;
+  }
+  .filter-bar .input-group .form-control {
+    flex: 1 !important;
+    min-width: 0 !important;
   }
 
   /* Chat widget tombol lebih kecil agar tidak menutupi konten */

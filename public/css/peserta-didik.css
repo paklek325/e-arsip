@@ -30,9 +30,12 @@
   flex-wrap: wrap;
 }
 
+/* form-control & select di filter: tidak pakai min-width agar tidak overflow di mobile */
 .filter-bar .form-control,
-.filter-bar .form-select {
-  min-width: 200px;
+.filter-bar .filter-select {
+  min-width: 0;
+  width: 100%;
+  font-size: 0.875rem;
 }
 
 /* ==== TOMBOL X DI INPUT ==== */
@@ -79,9 +82,9 @@
 }
 
 /* ==== PERBAIKAN PANAH DAN X DI SELECT ==== */
-.filter-bar .form-select {
-  padding-right: 5.5rem !important;
-  background-position: right 3.5rem center !important;
+.filter-bar .filter-select {
+  padding-right: 3.2rem !important;
+  background-position: right 2rem center !important;
   background-repeat: no-repeat;
   background-size: 0.65rem auto;
 }
@@ -212,7 +215,7 @@
 
 /* ==== DARK MODE ==== */
 /* Custom dropdown arrow agar terlihat jelas di dark mode */
-[data-theme="dark"] .filter-bar .form-select {
+[data-theme="dark"] .filter-bar .filter-select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
 }
 
@@ -292,18 +295,65 @@
 
 /* ==== RESPONSIVE MOBILE ==== */
 @media (max-width: 768px) {
-  .filter-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
+  /* Filter bar: padding lebih kecil */
+  #page-peserta-didik .filter-bar { padding: .65rem .75rem !important; }
+
+  /* Override layout.css: col-6 di peserta didik HARUS 50% (2x2 grid) */
+  #page-peserta-didik .filter-bar .col-6 {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+    width: 50% !important;
   }
-  .filter-group {
+
+  /* Override surat.css: jangan buat semua div full width */
+  #page-peserta-didik .filter-bar .row > div { flex: unset !important; }
+
+  /* Pastikan input-group search tetap inline (icon + input satu baris) */
+  #page-peserta-didik .filter-bar .input-group {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+  }
+  #page-peserta-didik .filter-bar .input-group .input-group-text {
+    flex-shrink: 0 !important;
+    width: auto !important;
+  }
+  #page-peserta-didik .filter-bar .input-group .form-control {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    width: auto !important;
+  }
+
+  /* Select dan form-control filter */
+  #page-peserta-didik .filter-bar .filter-select,
+  #page-peserta-didik .filter-bar .form-control {
+    font-size: 0.82rem;
+    min-width: 0 !important;
     width: 100%;
-    justify-content: space-between;
   }
-  .filter-group > * {
-    flex: 1 1 100%;
+
+  /* Tombol X di dalam select: lebih kecil */
+  #page-peserta-didik .filter-bar .reset-input-and-submit,
+  #page-peserta-didik .filter-bar .reset-sort-and-submit {
+    padding: 0 !important;
+    width: 1.4rem;
+    height: 1.4rem;
+    font-size: 0.75rem;
   }
+
+  /* Tabel: kolom lebih compact */
+  .pd-col-nama   { min-width: 150px; }
+  .pd-col-status { min-width: 110px; }
+}
+
+@media (max-width: 576px) {
+  /* Header judul & tombol */
+  #page-peserta-didik h5 { font-size: 1rem; }
+
+  /* Filter: padding minimal */
+  #page-peserta-didik .filter-bar { padding: .5rem !important; }
+  #page-peserta-didik .filter-bar .filter-select,
+  #page-peserta-didik .filter-bar .form-control { font-size: 0.8rem; }
 }
 
 /* ==== RINGKASAN (SUMMARY BADGES) — DARK MODE ==== */

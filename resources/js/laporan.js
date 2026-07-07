@@ -33,16 +33,16 @@
     // ── Mapping ID elemen HTML ────────────────────────────────────────────
     // Pusatkan semua ID di sini agar tidak perlu ubah di banyak tempat
     const SELECTORS = {
-        filterFormId:     "filter_form",       // <form> filter laporan
-        bulanGroupId:     "bulan_group",       // wrapper select bulan
-        bulanSelectId:    "bulan",             // <select> bulan
-        tipeRekapId:      "tipe_rekap",        // <input hidden> tipe (Tahun/Bulan)
-        tahunInputId:     "tahun",             // <input> tahun
+        filterFormId: "filter_form",       // <form> filter laporan
+        bulanGroupId: "bulan_group",       // wrapper select bulan
+        bulanSelectId: "bulan",             // <select> bulan
+        tipeRekapId: "tipe_rekap",        // <input hidden> tipe (Tahun/Bulan)
+        tahunInputId: "tahun",             // <input> tahun
         hasilContainerId: "laporan_hasil_container", // div hasil AJAX
-        printButtonId:    "btn_print",         // tombol Cetak
-        resetButtonId:    "btn_reset_filter",  // tombol Reset Filter
-        tampilkanButtonId:"btn_tampilkan",     // (tidak dipakai, reset auto-load)
-        downloadGroupId:  "download_group",    // grup tombol Download
+        printButtonId: "btn_print",         // tombol Cetak
+        resetButtonId: "btn_reset_filter",  // tombol Reset Filter
+        tampilkanButtonId: "btn_tampilkan",     // (tidak dipakai, reset auto-load)
+        downloadGroupId: "download_group",    // grup tombol Download
     };
 
     // ── Shortcut getElementById ───────────────────────────────────────────
@@ -333,7 +333,7 @@
     //           Controller Laravel membaca #tipe_rekap untuk memilih query
     function syncTipeFromBulan() {
         const bulanSelect = $id(SELECTORS.bulanSelectId);
-        const tipeInput   = $id(SELECTORS.tipeRekapId);
+        const tipeInput = $id(SELECTORS.tipeRekapId);
         if (!tipeInput) return;
         tipeInput.value = (bulanSelect && bulanSelect.value) ? "Bulan" : "Tahun";
     }
@@ -512,7 +512,7 @@
 
         const defaultYear = formTahun
             ? formTahun.getAttribute("data-default-year") ||
-              new Date().getFullYear()
+            new Date().getFullYear()
             : new Date().getFullYear();
 
         if (formTahun) formTahun.value = tahun || defaultYear;

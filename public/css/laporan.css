@@ -363,16 +363,18 @@
 [data-theme="dark"] .laporan-tahunan .header-bar,
 [data-theme="dark"] .laporan-bulanan .header-bar { background: #152644; }
 
-.judul-print { text-align: center; flex: 1; }
+.judul-print { text-align: center; flex: 1; min-width: 0; }
 .judul-print h4 {
   margin: 0; padding: 0;
   font-size: 17px; font-weight: 700;
   color: #fff !important;
+  word-break: break-word;
 }
 .judul-print h5 {
   margin: 0; padding: 0;
   font-size: 13px; font-weight: 400;
   color: rgba(255,255,255,.9) !important;
+  word-break: break-word;
 }
 
 .badge-tipe {
@@ -906,35 +908,85 @@
 /* =======================================================
    📱 RESPONSIVE
 ======================================================= */
-@media (max-width: 768px) {
-  .stat-cards { gap: .5rem; }
-  .stat-card  { min-width: 90px; padding: .45rem .6rem; }
-  .stat-card .stat-num { font-size: 20px !important; }
 
-  .table-wrapper table th,
-  .table-wrapper table td { font-size: 0.78rem; padding: .3rem .4rem !important; }
-
-  #page-laporan .laporan-page-header { padding: .85rem 1rem; }
+/* ── Tablet (≤ 992px) ── */
+@media (max-width: 992px) {
+  /* Header bar: biarkan flex wrap agar judul tidak terjepit */
+  .header-bar {
+    flex-wrap: wrap;
+    gap: .4rem;
+  }
+  .judul-print {
+    text-align: left !important;
+    order: 2;
+    flex-basis: 100%;
+  }
+  .judul-print h4 { font-size: 14px !important; }
+  .judul-print h5 { font-size: 11px !important; }
+  .badge-tipe { order: 1; }
+  .btn-kembali-header { order: 3; }
 }
 
+/* ── Mobile (≤ 768px) ── */
+@media (max-width: 768px) {
+  /* Page header */
+  #page-laporan .laporan-page-header { padding: .75rem .9rem; }
+  #page-laporan .laporan-page-header h5 { font-size: 0.95rem; }
+
+  /* Header bar – stack vertikal, teks rata kiri */
+  .header-bar {
+    padding: .55rem .75rem .5rem !important;
+    flex-wrap: wrap;
+    gap: .35rem;
+  }
+  .header-bar .badge-tipe { font-size: 9px; padding: 2px 7px; }
+  .judul-print { text-align: left !important; flex-basis: 100%; order: 2; }
+  .judul-print h4 { font-size: 13px !important; line-height: 1.3; }
+  .judul-print h5 { font-size: 11px !important; }
+
+  /* Stat cards */
+  .stat-cards { gap: .4rem; padding: .6rem .75rem .4rem; }
+  .stat-card  { min-width: 80px; padding: .4rem .5rem; }
+  .stat-card .stat-num   { font-size: 18px !important; }
+  .stat-card .stat-label { font-size: 9px !important; }
+
+  /* Tabel lebih compact */
+  .table-wrapper table th,
+  .table-wrapper table td {
+    font-size: 0.75rem !important;
+    padding: .3rem .35rem !important;
+    white-space: nowrap;
+  }
+  /* Badge lebih kecil di mobile */
+  .badge-masuk, .badge-keluar, .badge-total, .badge-zero {
+    padding: 2px 8px !important;
+    font-size: 10px !important;
+  }
+
+  /* section-sub margin lebih kecil */
+  .section-sub { margin: 10px .75rem 4px; font-size: 12px; }
+}
+
+/* ── Small mobile (≤ 576px) ── */
 @media (max-width: 576px) {
-  /* Stat cards tetap sejajar 3 kolom di mobile kecil */
+  /* Stat cards: 3 kolom sejajar, no wrap */
   .stat-cards {
     display: flex !important;
     flex-wrap: nowrap !important;
-    gap: .3rem !important;
-    padding: .5rem .5rem .3rem !important;
+    gap: .25rem !important;
+    padding: .45rem .5rem .3rem !important;
     overflow-x: auto;
   }
   .stat-card {
     flex: 1 1 0 !important;
     min-width: 0 !important;
-    padding: .4rem .3rem !important;
+    padding: .35rem .25rem !important;
   }
-  .stat-card .stat-num   { font-size: 16px !important; }
-  .stat-card .stat-label { font-size: 8px !important; }
+  .stat-card .stat-num   { font-size: 15px !important; }
+  .stat-card .stat-label { font-size: 7.5px !important; }
 
-  /* Laporan tabel di mobile — jangan pakai card-view karena ada tfoot total */
+  /* Tabel laporan — tetap pakai table layout (bukan card-view),
+     scroll horizontal untuk konten panjang */
   .table-wrapper.table-responsive table thead { display: table-header-group !important; }
   .table-wrapper.table-responsive table,
   .table-wrapper.table-responsive tbody,
@@ -942,6 +994,16 @@
   .table-wrapper.table-responsive td { display: revert !important; }
   .table-wrapper.table-responsive td[data-label]::before { display: none !important; }
   .table-wrapper.table-responsive { overflow-x: auto !important; }
+
+  /* Badge di mobile kecil */
+  .badge-masuk, .badge-keluar, .badge-total, .badge-zero {
+    padding: 2px 6px !important;
+    font-size: 9.5px !important;
+  }
+
+  /* Page header lebih ringkas */
+  #page-laporan .laporan-page-header { padding: .6rem .75rem; }
+  #page-laporan .laporan-page-header h5 { font-size: 0.85rem; }
 }
 
 /* ── Misc utilities ─────────────────────────────────────────────────────── */
