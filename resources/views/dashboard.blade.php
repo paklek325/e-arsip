@@ -128,43 +128,34 @@
                                     </div>
 
                                 @elseif($card['label'] === 'Surat')
-                                    <div class="d-flex flex-wrap justify-content-center gap-2 mt-1">
+                                    <div class="d-flex flex-wrap justify-content-center gap-1 mt-1">
                                         <a href="{{ $card['route_masuk'] }}"
-                                           class="badge-surat-link badge-surat-masuk"
+                                           class="badge-surat-masuk-sm"
                                            onclick="event.stopPropagation()">
                                             <i class="bi bi-envelope-arrow-down-fill me-1"></i>
-                                            Masuk <strong>{{ $card['masuk'] }}</strong>
+                                            Masuk {{ $card['masuk'] }}
                                         </a>
                                         <a href="{{ $card['route_keluar'] }}"
-                                           class="badge-surat-link badge-surat-keluar"
+                                           class="badge-surat-keluar-sm"
                                            onclick="event.stopPropagation()">
                                             <i class="bi bi-envelope-arrow-up-fill me-1"></i>
-                                            Keluar <strong>{{ $card['keluar'] }}</strong>
+                                            Keluar {{ $card['keluar'] }}
                                         </a>
                                     </div>
 
                                 @elseif($card['label'] === 'Peserta Didik')
-                                    <div class="d-flex flex-wrap justify-content-center gap-1">
+                                    <div class="d-flex flex-wrap justify-content-center align-items-center gap-2">
                                         @forelse($card['per_rombel'] as $rombel => $jumlah)
                                             @php
                                                 $jWarna = $donutPalette[$loop->index % count($donutPalette)];
-                                                $rg     = $card['rombel_gender'][$rombel] ?? ['laki' => 0, 'perempuan' => 0];
                                             @endphp
-                                            <span class="badge rombel-badge"
-                                                  style="background-color: {{ $jWarna }} !important; color:#fff !important;">
-                                                Rombel {{ $rombel }}: {{ $jumlah }} (L:{{ $rg['laki'] }} P:{{ $rg['perempuan'] }})
+                                            <span class="rombel-mini-group" style="color: {{ $jWarna }};">
+                                                <span class="rombel-mini-dot" style="background-color: {{ $jWarna }};"></span>
+                                                Rombel {{ $rombel }}
                                             </span>
                                         @empty
                                             <span class="text-muted fst-italic small">Belum ada data</span>
                                         @endforelse
-                                    </div>
-                                    <div class="d-flex justify-content-center gap-1 mt-1">
-                                        <span class="badge badge-gender-laki d-inline-flex align-items-center gap-1">
-                                            <i class="bi bi-gender-male"></i> L: {{ $card['laki'] }}
-                                        </span>
-                                        <span class="badge badge-gender-perempuan d-inline-flex align-items-center gap-1">
-                                            <i class="bi bi-gender-female"></i> P: {{ $card['perempuan'] }}
-                                        </span>
                                     </div>
 
                                 @elseif($card['label'] === 'Kode')
@@ -177,16 +168,12 @@
                                 @endif
                             </div>
 
-                            <div class="progress w-100 dashboard-progress">
-                                <div class="progress-bar bg-{{ $card['color'] }}" style="width:{{ $progressWidth }}%"></div>
-                            </div>
-
                         {{-- CARD REKAP --}}
                         @elseif($card['type'] === 'menu')
 
-                            <div class="card-sub d-flex flex-column align-items-center justify-content-center">
+                            <div class="card-sub d-flex flex-column align-items-center justify-content-start">
                                 <p class="small text-muted mb-2 px-1 text-center dashboard-rekap-text">
-                                    Kelola, filter dan cetak laporan arsip
+                                    Kelola
                                 </p>
                                 <span class="badge badge-info">
                                     <i class="bi bi-file-text me-1"></i>Buka Laporan
@@ -225,26 +212,45 @@
     <div class="row g-3 mb-4">
 
         {{-- Bar Chart: Surat Masuk vs Keluar --}}
-        <div class="col-lg-5 col-12 fade-up">
+        <div class="col-lg-6 col-12 fade-up">
             <div class="card chart-card shadow-sm border-0 h-100 d-flex flex-column">
                 <div class="card-header bg-transparent border-bottom px-3 pt-3 pb-2">
-                    <div class="chart-header-title">
-                        <i class="bi bi-bar-chart-line-fill text-success fs-5"></i>
-                        <h6 class="fw-bold mb-0 text-success">Statistik Surat</h6>
-                    </div>
-                    <div class="chart-header-controls">
-                        <span class="badge badge-success" id="badgeTotalSurat">
-                            Total<span class="d-none d-md-inline"> Semua Surat</span>: {{ ($totalSuratMasukAll ?? 0) + ($totalSuratKeluarAll ?? 0) }}
+                {{-- ── Statistik Surat: Card Header ──────────────────────── --}}
+
+                {{-- Judul --}}
+                <div class="chart-header-title">
+                    <i class="bi bi-bar-chart-line-fill text-success fs-5"></i>
+                    <h6 class="fw-bold mb-0 text-success">Statistik Surat</h6>
+                </div>
+
+                {{-- Kontrol: Total + Masuk + Keluar + Tahun (1 baris, sejajar dgn Peserta Didik) --}}
+                <div class="chart-header-controls">
+                    <span class="badge badge-success text-nowrap" id="badgeTotalSurat">
+                        <span id="badgeTotalSuratNormal">
+                            <span class="d-none d-md-inline">Total</span><span class="d-md-none">Jumlah</span>:
+                            <span id="textSuratTotal">{{ ($totalSuratMasukAll ?? 0) + ($totalSuratKeluarAll ?? 0) }}</span>
+                            <span class="d-none d-md-inline">Surat</span><span id="textSuratTahunSuffix"></span>
                         </span>
-                        <div class="d-flex align-items-center gap-1 ms-auto">
-                            <label for="filterTahunSurat" class="small text-muted mb-0">Tahun</label>
-                            <input type="number" id="filterTahunSurat" class="form-control form-control-sm"
-                                   min="{{ now()->year - 10 }}"
-                                   max="{{ now()->year }}"
-                                   placeholder="Semua">
-                        </div>
+                        <span id="badgeTotalSuratEmpty" style="display:none;">
+                            <span class="d-none d-md-inline">Tidak ada data<span id="textSuratEmptyTahun"></span></span>
+                            <span class="d-md-none">Kosong</span>
+                        </span>
+                    </span>
+                    <span class="badge badge-surat-masuk-sm d-inline-flex align-items-center gap-1" id="badgeSuratMasuk" title="Surat Masuk">
+                        M: <span id="textSuratMasuk">{{ $totalSuratMasukAll ?? 0 }}</span>
+                    </span>
+                    <span class="badge badge-surat-keluar-sm d-inline-flex align-items-center gap-1" id="badgeSuratKeluar" title="Surat Keluar">
+                        K: <span id="textSuratKeluar">{{ $totalSuratKeluarAll ?? 0 }}</span>
+                    </span>
+                    <div class="d-flex align-items-center gap-1 ms-auto">
+                        <label for="filterTahunSurat" class="small text-muted mb-0">Tahun</label>
+                        <input type="number" id="filterTahunSurat" class="form-control form-control-sm"
+                               min="{{ now()->year - 10 }}"
+                               max="{{ now()->year }}"
+                               placeholder="Semua">
                     </div>
                 </div>
+                </div>{{-- /card-header --}}
                 <div class="card-body p-3 flex-grow-1 chart-body">
                     <canvas id="chartSurat"></canvas>
                     <div id="chartSuratEmpty" style="display:none; position:absolute; inset:0;
@@ -258,7 +264,7 @@
         </div>
 
         {{-- Donut Chart: Peserta Didik per Rombel --}}
-        <div class="col-lg-7 col-12 fade-up">
+        <div class="col-lg-6 col-12 fade-up">
             <div class="card chart-card shadow-sm border-0 h-100 d-flex flex-column">
                 <div class="card-header bg-transparent border-bottom px-3 pt-3 pb-2">
                     <div class="chart-header-title">
@@ -286,9 +292,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body p-3 flex-grow-1 d-flex align-items-center justify-content-center chart-body-donut">
+                <div class="card-body p-3 flex-grow-1 chart-body-donut">
                     <canvas id="chartPesertaDidik" class="chart-canvas-donut"></canvas>
                 </div>
+                <div id="pesertaDidikLegend" class="donut-legend-custom"></div>
             </div>
         </div>
 
@@ -404,6 +411,7 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -558,32 +566,34 @@ document.addEventListener('DOMContentLoaded', function () {
     // Data surat per-tahun (dari PHP, untuk spinner)
     const dataSuratPerTahun = @json($trenSuratPerTahun ?? []);
 
-    const filterTahunSurat = document.getElementById('filterTahunSurat');
-    const badgeTotalSurat  = document.getElementById('badgeTotalSurat');
+    const filterTahunSurat      = document.getElementById('filterTahunSurat');
+    const badgeTotalSuratNormal = document.getElementById('badgeTotalSuratNormal');
+    const badgeTotalSuratEmpty  = document.getElementById('badgeTotalSuratEmpty');
+    const textSuratTotal        = document.getElementById('textSuratTotal');
+    const textSuratTahunSuffix  = document.getElementById('textSuratTahunSuffix');
+    const textSuratEmptyTahun   = document.getElementById('textSuratEmptyTahun');
+    const textSuratMasuk         = document.getElementById('textSuratMasuk');
+    const textSuratKeluar        = document.getElementById('textSuratKeluar');
 
-    function updateSuratChart() {
+    function updateSuratChart(tahunVal) {
         if (!chartSurat) return;
-        const tahunVal  = filterTahunSurat ? filterTahunSurat.value.trim() : '';
+        tahunVal = tahunVal ?? (filterTahunSurat ? filterTahunSurat.value.trim() : '');
         const emptyEl   = document.getElementById('chartSuratEmpty');
         const canvasEl  = document.getElementById('chartSurat');
 
-        let masuk, keluar, labelBadge, isEmpty = false;
+        let masuk, keluar, tahunSuffix = '', emptyTahunSuffix = '', isEmpty = false;
 
         if (tahunVal === '') {
-            // Kosong = semua tahun
             masuk      = dataSurat.semua_tahun.masuk;
             keluar     = dataSurat.semua_tahun.keluar;
-            labelBadge = 'Total<span class="d-none d-md-inline"> Semua Surat</span>: ' + (masuk + keluar);
         } else if (dataSuratPerTahun[tahunVal]) {
-            // Tahun ada datanya
             masuk      = dataSuratPerTahun[tahunVal].masuk  || 0;
             keluar     = dataSuratPerTahun[tahunVal].keluar || 0;
-            labelBadge = `Total<span class="d-none d-md-inline"> Semua Surat</span>: ${masuk + keluar} (${tahunVal})`;
+            tahunSuffix = ` (${tahunVal})`;
         } else {
-            // Tahun tidak ada data
             masuk      = 0;
             keluar     = 0;
-            labelBadge = `Tidak ada data (${tahunVal})`;
+            emptyTahunSuffix = ` (${tahunVal})`;
             isEmpty    = true;
         }
 
@@ -593,13 +603,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
         chartSurat.data.datasets[0].data = [masuk, keluar];
         chartSurat.update();
-        if (badgeTotalSurat) {
-            badgeTotalSurat.innerHTML = labelBadge;
+        // Update badge Total (Jumlah di mobile / Total: ... Surat di desktop)
+        if (badgeTotalSuratNormal && badgeTotalSuratEmpty) {
+            badgeTotalSuratNormal.style.display = isEmpty ? 'none' : '';
+            badgeTotalSuratEmpty.style.display  = isEmpty ? '' : 'none';
+            if (isEmpty) {
+                if (textSuratEmptyTahun) textSuratEmptyTahun.textContent = emptyTahunSuffix;
+            } else {
+                if (textSuratTotal)       textSuratTotal.textContent       = masuk + keluar;
+                if (textSuratTahunSuffix) textSuratTahunSuffix.textContent = tahunSuffix;
+            }
         }
+        // Update angka masuk & keluar
+        if (textSuratMasuk)        textSuratMasuk.textContent        = masuk;
+        if (textSuratKeluar)       textSuratKeluar.textContent       = keluar;
     }
 
+    // Filter tahun trigger updateSuratChart
     if (filterTahunSurat) {
-        filterTahunSurat.addEventListener('input', updateSuratChart);
+        filterTahunSurat.addEventListener('input', function () {
+            updateSuratChart(this.value.trim());
+        });
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -663,20 +687,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let pesertaDidikGenderMap = {};
 
+    function renderPesertaDidikLegendHTML(labels, data, colors, genderMap, isEmpty) {
+        const container = document.getElementById('pesertaDidikLegend');
+        if (!container) return;
+        if (isEmpty || !labels || labels.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+        container.innerHTML = labels.map((label, i) => {
+            const val   = data[i] || 0;
+            const color = colors[i] || '#e5e7eb';
+            const g     = genderMap[label] || { laki: 0, perempuan: 0 };
+            return `
+                <div class="donut-legend-item">
+                    <span class="donut-legend-dot" style="background:${color}"></span>
+                    <span class="donut-legend-text">${label}: ${val}</span>
+                    <span class="badge badge-gender-laki donut-legend-badge">L: ${g.laki}</span>
+                    <span class="badge badge-gender-perempuan donut-legend-badge">P: ${g.perempuan}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
     function renderPesertaDidikChart(tahun) {
         const d      = getPesertaDidikData(tahun);
         const colors = donutColors.slice(0, d.labels.length);
         const isEmpty = d.data.length === 0 || d.data.every(v => v === 0);
         pesertaDidikGenderMap = d.rombelGender || {};
+        renderPesertaDidikLegendHTML(d.labels, d.data, colors, pesertaDidikGenderMap, isEmpty);
 
         const badgePesertaDidik = document.getElementById('badgeTotalPesertaDidik');
         if (badgePesertaDidik) {
             if (d.kosong) {
-                badgePesertaDidik.textContent = `Tidak ada data${d.labelTahun ? ' • Angk. ' + d.labelTahun.trim() : ''}`;
+                const tahunText = d.labelTahun ? d.labelTahun.trim() : '';
+                badgePesertaDidik.innerHTML = `<span class="d-none d-md-inline">Tidak ada data${tahunText ? ' &bull; Angk. ' + tahunText : ''}</span><span class="d-md-none">Kosong</span>`;
             } else if (d.labelTahun) {
                 badgePesertaDidik.innerHTML = `Total: ${d.total}<span class="d-none d-md-inline"> Peserta Didik</span> • Angk. ${d.labelTahun.trim()}`;
             } else {
-                badgePesertaDidik.innerHTML = `Total: ${d.total}<span class="d-none d-md-inline"> Peserta Didik</span> (Semua)`;
+                badgePesertaDidik.innerHTML = `Total: ${d.total}<span class="d-none d-md-inline"> Peserta Didik</span>`;
             }
         }
 
@@ -735,42 +783,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 options: {
                     responsive        : true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     cutout            : '62%',
+                    rotation          : 180,
                     plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                padding       : 16,
-                                usePointStyle : true,
-                                pointStyle    : 'circle',
-                                font          : { size: 12 },
-                                color         : legendColor(),
-                                generateLabels: function(chart) {
-                                    const data = chart.data;
-                                    const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                    const genderMap = pesertaDidikGenderMap || {};
-                                return (data.labels || []).map((label, i) => {
-                                    const dataset = data.datasets[0];
-                                    if (!dataset || !dataset.data) return {};
-                                    const val  = dataset.data[i] || 0;
-                                    const pct  = total > 0 ? Math.round((val / total) * 100) : 0;
-                                    const g    = genderMap[label];
-                                    const genderText = g ? ` (L:${g.laki} P:${g.perempuan})` : '';
-                                    return {
-                                        text       : `Rombel ${label}: ${val}${genderText} - ${pct}%`,
-                                        fillStyle  : dataset.backgroundColor?.[i] || '#e5e7eb',
-                                        strokeStyle: dataset.backgroundColor?.[i] || '#e5e7eb',
-                                        lineWidth  : 0,
-                                        pointStyle : 'circle',
-                                        fontColor  : legendColor(),
-                                        index      : i,
-                                        hidden     : false,
-                                    };
-                                });
-                                }
-                            }
-                        },
+                        legend: { display: false },
                         tooltip: {
                             ...tooltipPlugin(),
                             callbacks: {
@@ -783,9 +800,26 @@ document.addEventListener('DOMContentLoaded', function () {
                                     return ` Rombel ${ctx.label}: ${ctx.parsed} peserta didik${genderText} (${pct}%)`;
                                 }
                             }
+                        },
+                        datalabels: {
+                            color: '#fff',
+                            font: { weight: 'bold', size: 12 },
+                            textStrokeColor: 'rgba(0,0,0,.25)',
+                            textStrokeWidth: 2,
+                            formatter: function(value, ctx) {
+                                const data  = ctx.chart.data.datasets[0].data;
+                                const total = data.reduce((a, b) => a + b, 0);
+                                if (total === 0 || value === 0) return '';
+                                return Math.round((value / total) * 100) + '%';
+                            },
+                            display: function(ctx) {
+                                const val = ctx.dataset.data[ctx.dataIndex];
+                                return val > 0;
+                            }
                         }
                     }
-                }
+                },
+                plugins: [ChartDataLabels]
             });
         }
     }
@@ -910,25 +944,9 @@ document.addEventListener('DOMContentLoaded', function () {
             chart.update('none'); // update tanpa animasi
         });
 
-        // Donut: border warna + legend
+        // Donut: border warna + tooltip (legend sekarang HTML custom, di-style via CSS)
         if (chartPesertaDidik) {
             chartPesertaDidik.data.datasets[0].borderColor = donutBorderColor();
-            if (chartPesertaDidik.options.plugins?.legend?.labels) {
-                chartPesertaDidik.options.plugins.legend.labels.color = legendColor();
-                // generateLabels perlu tahu warna baru — trigger via callback override
-                const origGen = chartPesertaDidik.options.plugins.legend.labels.generateLabels;
-                if (!origGen._isWrapped) {
-                    chartPesertaDidik.options.plugins.legend.labels.generateLabels = function(chart) {
-                        const items = origGen.call(this, chart);
-                        const col = legendColor();
-                        if (items && Array.isArray(items)) {
-                            items.forEach(item => { item.fontColor = col; });
-                        }
-                        return items || [];
-                    };
-                    chartPesertaDidik.options.plugins.legend.labels.generateLabels._isWrapped = true;
-                }
-            }
             if (chartPesertaDidik.options.plugins?.tooltip) {
                 Object.assign(chartPesertaDidik.options.plugins.tooltip, tooltipPlugin());
             }
