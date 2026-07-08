@@ -11,6 +11,17 @@
     <meta name="color-scheme" content="light only">
     <title>Laporan Surat</title>
 
+    @php
+        // Dihitung lebih awal (sebelum blok @php utama di body) supaya bisa
+        // dipakai di dalam <style> untuk menentukan SARAN orientasi cetak
+        // (@page size) — Tahunan (5 kolom) → potret, Bulanan (tabel detail
+        // 10 kolom) → lanskap. Ini hanya SARAN default di dialog cetak;
+        // user tetap bebas mengganti orientasi secara manual.
+        $tipeRekapEarly = $tipe_rekap ?? (request('tipe')  ?? 'Tahun');
+        $bulanEarly     = $bulan      ?? request('bulan');
+        $isTahunanEarly = ($tipeRekapEarly === 'Tahun' || ($tipeRekapEarly === 'Bulan' && empty($bulanEarly)));
+    @endphp
+
     <style>
         /* ========== VARIABEL – LIGHT MODE (disamakan dengan hasil_blade.php) ========== */
         :root {
@@ -45,6 +56,13 @@
             margin-bottom: @if(!empty($autoprint)) 10mm @else 18mm @endif;
             margin-left: @if(!empty($autoprint)) 10mm @else 15mm @endif;
             margin-right: @if(!empty($autoprint)) 10mm @else 15mm @endif;
+            @if(!empty($autoprint))
+                {{-- SARAN orientasi default di dialog cetak (bukan paksaan —
+                     user tetap bisa ganti manual). Rekap Tahunan (5 kolom)
+                     lebih pas Potret; Detail Bulanan (10 kolom) lebih pas
+                     Lanskap supaya kolom tidak terlalu sempit. --}}
+                size: {{ $isTahunanEarly ? 'portrait' : 'landscape' }};
+            @endif
         }
         @if(empty($autoprint))
         {{-- Ukuran halaman khusus ini dibaca oleh Word (mso-page-orientation).
@@ -246,6 +264,25 @@
             tbody tr:nth-child(even) td { background: #f0f4fa !important; }
             tbody tr:nth-child(odd)  td { background: #ffffff !important; }
             tbody tr.row-empty td { background: #e5e7eb !important; color: #4b5563 !important; }
+        }
+
+        /* ========== RESPONSIF PER ORIENTASI CETAK ==========
+           Tabel "Detail Daftar Surat" (10 kolom) perlu penyesuaian ukuran
+           font & padding berbeda tergantung orientasi yang dipilih user
+           di dialog cetak, supaya kolom tidak terlalu sempit/terpotong. */
+        @media print and (orientation: portrait) {
+            .tabel-detail-surat th,
+            .tabel-detail-surat td {
+                font-size: 7.5pt;
+                padding: 4px 5px;
+            }
+        }
+        @media print and (orientation: landscape) {
+            .tabel-detail-surat th,
+            .tabel-detail-surat td {
+                font-size: 9.5pt;
+                padding: 6px 9px;
+            }
         }
 
         /* Excel compat */
@@ -488,7 +525,7 @@
 
     {{-- Detail daftar surat --}}
     <div class="section-sub bulanan">Detail Daftar Surat</div>
-    <table>
+    <table class="tabel-detail-surat">
         <thead class="thead-bulanan">
             <tr>
                 <th class="col-no">No</th>
@@ -532,19 +569,35 @@
 </div>{{-- .Section1 --}}
 @if(!empty($autoprint))
     <script>
-    // Dipakai khusus oleh route laporan.print (Cetak dari mobile).
-    // Halaman ini dibuka di tab baru lalu langsung memicu dialog cetak
-    // begitu selesai dimuat — tidak dipakai saat halaman ini dirender
-    // lewat DomPDF (PDF) atau di-stream sebagai Word, karena keduanya
-    // tidak menjalankan JavaScript.
+    // Dipakai khusus oleh route laporan.print (Cetak dari mobile/desktop).
+    // Halaman ini dibuka di tab baru (window.open dari laporan.js) lalu
+    // langsung memicu dialog cetak begitu selesai dimuat — tidak dipakai
+    // saat halaman ini dirender lewat DomPDF (PDF) atau di-stream sebagai
+    // Word, karena keduanya tidak menjalankan JavaScript.
     window.addEventListener('load', function () {
         setTimeout(function () {
             window.print();
         }, 200);
     });
     window.addEventListener('afterprint', function () {
-        // coba tutup tab otomatis setelah selesai/dibatalkan cetak
+        // Coba tutup tab otomatis setelah selesai/dibatalkan cetak.
+        // CATATAN: window.close() pada tab biasa (bukan popup) tidak selalu
+        // reliable di semua browser — ini batasan platform, bukan sesuatu
+        // yang bisa dipaksa 100% dari script.
         window.close();
+
+        // FALLBACK: kalau tetap gagal ditutup, JANGAN redirect ke /laporan
+        // (itu cuma menyisakan tab duplikat yang membingungkan). Tampilkan
+        // pesan agar user menutup tab ini secara manual.
+        setTimeout(function () {
+            document.body.innerHTML =
+                '<div style="display:flex;align-items:center;justify-content:center;' +
+                'height:100vh;font-family:Arial,sans-serif;text-align:center;padding:20px;">' +
+                '<div>' +
+                '<p style="font-size:14pt;color:#1e293b;margin:0 0 8px;">✅ Cetak selesai.</p>' +
+                '<p style="font-size:11pt;color:#64748b;margin:0;">Tab ini bisa ditutup secara manual.</p>' +
+                '</div></div>';
+        }, 400);
     });
     </script>
 @endif
