@@ -875,6 +875,19 @@
     box-shadow: 0 1px 6px rgba(0,0,0,.06) !important;
   }
 
+  /* Section-sub ("Rekapitulasi Tahunan" / "Detail Daftar Surat") —
+     sama seperti elemen lain di atas, warna teksnya perlu dipaksa ulang
+     secara eksplisit saat print. Tanpa ini, teks jadi invisible (hanya
+     border-left biru yang terlihat, tulisannya tidak muncul) karena
+     current color ke-inherit putih dari sisa state dark mode yang tidak
+     ikut ter-reset otomatis lewat variabel :root saat window.print(). */
+  .section-sub {
+    color: #1e293b !important;
+    -webkit-text-fill-color: #1e293b !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
   /* Thead & tfoot — sama dengan web */
   .laporan-tahunan .table-wrapper thead.table-primary th,
   .laporan-bulanan .table-wrapper thead.table-primary th { background: var(--lap-thead-navy) !important; color: #fff !important; }
@@ -1009,3 +1022,63 @@
 /* ── Misc utilities ─────────────────────────────────────────────────────── */
 .badge-opsional     { font-size: .7rem; }
 .lap-col-perihal    { min-width: 180px; }
+/* ═══════════════════════════════════════════════════════════
+   🌙➜☀️ SAFETY NET — cetak (print) mode gelap = mode terang
+   Ditaruh di paling akhir file supaya SELALU menang di urutan
+   cascade, apa pun override lain yang mungkin masih menempel
+   dari state dark mode saat window.print() dipanggil.
+
+   Strategi 2 lapis:
+   1) Paksa warna teks di level container laporan (supaya semua
+      elemen di dalamnya yang TIDAK punya warna sendiri ikut
+      mewarisi warna terang secara otomatis).
+   2) Tetap tambahkan override eksplisit untuk elemen yang
+      terbukti hilang teksnya (.section-sub), untuk berjaga-jaga
+      kalau ada rule lain yang match persis elemen tersebut.
+═══════════════════════════════════════════════════════════ */
+@media print {
+  html, body,
+  body.laporan-print-mode,
+  #page-laporan,
+  #laporan_hasil_container,
+  .laporan-tahunan,
+  .laporan-bulanan,
+  .laporan-tahunan .card,
+  .laporan-bulanan .card,
+  .laporan-tahunan .card-body,
+  .laporan-bulanan .card-body,
+  [data-theme="dark"] .laporan-tahunan .card,
+  [data-theme="dark"] .laporan-bulanan .card,
+  [data-theme="dark"] .card-hasil .card,
+  body.laporan-print-mode[data-theme="dark"] .card,
+  body.laporan-print-mode [data-theme="dark"] .card {
+    color: #1e293b !important;
+    -webkit-text-fill-color: #1e293b !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    background-image: none !important;
+  }
+
+  #page-laporan .section-sub {
+    color: #1e293b !important;
+    -webkit-text-fill-color: #1e293b !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  /* Elemen yang MEMANG harus tetap putih (di atas background gelap)
+     dikembalikan lagi warnanya, supaya tidak ikut ketiban aturan
+     pemaksaan warna terang di atas. */
+  .header-bar .judul-print h4,
+  .header-bar .judul-print h5,
+  .judul-print h4,
+  .judul-print h5,
+  .tfoot-total,
+  .tfoot-total td,
+  .tfoot-total td a,
+  .laporan-tahunan .table-wrapper thead.table-primary th,
+  .laporan-bulanan .table-wrapper thead.table-primary th {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+}

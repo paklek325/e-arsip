@@ -9,7 +9,10 @@
  *  1. Halaman pertama kali dibuka → auto-load rekap tahunan
  *  2. User ganti Tahun / Bulan   → AJAX fetch partial hasil baru
  *  3. User klik Reset            → reset form + auto-load rekap tahunan
- *  4. User klik Cetak            → window.print() tanpa tab baru
+ *  4. User klik Cetak            → desktop: window.print() tanpa tab baru
+ *                                    mobile: buka tab baru (route laporan.print)
+ *                                    yang auto-print saat load selesai, lalu
+ *                                    tab tersebut auto-close setelah selesai print
  *  5. User klik Download         → buka URL export di tab baru
  *  6. User klik link pagination  → AJAX fetch halaman berikutnya
  *  7. Browser Back/Forward       → restore state dari URL (popstate)
@@ -115,60 +118,6 @@
     }
 
     /**
-     * printViaIframe — cetak lewat <iframe> tersembunyi (khusus mobile)
-     * ─────────────────────────────────────────────────────────
-     * ALUR:
-     *  1. Buat (atau pakai ulang) <iframe> tersembunyi di halaman
-     *  2. Set src iframe ke URL export format PDF (view print rapi,
-     *     sama seperti yang dipakai tombol Download → PDF)
-     *  3. Setelah iframe selesai load, panggil iframe.contentWindow.print()
-     *     → dialog cetak native browser/OS mobile muncul, tanpa perlu
-     *       buka tab baru (yang rawan diblokir popup blocker)
-     *  4. Kalau gagal (mis. browser tidak izinkan print dari iframe),
-     *     fallback ke window.open(url, "_blank")
-     */
-    function printViaIframe(url) {
-        let iframe = document.getElementById("laporan-print-iframe");
-        if (iframe) iframe.remove();
-
-        iframe = document.createElement("iframe");
-        iframe.id = "laporan-print-iframe";
-        iframe.setAttribute("aria-hidden", "true");
-        iframe.style.position = "fixed";
-        iframe.style.right = "0";
-        iframe.style.bottom = "0";
-        iframe.style.width = "0";
-        iframe.style.height = "0";
-        iframe.style.border = "0";
-        iframe.style.visibility = "hidden";
-
-        let triggered = false;
-        const triggerPrint = function () {
-            if (triggered) return;
-            triggered = true;
-            try {
-                iframe.contentWindow.focus();
-                iframe.contentWindow.print();
-            } catch (err) {
-                window.open(url, "_blank");
-            }
-        };
-
-        iframe.addEventListener("load", function () {
-            // beri jeda sedikit supaya konten PDF/HTML benar-benar siap sebelum print()
-            setTimeout(triggerPrint, 300);
-        });
-
-        // Fallback kalau event "load" tidak pernah terpicu (mis. dibatasi browser)
-        setTimeout(function () {
-            if (!triggered) triggerPrint();
-        }, 3000);
-
-        document.body.appendChild(iframe);
-        iframe.src = url;
-    }
-
-    /**
      * Build URL export berdasarkan URL AKTIF + format (pdf/excel/word).
      * Supaya ketika sedang lihat detail bulan (tipe=Bulan&bulan=...&jenis=...),
      * export juga ikut pakai filter yang sama.
@@ -195,6 +144,33 @@
 
         // 3. Pastikan format diset/di-override
         params.set("format", format);
+
+        return `${base}?${params.toString()}`;
+    }
+
+    /**
+     * Build URL untuk PRINT PREVIEW mobile (route laporan.print).
+     * Endpoint ini mengembalikan HTML biasa (bukan stream PDF dari DomPDF),
+     * supaya <iframe> tersembunyi benar-benar punya dokumen HTML yang bisa
+     * di-print via window.print() bawaan browser, dan tidak dianggap file
+     * unduhan oleh extension seperti IDM.
+     */
+    function buildPrintUrl() {
+        const form = $id(SELECTORS.filterFormId);
+        if (!form) return null;
+
+        const base = form.getAttribute("data-print-url");
+        if (!base) return null;
+
+        const currentUrl = new URL(window.location.href);
+        const params = new URLSearchParams(currentUrl.search);
+
+        const fd = new FormData(form);
+        for (const [key, value] of fd.entries()) {
+            if (value && String(value).trim() !== "") {
+                params.set(key, value);
+            }
+        }
 
         return `${base}?${params.toString()}`;
     }
@@ -387,6 +363,60 @@
     }
 
     /**
+     * autoCloseAfterPrint — Tutup otomatis tab cetak mobile setelah selesai print
+     * ─────────────────────────────────────────────────────────
+     * DIPANGGIL OLEH: handlePrint() — hanya untuk alur mobile (tab baru)
+     * PARAM  : printWindow — reference window dari window.open(url, "_blank")
+     * ALUR:
+     *  1. Tunggu tab baru selesai load (event "load" pada printWindow)
+     *  2. Pasang listener "afterprint" DI DALAM tab tersebut
+     *     → begitu user menutup dialog cetak / selesai cetak, tab otomatis close()
+     *  3. FALLBACK: sebagian browser/webview mobile tidak selalu memicu
+     *     "afterprint" dengan konsisten. Sebagai jaga-jaga, saat halaman
+     *     utama (tab ini) kembali terlihat (visibilitychange → "visible"),
+     *     itu pertanda user sudah selesai berinteraksi dengan dialog cetak
+     *     di tab sebelah, jadi tab cetak ikut ditutup.
+     *  CATATAN: printWindow same-origin (route laporan.print di domain
+     *  yang sama), sehingga akses printWindow.addEventListener aman
+     *  tanpa terkena pembatasan cross-origin.
+     */
+    function autoCloseAfterPrint(printWindow) {
+        let closed = false;
+        const closeOnce = () => {
+            if (closed) return;
+            closed = true;
+            try {
+                if (!printWindow.closed) printWindow.close();
+            } catch (e) {
+                console.warn("Tidak dapat menutup tab cetak otomatis:", e);
+            }
+            document.removeEventListener("visibilitychange", onVisible);
+        };
+
+        const onVisible = () => {
+            if (document.visibilityState === "visible") {
+                closeOnce();
+            }
+        };
+
+        printWindow.addEventListener("load", function onLoad() {
+            printWindow.removeEventListener("load", onLoad);
+            try {
+                printWindow.addEventListener(
+                    "afterprint",
+                    () => closeOnce(),
+                    { once: true }
+                );
+            } catch (e) {
+                console.warn("Tidak dapat memasang listener afterprint:", e);
+            }
+        });
+
+        // Fallback: tab utama kembali terlihat = user sudah selesai dari dialog cetak
+        document.addEventListener("visibilitychange", onVisible);
+    }
+
+    /**
      * handlePrint — Tombol "Cetak" (#btn_print)
      * ─────────────────────────────────────────────────────────
      * MENU    : Laporan — header halaman (laporan/index.blade.php)
@@ -403,18 +433,42 @@
      *  MOBILE:
      *   window.print() pada halaman utama (sidebar + layout kompleks)
      *   sering tidak memicu dialog cetak dengan baik di browser/webview
-     *   mobile. Jadi di mobile, Cetak memakai <iframe> tersembunyi yang
-     *   me-load view export format PDF (rapi, siap cetak, tanpa sidebar)
-     *   lalu memanggil print() dari dalam iframe tsb — lihat printViaIframe().
+     *   mobile. Sebelumnya dicoba lewat <iframe> tersembunyi + 
+     *   iframe.contentWindow.print(), TAPI itu tidak reliable di banyak
+     *   browser mobile (terutama Android Chrome) — API print mobile
+     *   pada praktiknya cuma bisa mencetak dokumen utama yang sedang
+     *   tampil, bukan isi iframe (hasil cetak jadi kosong / "about:blank").
+     *
+     *   Jadi sekarang: buka route laporan.print (HTML biasa, siap cetak,
+     *   tanpa sidebar) di TAB BARU. Halaman itu sendiri yang otomatis
+     *   memanggil window.print() begitu selesai dimuat (lihat script di
+     *   laporan/partials/export.blade.php, blok @if($autoprint)).
+     *
+     *   Setelah user selesai dengan dialog cetak (baik dicetak maupun
+     *   dibatalkan), tab tersebut ditutup otomatis oleh autoCloseAfterPrint()
+     *   — lihat definisi fungsi di atas.
      */
     function handlePrint() {
         if (isMobileDevice()) {
-            const url = buildExportUrl("pdf");
+            const url = buildPrintUrl();
             if (!url) {
                 window.AppToast("Tidak dapat membuat URL cetak.", "error");
                 return;
             }
-            printViaIframe(url);
+            const printWindow = window.open(url, "_blank");
+            if (!printWindow) {
+                window.AppToast(
+                    "Pop-up diblokir browser. Izinkan pop-up untuk mencetak.",
+                    "error"
+                );
+                return;
+            }
+
+            // Setelah tab cetak selesai memuat & auto-print (lihat blok
+            // @if($autoprint) di laporan/partials/export.blade.php),
+            // tutup tab tersebut secara otomatis begitu dialog cetak
+            // ditutup oleh user (event "afterprint" pada tab tersebut).
+            autoCloseAfterPrint(printWindow);
             return;
         }
 

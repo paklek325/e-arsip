@@ -147,6 +147,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', 'filter')->name('filter');
         Route::get('/generate', 'generate')->name('generate');
         Route::get('/export', 'export')->name('export');
+        Route::get('/print', 'printPreview')->name('print');
     });
 
     // Test PDF

@@ -1,6 +1,7 @@
 <form id="filter_form"
       action="{{ route('laporan.generate') }}"
       data-export-url="{{ route('laporan.export') }}"
+      data-print-url="{{ route('laporan.print') }}"
       method="GET"
       novalidate>
 

@@ -162,6 +162,45 @@ class LaporanController extends Controller
     {
         $format = $request->get('format', 'pdf');
 
+        [$view_data, $filenameBase] = $this->buildExportData($request);
+
+        switch (strtolower($format)) {
+            case 'excel':
+                return $this->exportExcel($view_data, $filenameBase);
+            case 'word':
+                return $this->exportWord($view_data, $filenameBase);
+            case 'pdf':
+            default:
+                return $this->exportPdf($view_data, $filenameBase);
+        }
+    }
+
+    // ===========================
+    // PRINT PREVIEW (khusus mobile)
+    // ===========================
+    // Dipakai oleh laporan.js (printViaIframe) untuk mobile: mengembalikan
+    // HTML biasa (bukan stream PDF dari DomPDF), supaya:
+    //  1. Bisa dimuat & di-print langsung dari <iframe> lewat window.print()
+    //     bawaan browser (PDF-stream tidak bisa diakses via contentWindow
+    //     di banyak browser/webview mobile → hasil cetak jadi kosong).
+    //  2. Tidak dikenali sebagai "file unduhan" oleh extension semacam IDM,
+    //     karena Content-Type-nya text/html, bukan application/pdf.
+    public function printPreview(Request $request)
+    {
+        [$view_data] = $this->buildExportData($request);
+        $view_data['autoprint'] = true;
+
+        return view('laporan.partials.export', $view_data);
+    }
+
+    /**
+     * Helper bersama untuk export() dan printPreview() — validasi request
+     * dan susun data laporan (tahunan/bulanan) + nama file dasar.
+     *
+     * @return array{0: array, 1: string}
+     */
+    protected function buildExportData(Request $request): array
+    {
         $validated = $request->validate([
             'tipe'  => 'required|in:Tahun,Bulan',
             'tahun' => 'required|numeric|digits:4',
@@ -244,15 +283,7 @@ class LaporanController extends Controller
             'totalSuratKeluarBulan' => $totalSuratKeluarBulan,
         ];
 
-        switch (strtolower($format)) {
-            case 'excel':
-                return $this->exportExcel($view_data, $filenameBase);
-            case 'word':
-                return $this->exportWord($view_data, $filenameBase);
-            case 'pdf':
-            default:
-                return $this->exportPdf($view_data, $filenameBase);
-        }
+        return [$view_data, $filenameBase];
     }
 
     /**

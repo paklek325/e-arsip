@@ -41,15 +41,27 @@
 
         /* ========== LAYOUT HALAMAN ========== */
         @page {
-            margin-top: 20mm; margin-bottom: 18mm;
-            margin-left: 15mm; margin-right: 15mm;
+            margin-top: @if(!empty($autoprint)) 10mm @else 20mm @endif;
+            margin-bottom: @if(!empty($autoprint)) 10mm @else 18mm @endif;
+            margin-left: @if(!empty($autoprint)) 10mm @else 15mm @endif;
+            margin-right: @if(!empty($autoprint)) 10mm @else 15mm @endif;
         }
+        @if(empty($autoprint))
+        {{-- Ukuran halaman khusus ini dibaca oleh Word (mso-page-orientation).
+             Ukuran PDF asli di-set lewat PHP di exportPdf(), CSS ini TIDAK
+             dipakai saat generate PDF. Sengaja di-skip saat $autoprint aktif
+             (dibuka langsung sebagai halaman HTML biasa untuk print dari
+             mobile), karena tinggi 21cm justru lebih pendek dari kertas
+             normal dan membuat konten kepotong ke halaman kedua yang
+             hampir kosong. Untuk print mobile, biarkan browser memakai
+             ukuran kertas & orientasi sesuai pilihan user di dialog cetak. --}}
         @page Section1 {
             size: 33cm 21cm; /* F4 landscape */
             mso-page-orientation: landscape;
             margin: 2cm 1.5cm 2cm 1.5cm;
         }
         div.Section1 { page: Section1; }
+        @endif
 
         html, body { margin: 0; padding: 0; background: #ffffff; color: #1f2937; color-scheme: light; }
         body { font-family: Arial, sans-serif; font-size: 10.5pt; }
@@ -304,6 +316,8 @@
         </tr>
     </table>
 
+    <div class="section-sub">Rekapitulasi Tahunan</div>
+
     <table>
         <thead class="thead-tahunan">
             <tr>
@@ -516,9 +530,23 @@
 @endif
 
 </div>{{-- .Section1 --}}
+@if(!empty($autoprint))
+    <script>
+    // Dipakai khusus oleh route laporan.print (Cetak dari mobile).
+    // Halaman ini dibuka di tab baru lalu langsung memicu dialog cetak
+    // begitu selesai dimuat — tidak dipakai saat halaman ini dirender
+    // lewat DomPDF (PDF) atau di-stream sebagai Word, karena keduanya
+    // tidak menjalankan JavaScript.
+    window.addEventListener('load', function () {
+        setTimeout(function () {
+            window.print();
+        }, 200);
+    });
+    window.addEventListener('afterprint', function () {
+        // coba tutup tab otomatis setelah selesai/dibatalkan cetak
+        window.close();
+    });
+    </script>
+@endif
 </body>
 </html>
-
-
-
-
