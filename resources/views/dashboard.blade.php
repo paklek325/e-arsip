@@ -173,7 +173,7 @@
 
                             <div class="card-sub d-flex flex-column align-items-center justify-content-start">
                                 <p class="small text-muted mb-2 px-1 text-center dashboard-rekap-text">
-                                    Kelola
+                                    Bulanan & Tahunan   
                                 </p>
                                 <span class="badge badge-info">
                                     <i class="bi bi-file-text me-1"></i>Buka Laporan
@@ -302,13 +302,28 @@
         {{-- Line Chart: Tren Surat Bulanan --}}
         <div class="col-12 fade-up">
             <div class="card chart-card shadow-sm border-0">
-                <div class="card-header bg-transparent border-bottom px-3 pt-3 pb-2">
+                <div class="card-header bg-transparent border-bottom px-3 pt-3 pb-2 chart-header-inline">
                     <div class="chart-header-title">
                         <i class="bi bi-graph-up-arrow text-primary fs-5"></i>
                         <h6 class="fw-bold mb-0 text-primary">
                             Tren Surat Bulanan
                             <span class="text-muted fw-normal chart-year-label">({{ now()->year }})</span>
                         </h6>
+                    </div>
+                    <div class="chart-header-controls">
+                        <div class="d-flex align-items-center gap-1 ms-auto tren-filter">
+                            <label class="small text-muted mb-0 d-none d-sm-inline">Jenis</label>
+                            <button type="button" class="tren-filter-btn" id="trenFilterBtn"
+                                    aria-haspopup="listbox" aria-expanded="false">
+                                <span id="trenFilterLabel">Semua Surat</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <ul class="tren-filter-menu" id="trenFilterMenu" role="listbox">
+                                <li class="tren-filter-option active" data-value="semua" role="option">Semua Surat</li>
+                                <li class="tren-filter-option" data-value="masuk" role="option">Surat Masuk</li>
+                                <li class="tren-filter-option" data-value="keluar" role="option">Surat Keluar</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-3 chart-body-line">
@@ -322,7 +337,7 @@
     {{-- ====== Tabel Users (hanya Kepala Staf) ====== --}}
     @if ($isKepala)
         <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-transparent border-bottom d-flex align-items-center gap-2 py-3">
+            <div class="card-header bg-transparent border-bottom d-flex align-items-center gap-2 py-2">
                 <i class="bi bi-people-fill text-primary fs-5"></i>
                 <h6 class="fw-bold mb-0 text-primary">Daftar Pengguna</h6>
             </div>
@@ -373,7 +388,11 @@
             </div>
 
             {{-- Mobile: kartu per user (≤576px) --}}
-            <div class="d-block d-sm-none p-2">
+            {{-- pt-0: card-header di atas sudah punya padding-bottom (py-3),
+                 kalau di sini masih pakai padding-top juga (p-2), jaraknya
+                 jadi dobel/menumpuk & kelihatan terlalu jauh dari judul
+                 "Daftar Pengguna". Cukup px-2 pb-2 saja (tanpa pt). --}}
+            <div class="d-block d-sm-none px-2 pb-2 pt-0">
                 @forelse($recentUsers ?? [] as $user)
                 <div class="d-flex align-items-center gap-3 p-3 mb-2 rounded-3 border" style="background:var(--card-bg,#fff)">
                     <img src="{{ $user->foto ? asset('storage/foto_admin/' . $user->foto) : asset('assets/img/default_staf.png') }}"
@@ -883,19 +902,11 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             options: {
                 responsive        : true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 interaction       : { mode: 'index', intersect: false },
                 plugins: {
                     legend: {
-                        position : 'top',
-                        align    : 'end',
-                        labels   : {
-                            usePointStyle: true,
-                            pointStyle   : 'circle',
-                            font         : { size: 12 },
-                            color        : chartColors().textColor,
-                            padding      : 16,
-                        }
+                        display: false
                     },
                     tooltip: {
                         ...tooltipPlugin(),
@@ -905,9 +916,55 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 },
                 scales: {
-                    y: scaleY(),
+                    // grace: '15%' → beri ruang kosong di atas titik data tertinggi,
+                    // supaya puncak kurva (termasuk lingkaran titiknya) tidak pernah
+                    // mepet/terpotong di tepi atas area chart.
+                    y: scaleY({ grace: '15%' }),
                     x: scaleX()
                 }
+            }
+        });
+    }
+
+    // Dropdown custom "Jenis" (Semua Surat / Surat Masuk / Surat Keluar)
+    // untuk chart Tren — dibuat manual (bukan <select> native) supaya ukuran
+    // kotak & menu-nya bisa dikontrol penuh lewat CSS, termasuk di mobile
+    // (dropdown <select> native ukurannya ditentukan OS/browser & tidak
+    // bisa diperkecil dengan konsisten di semua perangkat).
+    const trenFilterBtn   = document.getElementById('trenFilterBtn');
+    const trenFilterMenu  = document.getElementById('trenFilterMenu');
+    const trenFilterLabel = document.getElementById('trenFilterLabel');
+
+    if (trenFilterBtn && trenFilterMenu && trenFilterLabel && chartTren) {
+        trenFilterBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const willOpen = !trenFilterMenu.classList.contains('show');
+            trenFilterMenu.classList.toggle('show', willOpen);
+            trenFilterBtn.setAttribute('aria-expanded', String(willOpen));
+        });
+
+        trenFilterMenu.querySelectorAll('.tren-filter-option').forEach(function (opt) {
+            opt.addEventListener('click', function () {
+                const jenis = this.dataset.value;
+
+                trenFilterLabel.textContent = this.textContent;
+                trenFilterMenu.querySelectorAll('.tren-filter-option').forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+
+                chartTren.setDatasetVisibility(0, jenis === 'semua' || jenis === 'masuk');
+                chartTren.setDatasetVisibility(1, jenis === 'semua' || jenis === 'keluar');
+                chartTren.update();
+
+                trenFilterMenu.classList.remove('show');
+                trenFilterBtn.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        // Tutup dropdown saat klik di luar area filter
+        document.addEventListener('click', function (e) {
+            if (!trenFilterMenu.contains(e.target) && e.target !== trenFilterBtn) {
+                trenFilterMenu.classList.remove('show');
+                trenFilterBtn.setAttribute('aria-expanded', 'false');
             }
         });
     }

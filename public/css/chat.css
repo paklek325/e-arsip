@@ -496,7 +496,13 @@ body.modal-open #earsipchat-panel {
     left: 8px;
     width: auto;
     bottom: 68px;
-    height: min(520px, calc(100vh - 88px));
+    /* Sebelumnya min(520px, calc(100vh - 88px)) — di HP dgn tinggi layar
+       normal (≥600px) ini selalu jatuh ke 520px, yaitu ~70-80% tinggi
+       layar, jadi kelihatan "menutupi" hampir seluruh layar. Diperkecil
+       jadi persentase viewport (60vh) dgn batas atas 440px, supaya masih
+       kelihatan konten di belakangnya & tidak dominan penuh layar. */
+    height: min(60vh, 440px);
+    max-height: min(60vh, 440px);
     border-radius: 14px;
   }
   /* Panel rekap toolbar — bungkus selects agar tidak overflow */

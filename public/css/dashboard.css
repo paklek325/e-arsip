@@ -309,6 +309,117 @@
     letter-spacing: .2px;
 }
 
+/* ── HEADER INLINE — khusus header "Tren Surat Bulanan": judul (kiri) &
+     kontrol/dropdown "Jenis" (kanan) SEJAJAR dalam 1 baris, di desktop
+     MAUPUN mobile (bukan bertumpuk 2 baris seperti header Statistik
+     Surat/Peserta Didik yang memang butuh 2 baris karena banyak badge).
+     STRATEGI: baris dipaksa SELALU 1 baris (nowrap) di semua ukuran layar
+     (desktop & mobile) — dropdown "Jenis" punya ukuran tetap (tidak pernah
+     menyusut/turun baris), sementara judul boleh menyusut & terpotong
+     dengan ellipsis kalau ruang sempit. Dengan begini dropdown SELALU
+     sejajar 1 baris dengan judul, di ukuran layar berapa pun. ──────────── */
+.chart-header-inline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    column-gap: 0.5rem;
+}
+
+.chart-header-inline .chart-header-title {
+    margin-bottom: 0;
+    /* judul boleh menyusut & terpotong ellipsis duluan drpd dropdown Jenis
+       kalau ruang sempit — supaya dropdown tidak pernah turun baris */
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    /* line-height dirapatkan (sama seperti .tren-filter-btn yg sudah
+       line-height:1) supaya PUSAT VISUAL teks judul & teks dropdown
+       benar-benar sejajar. Tanpa ini, line-height default h6 (~1.2)
+       menambah leading ekstra di atas/bawah teks judul sehingga glyph-nya
+       kelihatan sedikit lebih tinggi/rendah drpd tombol dropdown, walau
+       kotaknya sudah center lewat flex align-items:center. */
+    line-height: 1;
+}
+
+.chart-header-inline .chart-header-title h6 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    line-height: 1;
+}
+
+.chart-header-inline .chart-header-title i {
+    line-height: 1;
+}
+
+.chart-header-inline .chart-header-controls {
+    width: auto;
+    flex: 0 0 auto;
+    /* Nudge halus ke bawah: align-items:center sudah men-tengahkan KOTAK
+       judul & KOTAK dropdown secara matematis, tapi karena ukuran font
+       judul (0.9rem) & dropdown (0.73rem) beda, posisi glyph teks di
+       dalam kotaknya sendiri tidak simetris sempurna (efek metrik font),
+       sehingga dropdown terlihat sedikit lebih tinggi drpd judul. Nilai
+       ini didapat dari pengukuran screenshot — kalau di browser asli
+       masih ada selisih 1-2px, tinggal sesuaikan angka ini saja.
+    */
+    margin-top: 3px;
+}
+
+/* Selector lebih spesifik (3 class) supaya MENANG melawan rule mobile
+   ".chart-card .chart-header-controls { flex-wrap: wrap !important }"
+   di bawah, yang letaknya lebih akhir di file & spesifisitasnya sama
+   (2 class) — tanpa ini, aturan mobile tsb akan menang & dropdown Jenis
+   turun baris lagi di layar sempit. */
+.card-header.chart-header-inline .chart-header-controls {
+    flex-wrap: nowrap !important;
+}
+
+.chart-header-inline .chart-header-controls .tren-filter {
+    margin-left: 0 !important;
+    flex-wrap: nowrap;
+}
+
+.card-header.chart-header-inline .chart-header-controls .tren-filter {
+    flex-wrap: nowrap !important;
+}
+
+/* Mobile: dropdown "Jenis" dibuat lebih kecil lagi supaya tetap nyaman
+   sejajar 1 baris dengan judul, bahkan di layar yang paling sempit. */
+@media (max-width: 767.98px) {
+    .chart-header-inline .tren-filter-btn {
+        height: 20px !important;
+        font-size: 0.6rem !important;
+        padding: .06rem .32rem !important;
+        gap: .16rem !important;
+        max-width: 82px !important;
+    }
+
+    .chart-header-inline .tren-filter-btn i {
+        font-size: 0.48rem !important;
+    }
+
+    /* Label "Jenis" disamakan tingginya dgn tombol (20px, bukan 24px
+       bawaan) supaya kotaknya sama tinggi persis. Ditambah nudge
+       margin-top kecil karena ukuran font label (0.72rem) & tombol
+       (0.6rem) beda, jadi posisi glyph teks di dalam kotaknya sendiri
+       sedikit tidak simetris (efek metrik font) — tanpa nudge ini label
+       "Jenis" kelihatan sedikit lebih tinggi drpd tombol dropdown. */
+    .chart-header-inline .tren-filter label.small {
+        height: 20px !important;
+        font-size: 0.62rem !important;
+        margin-top: 2px !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .chart-header-inline .chart-header-title .chart-year-label {
+        display: none;
+    }
+}
+
 /* Baris kontrol (badge + filter) */
 .chart-card .chart-header-controls {
     display: flex;
@@ -341,14 +452,17 @@
     text-overflow: unset;
 }
 
-/* Gender badge tidak boleh menyusut */
+/* Gender/jumlah badge kecil (M/K/L/P) tidak boleh menyusut.
+   CATATAN: #badgeTotalSurat SENGAJA tidak dimasukkan di sini — badge Total
+   justru harus BOLEH menyusut (lihat aturan #badgeTotalSurat & fix desktop
+   ≥992px di bawah) supaya filter "Tahun" di sebelahnya selalu punya ruang
+   dan tidak pernah terdorong keluar/terpotong di layar desktop yang sempit. */
 #badgeSiswaLaki,
 #badgeSiswaPerempuan,
 #badgeSuratMasuk,
 #badgeSuratKeluar,
 #badgePesertaDidikLaki,
-#badgePesertaDidikPerempuan,
-#badgeTotalSurat {
+#badgePesertaDidikPerempuan {
     flex-shrink: 0 !important;
     font-size: 0.68rem !important;
     padding: .22rem .44rem !important;
@@ -380,6 +494,35 @@
     margin: 0;
 }
 
+/* ── FIX DESKTOP (≥992px): sejajarkan badge Total statistik DENGAN filter
+     Tahun dalam satu baris yang sama untuk card "Statistik Surat" &
+     "Statistik Peserta Didik" (col-lg-6 berdampingan).
+     Sebelumnya filter Tahun dipaksa pindah ke baris sendiri (turun baris)
+     supaya tinggi kedua header sama — tapi ini membuat Total & filter
+     Tahun tidak sejajar. Solusi baru: badge total (first-child) diizinkan
+     menyusut dengan ellipsis (bukan wrap ke baris baru) sehingga SEMUA
+     elemen (Total, M/K atau L/P, dan Tahun) selalu tetap dalam 1 baris
+     yang sejajar, sekaligus tinggi kedua card-header tetap konsisten.
+     Mobile (<768px) tidak disentuh — tetap pakai wrap 2 baris. ────────── */
+@media (min-width: 992px) {
+    .chart-card .chart-header-controls {
+        flex-wrap: nowrap !important;
+    }
+
+    .chart-card .chart-header-controls .badge:first-child {
+        flex-shrink: 1 !important;
+        min-width: 0;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .chart-card .chart-header-controls>.ms-auto {
+        flex-shrink: 0 !important;
+        flex-basis: auto !important;
+        justify-content: flex-end !important;
+    }
+}
+
 /* Keterangan teks biasa (pengganti badge) di header Statistik Peserta Didik */
 .chart-header-caption {
     font-size: 0.85rem;
@@ -387,6 +530,167 @@
     color: #475569;
     white-space: nowrap;
 }
+
+/* ── Dropdown custom "Jenis" (chart Tren Surat Bulanan) ──────────────────
+   Dibuat manual (bukan <select> native) supaya ukuran kotak & menu bisa
+   dikontrol penuh lewat CSS — termasuk diperkecil khusus di mobile — tanpa
+   tunduk ke rendering native dropdown milik OS/browser. ────────────────── */
+.tren-filter {
+    position: relative;
+}
+
+/* Label "Jenis" & tombol dropdown sama-sama tinggi 24px (line-height:1),
+   tapi ukuran font keduanya sedikit beda (label 0.72rem vs tombol
+   0.73rem) sehingga posisi glyph teks di dalam kotaknya sendiri tidak
+   simetris sempurna (efek metrik font) — label kelihatan sedikit lebih
+   tinggi drpd tombol walau kotaknya sudah center lewat flex.
+   PENTING: selector di bawah ini SENGAJA dibuat 4-class (lebih spesifik
+   drpd rule ".chart-card .chart-header-controls label.small" yg cuma
+   3-class & set "margin:0") + !important, karena percobaan sebelumnya
+   pakai selector yg speseifisitasnya lebih rendah sehingga margin-top-nya
+   kalah/ke-override balik ke 0 oleh rule tsb & nudge-nya tidak kepakai
+   sama sekali. Mobile punya rule sendiri di bawah (media query) dgn
+   selector yg juga dibuat 4-class supaya sama-sama menang. */
+.chart-card .chart-header-controls .tren-filter label.small {
+    margin-top: 8px !important;
+}
+
+.tren-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    height: 24px;
+    font-size: 0.73rem;
+    padding: .12rem .5rem;
+    border: 1px solid #cbd5e1;
+    border-radius: .4rem;
+    background: #fff;
+    color: #334155;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    max-width: 140px;
+}
+
+.tren-filter-btn span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tren-filter-btn i {
+    font-size: 0.6rem;
+    flex-shrink: 0;
+    color: #94a3b8;
+}
+
+.tren-filter-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 1050;
+    /* Lebar menu mengikuti lebar tombol (max-width tombol) supaya menu
+       tidak terlihat lebih besar drpd tombol yang membukanya. */
+    min-width: 100%;
+    width: max-content;
+    max-width: 140px;
+    margin: 0;
+    padding: .25rem 0;
+    list-style: none;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: .5rem;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, .12);
+}
+
+.tren-filter-menu.show {
+    display: block;
+}
+
+.tren-filter-option {
+    /* Ukuran font & padding disamakan dgn font tombol (.tren-filter-btn)
+       supaya menu yang terbuka terasa 1 kesatuan ukuran dgn tombolnya,
+       bukan tiba-tiba jadi jauh lebih besar. */
+    padding: .3rem .6rem;
+    font-size: 0.73rem;
+    color: #334155;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.tren-filter-option:hover {
+    background: #eff6ff;
+}
+
+.tren-filter-option.active {
+    background: #0d6efd;
+    color: #fff;
+}
+
+[data-theme="dark"] .tren-filter-btn {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .tren-filter-menu {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .tren-filter-option {
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .tren-filter-option:hover {
+    background: #263449 !important;
+}
+
+/* Mobile: kotak & menu dropdown diperkecil lagi supaya tidak memakan
+   ruang berlebih di layar sempit. */
+@media (max-width: 767.98px) {
+    .tren-filter-btn {
+        height: 21px;
+        font-size: 0.64rem;
+        padding: .08rem .38rem;
+        gap: .2rem;
+        max-width: 96px;
+    }
+
+    .tren-filter-btn i {
+        font-size: 0.52rem;
+    }
+
+    .tren-filter-menu {
+        min-width: 100%;
+        max-width: 96px;
+        padding: .18rem 0;
+    }
+
+    .tren-filter-option {
+        padding: .28rem .5rem;
+        font-size: 0.64rem;
+    }
+}
+
+/* Mobile khusus header "Tren Surat Bulanan" (chart-header-inline): tombol
+   diperkecil lagi lewat rule di atas (font 0.6rem, max-width 82px) — menu
+   & isinya ikut disamakan di sini supaya tidak lagi jauh lebih besar drpd
+   tombol yang sudah sangat kecil ini. Tanpa ini, menu tetap pakai ukuran
+   mobile generik (0.64rem/96px) yang terlihat "loncat" lebih besar. */
+@media (max-width: 767.98px) {
+    .chart-header-inline .tren-filter-menu {
+        min-width: 100% !important;
+        max-width: 82px !important;
+    }
+
+    .chart-header-inline .tren-filter-option {
+        font-size: 0.58rem !important;
+        padding: .26rem .45rem !important;
+    }
+}
+
 
 .chart-header-caption-sep {
     color: #94a3b8;
@@ -625,7 +929,14 @@
 #badgeTotalPesertaDidik {
     display: inline-block;
     width: 210px;
-    flex-shrink: 0 !important;
+    min-width: 0;
+    /* flex-shrink SENGAJA tidak di-!important-kan di sini supaya rule
+       desktop (≥992px, .badge:first-child) yang mengizinkan badge ini
+       menyusut+ellipsis benar-benar bisa menang — sebelumnya flex-shrink:0
+       !important di sini selalu menang (ID > class) walau ada fix desktop,
+       sehingga badge Total tidak pernah menyusut & mendorong "Tahun" keluar
+       kartu / terpotong di layar desktop yang tidak terlalu lebar. */
+    flex-shrink: 1;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
@@ -637,6 +948,10 @@
     #badgeTotalSurat,
     #badgeTotalPesertaDidik {
         width: 80px !important;
+        flex-shrink: 0 !important;
+        /* Mobile tetap seperti semula: sudah wrap 2 baris (lihat fix
+           mobile chart-header-controls), jadi badge Total di sini boleh
+           dikunci lagi supaya tidak ikut menyusut tak perlu. */
     }
 }
 
@@ -1112,11 +1427,15 @@
     }
 }
 
-/* ── Badge total peserta didik ─────────────────────────────────────────── */
+/* ── Badge total peserta didik ─────────────────────────────────────────────
+   overflow/text-overflow SENGAJA memakai "hidden"/"ellipsis" (bukan visible/
+   unset) supaya badge ini konsisten dengan #badgeTotalSurat: boleh menyusut
+   dengan ellipsis di desktop sempit, jadi filter "Tahun" di sebelahnya tidak
+   pernah terdorong keluar kartu / terpotong. ── */
 #badgeTotalPesertaDidik {
-    max-width: none !important;
-    overflow: visible !important;
-    text-overflow: unset !important;
+    max-width: none;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
     white-space: nowrap !important;
     flex-shrink: 1 !important;
     min-width: 0;
@@ -1252,7 +1571,30 @@
 }
 
 .chart-body-line {
-    min-height: 280px;
+    min-height: 300px;
+    height: 300px;
+    position: relative;
+}
+
+/* Line chart (Tren Surat Bulanan): sama seperti #chartSurat, canvas mengisi
+   penuh container karena maintainAspectRatio:false. Ini mencegah tinggi
+   grafik ikut membesar mengikuti lebar kartu (yang full-width/col-12),
+   sehingga proporsinya tetap konsisten & pas di layar selebar apa pun. */
+#chartTren {
+    position: absolute !important;
+    top: 12px !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    width: calc(100% - 24px) !important;
+    height: calc(100% - 24px) !important;
+}
+
+@media (max-width: 767.98px) {
+    .chart-body-line {
+        min-height: 260px;
+        height: 260px;
+    }
 }
 
 /* ── FIX MOBILE: teks legend donut (mis. "Rombel A: 1 (L:0 P:0)") terpotong

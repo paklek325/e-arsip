@@ -574,6 +574,18 @@ body[data-theme-transition] * { transition: none !important; }
   .pc-header .user-info {
     display: none;
   }
+
+  /* .pc-container di atas sudah punya padding-top (58px) khusus utk
+     "menurunkan" konten dari bawah header fixed. Tapi .pc-content (lihat
+     rule global ".pc-container .pc-content { padding-top:16px; }" di
+     bawah file ini) MASIH nambah 16px lagi di atasnya — dobel, sama
+     persis kasusnya dgn bug "Daftar Pengguna" sebelumnya. Di desktop
+     16px itu perlu (karena .pc-container desktop pakai "top:56px" bukan
+     padding, jadi .pc-content-lah yg kasih jarak dari breadcrumb bar-nya
+     template), tapi di mobile jadi jarak ekstra yg tidak perlu. */
+  .pc-container .pc-content {
+    padding-top: 0 !important;
+  }
 }
 
 /* =======================================================
@@ -584,6 +596,14 @@ body[data-theme-transition] * { transition: none !important; }
   /* Kurangi padding container */
   .pc-container {
     padding: 55px 0.6rem 1rem !important;
+  }
+
+  /* Sama seperti breakpoint ≤992px di atas — .pc-container sudah kasih
+     padding-top (55px) utk clear header fixed, jadi .pc-content tidak
+     perlu nambah padding-top lagi (dobel = jarak konten/judul kelihatan
+     terlalu jauh dari header). */
+  .pc-container .pc-content {
+    padding-top: 0 !important;
   }
 
   /* Breadcrumb lebih kompak */
