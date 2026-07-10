@@ -48,11 +48,13 @@
 
                     <div class="mb-3">
                         <label class="form-label">Role</label>
-                        {{-- Pastikan variabel $roles sudah dilewatkan dari Controller --}}
+                        {{-- Kepala Staf bersifat permanen (sudah ada & unik), jadi tidak
+                             ditampilkan sebagai pilihan saat tambah user baru.
+                             Role otomatis default ke "Staf". --}}
                         <select name="id_role" id="add_role" class="form-select" required>
-                            <option value="" disabled selected>Pilih Role</option>
                             @foreach($roles as $r)
-                            <option value="{{ $r->id_role }}">{{ $r->name }}</option>
+                                @continue(strtolower($r->name) === 'kepala staf')
+                                <option value="{{ $r->id_role }}" {{ strtolower($r->name) === 'staf' ? 'selected' : '' }}>{{ $r->name }}</option>
                             @endforeach
                         </select>
                         <div class="invalid-feedback" id="error_add_id_role"></div>
@@ -227,7 +229,3 @@
         </div>
     </div>
 </div>
-
-
-
-

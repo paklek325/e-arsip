@@ -384,6 +384,12 @@
                 if (Array.isArray(data.suggestions) && data.suggestions.length) {
                     addQuickChips(data.suggestions);
                 }
+                // Jika AI baru saja benar-benar mengubah data (bukan cuma teks),
+                // refresh tabel di halaman supaya user langsung lihat perubahannya
+                // tanpa perlu reload manual.
+                if (data.refresh && data.refresh.menu) {
+                    refreshMenuTable(data.refresh.menu);
+                }
             } else {
                 addErrorBubble('Maaf, tidak ada respons dari server. Coba lagi.');
             }
@@ -400,6 +406,39 @@
             }
         })
         .finally(()=>{ isTyping=false; sendBtn.disabled=false; input.focus(); });
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       REFRESH TABEL HALAMAN SETELAH AI MENGUBAH DATA
+       ──────────────────────────────────────────────────────────
+       Pola generik: setiap halaman yang datanya bisa diubah lewat
+       chat cukup punya wrapper <div id="wrapper-table-<menu>"
+       data-base-url="...">, mengikuti pola yang sudah dipakai di
+       halaman Peserta Didik (lihat index.blade.php). Controller-nya
+       cukup mendukung request AJAX (X-Requested-With) yang me-return
+       partial view tabel saja — pola ini sudah ada di
+       PesertaDidikController@index, tinggal dipakai ulang untuk
+       menu lain (Surat, Kode, dst) saat aksi tulis-data via chat
+       ditambahkan ke menu tersebut.
+    ══════════════════════════════════════════════════════════ */
+    function refreshMenuTable(menu) {
+        const wrapper = document.getElementById('wrapper-table-' + menu);
+        if (!wrapper) return; // user sedang tidak berada di halaman menu ini — tidak perlu refresh
+        const url = wrapper.dataset.baseUrl || window.location.pathname;
+        fetch(url, {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
+            credentials: 'same-origin',
+        })
+        .then(r => r.ok ? r.text() : Promise.reject(r.status))
+        .then(html => {
+            wrapper.innerHTML = html;
+            // restart animasi fade-in biar user sadar tabelnya baru saja diperbarui
+            wrapper.classList.remove('animate-fade-in');
+            void wrapper.offsetWidth;
+            wrapper.classList.add('animate-fade-in');
+        })
+        .catch(() => { /* diamkan — tabel tetap akan sinkron saat halaman di-refresh manual */ });
     }
 
     /* ── bubble helpers ── */
@@ -756,7 +795,3 @@
 
 })();
 </script>
-
-
-
-

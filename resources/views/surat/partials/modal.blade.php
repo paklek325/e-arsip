@@ -62,7 +62,7 @@
 
           {{-- Kode Surat --}}
           <div class="col-md-6" id="kode-container-add">
-            <label class="form-label">
+            <label class="form-label" id="kode-surat-label-add">
               Kode Surat
               @if(($lockJenis ?? null) === 'Keluar')
                 <span class="text-danger"> *</span>
@@ -77,6 +77,7 @@
               - halaman lain  → disembunyikan + disabled, JS yang mengatur
             --}}
             <select id="kode_surat_select_add" name="kode_surat" class="form-select"
+                    aria-labelledby="kode-surat-label-add"
                     @if(($lockJenis ?? null) === 'Keluar') required
                     @else disabled style="display:none"
                     @endif>
@@ -93,12 +94,14 @@
             --}}
             <input type="text" id="kode_surat_input_add" name="kode_surat"
                    class="form-control" placeholder="Kode surat (opsional)"
+                   aria-labelledby="kode-surat-label-add" autocomplete="off"
                    @if(($lockJenis ?? null) === 'Masuk') @else disabled style="display:none" @endif>
 
             {{-- Placeholder hanya di halaman utama (bukan halaman terkunci) --}}
             @if(!($lockJenis ?? null))
-              <input type="text" id="kode_surat_placeholder_add" class="form-control"
-                     placeholder="Pilih jenis surat terlebih dahulu" disabled>
+              <input type="text" id="kode_surat_placeholder_add" name="kode_surat_placeholder" class="form-control"
+                     placeholder="Pilih jenis surat terlebih dahulu"
+                     aria-labelledby="kode-surat-label-add" autocomplete="off" disabled>
             @endif
 
             <small class="text-muted d-block mt-1">
@@ -117,7 +120,7 @@
           <div class="col-md-4">
             <label for="add_bulan" class="form-label">Bulan <span class="text-danger">*</span></label>
             <div class="input-group">
-              <select id="add_bulan" class="form-select">
+              <select id="add_bulan" name="bulan_surat" class="form-select">
                 <option value="1">Januari</option>
                 <option value="2">Februari</option>
                 <option value="3">Maret</option>
@@ -141,8 +144,8 @@
           <div class="col-md-4">
             <label for="add_tahun" class="form-label">Tahun <span class="text-danger">*</span></label>
             <div class="input-group">
-              <input type="number" id="add_tahun" class="form-control"
-                     min="2000" max="2099" value="{{ date('Y') }}">
+              <input type="number" id="add_tahun" name="tahun_surat" class="form-control"
+                     min="2000" max="2099" value="{{ date('Y') }}" autocomplete="off">
               <button type="button" class="btn btn-outline-secondary" id="btnTahunIniAdd" title="Tahun ini">
                 <i class="bi bi-calendar-check"></i>
               </button>
@@ -280,7 +283,7 @@
           <div class="col-md-4">
             <label for="edit_bulan" class="form-label">Bulan <span class="text-danger">*</span></label>
             <div class="input-group">
-              <select id="edit_bulan" class="form-select">
+              <select id="edit_bulan" name="bulan_surat" class="form-select">
                 <option value="1">Januari</option>
                 <option value="2">Februari</option>
                 <option value="3">Maret</option>
@@ -304,8 +307,8 @@
           <div class="col-md-4">
             <label for="edit_tahun" class="form-label">Tahun <span class="text-danger">*</span></label>
             <div class="input-group">
-              <input type="number" id="edit_tahun" class="form-control"
-                     min="2000" max="2099">
+              <input type="number" id="edit_tahun" name="tahun_surat" class="form-control"
+                     min="2000" max="2099" autocomplete="off">
               <button type="button" class="btn btn-outline-secondary" id="btnTahunIniEdit" title="Tahun ini">
                 <i class="bi bi-calendar-check"></i>
               </button>

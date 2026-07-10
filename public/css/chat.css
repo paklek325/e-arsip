@@ -398,7 +398,7 @@ body.modal-open #earsipchat-panel {
 .eac-tabs { display:flex; background:#f8f8ff; border-bottom:1px solid #ebe8f5; flex-shrink:0; }
 .eac-tab { flex:1; padding:10px 0; background:none; border:none; font-size:12.5px; font-weight:500; color:#888; cursor:pointer; border-bottom:2px solid transparent; display:flex; align-items:center; justify-content:center; gap:5px; transition:color .15s; }
 .eac-tab.active { color:#6C3EAB; border-bottom:2px solid #6C3EAB; font-weight:600; }
-.eac-messages { flex:1; overflow-y:auto; padding:13px; display:flex; flex-direction:column; gap:10px; scroll-behavior:smooth; }
+.eac-messages { flex:1; min-height: 110px; overflow-y:auto; padding:13px; display:flex; flex-direction:column; gap:10px; scroll-behavior:smooth; }
 .eac-messages::-webkit-scrollbar { width:4px; }
 .eac-messages::-webkit-scrollbar-thumb { background:#ddd; border-radius:4px; }
 .eac-bubble { display:flex; gap:8px; align-items:flex-start; max-width:93%; animation:eacFI .2s ease; }
@@ -408,7 +408,7 @@ body.modal-open #earsipchat-panel {
 .eac-bubble.user .eac-bubble-avatar { background:linear-gradient(135deg,#6C3EAB,#4F46E5); color:#fff; }
 .eac-bubble-text { background:#f1f0f8; border-radius:14px 14px 14px 4px; padding:9px 13px; font-size:13px; line-height:1.6; color:#2d2d2d; max-width:100%; word-break:break-word; }
 .eac-bubble.user .eac-bubble-text { background:linear-gradient(135deg,#6C3EAB,#4F46E5); color:#fff; border-radius:14px 14px 4px 14px; }
-.eac-bubble-text a { color:#6C3EAB; text-decoration:underline; }
+.eac-bubble-text a { color:#8B5CF6; text-decoration:underline; }
 .eac-bubble.user .eac-bubble-text a { color:#d4c8f8; }
 .eac-error { background:#fff4f4; color:#b91c1c; border:1px solid #fecaca; border-radius:10px; padding:8px 13px; font-size:12.5px; margin:0 4px; }
 .eac-typing { display:flex; gap:4px; align-items:center; padding:4px 2px; }
@@ -418,7 +418,7 @@ body.modal-open #earsipchat-panel {
 .eac-typing-label { font-size:10.5px; color:#9b87d1; margin-top:4px; font-style:italic; animation:eacFade 1.5s infinite ease-in-out; }
 @keyframes eacFade { 0%,100%{opacity:.5} 50%{opacity:1} }
 .eac-suggestions { padding:7px 13px 9px; display:flex; flex-wrap:wrap; gap:5px; border-top:1px solid #f0edf8; flex-shrink:0; }
-.eac-suggestions > span { font-size:11px; color:#888; width:100%; margin-bottom:1px; font-weight:500; }
+.eac-suggestions > span { font-size:11px; color:#1a1a1a; width:100%; margin-bottom:1px; font-weight:600; }
 .eac-sug-btn { background:#f1eef8; border:1px solid #d8d0f0; color:#5a3d96; border-radius:20px; padding:4px 10px; font-size:11.5px; cursor:pointer; transition:all .15s; white-space:nowrap; font-weight:500; }
 .eac-sug-btn:hover { background:#6C3EAB; color:#fff; border-color:#6C3EAB; }
 .eac-input-bar { padding:9px 11px 11px; border-top:1px solid #ede9f8; display:flex; gap:8px; align-items:flex-end; flex-shrink:0; background:#fafafa; }
@@ -474,7 +474,7 @@ body.modal-open #earsipchat-panel {
 .eac-tbl th { background:#f0ecfb; color:#5a3d96; padding:7px 8px; text-align:left; font-weight:700; border-bottom:2px solid #d8d0f0; white-space:nowrap; position:sticky; top:0; }
 .eac-tbl td { padding:6px 8px; border-bottom:1px solid #f0edf8; color:#333; vertical-align:middle; }
 .eac-tbl tr:hover td { background:#faf8ff; }
-.eac-tbl-link { color:#6C3EAB; text-decoration:none; font-weight:600; }
+.eac-tbl-link { color:#8B5CF6; text-decoration:none; font-weight:600; }
 .eac-tbl-link:hover { text-decoration:underline; }
 .eac-tbl-year th { background:#f0ecfb; color:#5a3d96; padding:7px 9px; text-align:left; font-weight:700; border-bottom:2px solid #d8d0f0; position:sticky; top:0; }
 .eac-tbl-year td { padding:7px 9px; border-bottom:1px solid #f0edf8; color:#333; }
@@ -490,21 +490,137 @@ body.modal-open #earsipchat-panel {
 .eac-pg-btn:hover { background:#6C3EAB; color:#fff; border-color:#6C3EAB; }
 .eac-pg-btn.active { background:#6C3EAB; color:#fff; border-color:#6C3EAB; font-weight:700; }
 .eac-pg-btn:disabled { opacity:.4; cursor:default; }
+/* ══════════════════════════════════════════════════════════
+   DARK MODE — earsipchat widget v2
+   Mengikuti atribut [data-theme="dark"] yang sama dipakai
+   layout.css (toggle malam/siang global), supaya widget chat
+   ikut berubah otomatis saat mode diganti.
+   ══════════════════════════════════════════════════════════ */
+#earsipchat-btn,
+#earsipchat-panel {
+  transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+[data-theme="dark"] #earsipchat-btn { box-shadow: 0 4px 16px rgba(0,0,0,.55); }
+
+[data-theme="dark"] #earsipchat-panel {
+  background: #1f2937;
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 8px 40px rgba(0,0,0,.55);
+}
+
+[data-theme="dark"] .eac-tabs {
+  background: #17202f;
+  border-bottom-color: rgba(255,255,255,.08);
+}
+[data-theme="dark"] .eac-tab { color: #94a3b8; }
+[data-theme="dark"] .eac-tab.active { color: #c4b5fd; border-bottom-color: #8b5cf6; }
+
+[data-theme="dark"] .eac-messages::-webkit-scrollbar-thumb { background: #3d4759; }
+
+[data-theme="dark"] .eac-bubble-avatar { background: #2d3548; }
+[data-theme="dark"] .eac-bubble.user .eac-bubble-avatar { background: linear-gradient(135deg,#8b5cf6,#6366f1); }
+[data-theme="dark"] .eac-bubble-text { background: #2a3244; color: #e5e7eb; }
+[data-theme="dark"] .eac-bubble.user .eac-bubble-text { background: linear-gradient(135deg,#8b5cf6,#6366f1); color: #fff; }
+[data-theme="dark"] .eac-bubble-text a { color: #c4b5fd; }
+[data-theme="dark"] .eac-bubble.user .eac-bubble-text a { color: #ede9fe; }
+
+[data-theme="dark"] .eac-error {
+  background: rgba(185,28,28,.15);
+  color: #fca5a5;
+  border-color: rgba(248,113,113,.35);
+}
+[data-theme="dark"] .eac-typing span { background: #8b7ed6; }
+[data-theme="dark"] .eac-typing-label { color: #a78bfa; }
+
+[data-theme="dark"] .eac-suggestions { border-top-color: rgba(255,255,255,.08); }
+[data-theme="dark"] .eac-suggestions > span { color: #cbd5e1; }
+[data-theme="dark"] .eac-sug-btn { background: #2a3244; border-color: #3d4759; color: #c4b5fd; }
+[data-theme="dark"] .eac-sug-btn:hover { background: #8b5cf6; color: #fff; border-color: #8b5cf6; }
+
+[data-theme="dark"] .eac-input-bar { background: #17202f; border-top-color: rgba(255,255,255,.08); }
+[data-theme="dark"] #eac-input { background: #2a3244; color: #e5e7eb; border-color: #3d4759; }
+[data-theme="dark"] #eac-input::placeholder { color: #6b7280; }
+[data-theme="dark"] #eac-input:focus { border-color: #8b5cf6; }
+[data-theme="dark"] #eac-attach { background: #2a3244; border-color: #3d4759; color: #c4b5fd; }
+[data-theme="dark"] #eac-attach:hover { background: #8b5cf6; color: #fff; }
+
+[data-theme="dark"] .eac-file-chip { background: #2a3244; border-color: #3d4759; color: #c4b5fd; }
+[data-theme="dark"] .eac-file-chip button { color: #94a3b8; }
+[data-theme="dark"] .eac-file-chip button:hover { color: #f87171; }
+[data-theme="dark"] .eac-file-thumb { background: #2a3244; border-color: #3d4759; color: #cbd5e1; }
+
+[data-theme="dark"] .eac-rekap-toolbar {
+  background: #17202f;
+  border-bottom-color: rgba(255,255,255,.08);
+}
+[data-theme="dark"] .eac-rekap-toolbar select { background: #2a3244; border-color: #3d4759; color: #e5e7eb; }
+[data-theme="dark"] .eac-rekap-toolbar select:focus { border-color: #8b5cf6; }
+
+[data-theme="dark"] .eac-rekap-body::-webkit-scrollbar-thumb { background: #3d4759; }
+[data-theme="dark"] .eac-rekap-info { color: #94a3b8; }
+[data-theme="dark"] .eac-rekap-info strong { color: #c4b5fd; }
+[data-theme="dark"] .eac-badge.masuk  { background: rgba(45,122,79,.2);  color: #6ee7b7; }
+[data-theme="dark"] .eac-badge.keluar { background: rgba(133,100,4,.25); color: #fcd34d; }
+[data-theme="dark"] .eac-badge.total  { background: rgba(139,92,246,.2); color: #c4b5fd; }
+
+[data-theme="dark"] .eac-tbl th,
+[data-theme="dark"] .eac-tbl-year th { background: #2a3244; color: #c4b5fd; border-bottom-color: #3d4759; }
+[data-theme="dark"] .eac-tbl td,
+[data-theme="dark"] .eac-tbl-year td { color: #cbd5e1; border-bottom-color: #2a3244; }
+[data-theme="dark"] .eac-tbl tr:hover td,
+[data-theme="dark"] .eac-tbl-year tr:hover td { background: #232b3d; }
+[data-theme="dark"] .eac-tbl-link { color: #c4b5fd; }
+[data-theme="dark"] .eac-tbl-year tr.total-row td { background: rgba(139,92,246,.15); color: #c4b5fd; }
+
+[data-theme="dark"] .eac-empty { color: #6b7280; }
+[data-theme="dark"] .eac-loading-dots span { background: #8b7ed6; }
+
+[data-theme="dark"] .eac-pg-btn { background: #2a3244; border-color: #3d4759; color: #c4b5fd; }
+[data-theme="dark"] .eac-pg-btn:hover,
+[data-theme="dark"] .eac-pg-btn.active { background: #8b5cf6; color: #fff; border-color: #8b5cf6; }
+
 @media (max-width:440px) {
   #earsipchat-panel {
-    right: 8px;
-    left: 8px;
+    /* Sebelumnya left:16px + margin:0 auto bikin panel KE-CENTER di
+       layar, jadi malah kelihatan mepet kiri (krn tombol toggle-nya ada
+       di kanan bawah). Diganti jadi nempel ke kanan aja (right:16px,
+       left:auto) — konsisten sejajar dgn tombol togglenya. */
+    right: 16px;
+    left: auto;
     width: auto;
-    bottom: 68px;
-    /* Sebelumnya min(520px, calc(100vh - 88px)) — di HP dgn tinggi layar
-       normal (≥600px) ini selalu jatuh ke 520px, yaitu ~70-80% tinggi
-       layar, jadi kelihatan "menutupi" hampir seluruh layar. Diperkecil
-       jadi persentase viewport (60vh) dgn batas atas 440px, supaya masih
-       kelihatan konten di belakangnya & tidak dominan penuh layar. */
-    height: min(60vh, 440px);
-    max-height: min(60vh, 440px);
-    border-radius: 14px;
+    max-width: 340px;
+    /* Di desktop panel terlihat "mepet atas" krn tinggi 580px di layar
+       yg tinggi. Di mobile sebelumnya di-anchor dari bawah (bottom:68px)
+       yg bikin ada jarak kosong di atas panel. Diganti anchor dari atas
+       (top) supaya mepet atas-kanan, senada dgn tampilan desktop —
+       angka top disesuaikan dgn tinggi header/navbar fixed di mobile. */
+    top: 66px;
+    bottom: auto;
+    height: min(60vh, 460px);
+    max-height: calc(100vh - 150px);
+    border-radius: 16px;
   }
+
+  /* "Tanya cepat" tadinya wrap jadi 3 baris tombol — itu yg bikin ruang
+     buat area pesan (.eac-messages) kegencet sampai nyaris tidak
+     kelihatan/tidak nyaman di-scroll di panel yg sudah diperkecil.
+     Dibuat 1 baris scroll horizontal aja supaya hemat tempat vertikal,
+     ruang buat pesan jadi lega lagi. */
+  .eac-suggestions {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    padding-bottom: 8px !important;
+  }
+  .eac-suggestions > span {
+    width: auto !important;
+    flex-shrink: 0;
+  }
+  .eac-sug-btn {
+    flex-shrink: 0;
+  }
+
+
   /* Panel rekap toolbar — bungkus selects agar tidak overflow */
   .eac-rekap-row1 {
     flex-wrap: wrap !important;

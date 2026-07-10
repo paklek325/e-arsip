@@ -38,16 +38,132 @@
 
 /* filter-bar → dipindah ke layout.css */
 
-/* Padding untuk select agar tombol X tidak menutupi panah */
+/* Padding untuk select agar tombol X tidak menutupi panah.
+   Tombol X (.filter-clear-btn) ada di right:1.2rem, lebar 1.4rem —
+   jadi menutupi area sampai ~2.6rem dari kanan. Panah digeser ke
+   3.1rem supaya ada jarak aman ±0.5rem dari tombol X. */
 .position-relative .form-select {
-  padding-right: 4.6rem !important;
-  background-position: right 2.7rem center !important;
+  padding-right: 5rem !important;
+  background-position: right 3.1rem center !important;
   background-repeat: no-repeat;
   background-size: 0.65rem auto;
 }
 
 .position-relative .form-control {
   padding-right: 2.2rem !important;
+}
+
+/* Input search butuh padding sedikit lebih besar karena tombol X
+   (.filter-clear-btn) sekarang overlay di atasnya, sama seperti
+   dropdown Jenis & Sort — bukan lagi tombol input-group biasa.
+   Tombol X ada di right:1.2rem, lebar 1.4rem → menutupi area sampai
+   ~2.6rem dari kanan. Padding digeser ke 3.1rem (sama seperti jarak
+   panah pada dropdown) supaya ada jarak aman ±0.5rem dan teks/
+   placeholder tidak mepet/ketiban tombol X. */
+.search-group .form-control {
+  padding-right: 2.6rem !important;
+}
+
+/* Karena tombol X sekarang position:absolute (tidak lagi jadi elemen
+   terakhir di input-group secara layout), Bootstrap tetap menganggapnya
+   :last-child dan memaksa sudut kanan input jadi kotak. Kembalikan
+   sudut kanan input supaya tetap membulat penuh. */
+.search-group .form-control {
+  border-top-right-radius: 0.5rem !important;
+  border-bottom-right-radius: 0.5rem !important;
+}
+
+/* =======================================================
+   🎯 CUSTOM DROPDOWN FILTER — sama seperti peserta-didik
+   ------------------------------------------------------
+   <select> asli disembunyikan (tetap ada di DOM utk logika JS di
+   surat.js), diganti .pd-select-trigger + .pd-select-panel supaya
+   panah & tombol X (.filter-clear-btn) tidak pernah tabrakan, dan
+   popup pilihan tidak ikut lebar/posisi native browser.
+======================================================= */
+.pd-select-native {
+  display: none !important;
+}
+
+.pd-select-trigger {
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 3.1rem center !important;
+  background-size: 0.65rem auto !important;
+  padding-right: 5rem !important;
+}
+[data-theme="dark"] .pd-select-trigger {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+.pd-select-trigger:focus {
+  outline: none;
+}
+.pd-select-trigger.active {
+  border-color: var(--active-color, #0d6efd);
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
+}
+
+.pd-select-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
+  border-radius: 0.6rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  z-index: 40;
+  display: none;
+  padding: 0.3rem;
+}
+.pd-select-panel.show {
+  display: block;
+}
+
+.pd-select-option {
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-color);
+  cursor: pointer;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
+}
+.pd-select-option:hover {
+  background: rgba(13, 110, 253, 0.08);
+}
+.pd-select-option.is-selected {
+  background: var(--active-color, #0d6efd);
+  color: #fff;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .pd-select-panel {
+  background: #1f2937;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .pd-select-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .pd-select-option.is-selected {
+  background: #3b82f6;
+  color: #fff;
+}
+
+@media (max-width: 576px) {
+  .pd-select-option {
+    font-size: 0.78rem;
+    padding: 0.4rem 0.55rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -280,6 +396,33 @@
   #btnAiSearch {
     height: 44px;
   }
+}
+
+/* =======================================================
+   🏷️ BADGE JENIS SURAT (Keluar / Masuk)
+   ------------------------------------------------------
+   bg-success & bg-info bawaan Bootstrap terlalu terang,
+   jadi teks putih di atasnya kurang jelas dibaca.
+   Dipertegas supaya kontras teks putih lebih baik.
+======================================================= */
+.table-custom .badge.bg-success {
+  background-color: #0f9d68 !important;
+  color: #fff !important;
+}
+
+.table-custom .badge.bg-info {
+  background-color: #0e7490 !important;
+  color: #fff !important;
+}
+
+[data-theme="dark"] .table-custom .badge.bg-success {
+  background-color: #10b981 !important;
+  color: #062e21 !important;
+}
+
+[data-theme="dark"] .table-custom .badge.bg-info {
+  background-color: #38bdf8 !important;
+  color: #052436 !important;
 }
 
 /* ── Lebar kolom tabel surat ────────────────────────────────────────────── */

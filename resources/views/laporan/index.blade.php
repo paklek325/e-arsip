@@ -125,14 +125,8 @@
     #page-laporan .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     #page-laporan .table-wrapper table { font-size: .74rem; }
 
-    #page-laporan th.col-no,
-    #page-laporan td.col-no {
-        width: 28px !important;
-        max-width: 28px;
-        padding-left: 4px !important;
-        padding-right: 4px !important;
-        white-space: nowrap;
-    }
+    /* Lebar kolom No sudah diatur terpusat di laporan.css (.table-wrapper
+       th.col-no / td.col-no) supaya tidak ada aturan ganda yang bentrok. */
 
     #page-laporan .table-wrapper th,
     #page-laporan .table-wrapper td {

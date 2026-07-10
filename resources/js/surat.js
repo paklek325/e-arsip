@@ -473,31 +473,25 @@ if (window.SuratApp) {
             const searchInputEl = $("#searchInput");
             const resetSearchEl = $("#resetSearch");
 
-            function updateResetSearchButton() {
-                resetSearchEl?.classList.toggle(
-                    "d-none",
-                    !searchInputEl?.value.trim()
-                );
-            }
+            // Tombol X search SELALU tampil (sama seperti resetJenis &
+            // resetSort) — tidak lagi bergantung pada ada/tidaknya teks
+            // yang diketik di kolom search.
+            resetSearchEl?.classList.remove("d-none");
 
             if (searchInputEl) {
                 searchInputEl.addEventListener("input", () => {
                     clearTimeout(searchDebounceTimer);
                     searchDebounceTimer = setTimeout(() => loadTable(), 400);
-                    updateResetSearchButton();
                 });
             }
 
             resetSearchEl?.addEventListener("click", () => {
                 if (searchInputEl) {
                     searchInputEl.value = "";
-                    updateResetSearchButton();
                     searchInputEl.dispatchEvent(new Event("input"));
                     searchInputEl.focus();
                 }
             });
-
-            updateResetSearchButton();
 
             ["#jenis", "#tanggal", "#sort"].forEach((s) =>
                 $(s)?.addEventListener("change", () => loadTable())
@@ -519,71 +513,169 @@ if (window.SuratApp) {
                             el.value = el.id === "sort" ? defaultSort : "";
                         }
                     );
+                    syncCustomSelect($("#jenis"));
+                    syncCustomSelect($("#sort"));
 
                     lapParams = { bulan: null, tahun: null, jenis_surat: null };
                     _initTanggal = null;
-                    updateResetButtons();
                     loadTable();
                 });
             }
 
-            // Sync jenis dropdown dari URL param (mis. link dari dashboard)
-            const urlJenis = new URLSearchParams(window.location.search).get(
-                "jenis_surat"
-            );
-            const jenisEl = $("#jenis");
-            if (urlJenis && jenisEl) {
-                jenisEl.value =
-                    urlJenis.charAt(0).toUpperCase() +
-                    urlJenis.slice(1).toLowerCase();
-            }
-
             // Show/hide tombol reset jenis & sort
+            const jenisEl = $("#jenis");
             const sortEl = $("#sort");
             const resetJenisEl = $("#resetJenis");
             const resetSortEl = $("#resetSort");
 
-            // Paksa tampil/sembunyi lewat inline style (bukan cuma toggle class),
-            // supaya visibilitas tombol reset TIDAK bergantung sama sekali pada
-            // CSS eksternal (yang bisa saja ter-cache versi lama di browser user).
+            // ============================================================
+            // CUSTOM DROPDOWN — sama seperti peserta-didik.js.
+            // <select> asli TETAP ADA di DOM (disembunyikan via CSS
+            // .pd-select-native), cuma tampilannya diganti div custom
+            // (.pd-select-trigger + .pd-select-panel) supaya panah &
+            // tombol X tidak pernah tabrakan, dan popup pilihan tidak
+            // ikut lebar/posisi native browser. Semua logic filter yang
+            // sudah ada (buildFilterParams, updateResetButtons, dst)
+            // tidak berubah — mereka tetap baca/tulis select.value biasa.
+            // Select yang di-lock (disabled, mis. halaman Surat Masuk/
+            // Keluar) sengaja TIDAK diubah ke custom dropdown karena
+            // memang tidak bisa diklik.
+            // ============================================================
+            const FILTER_SELECTS = [jenisEl, sortEl].filter(
+                (el) => el && !el.disabled
+            );
+            const customSelectMap = new Map(); // select -> { trigger, panel }
+
+            function buildCustomSelect(select) {
+                if (!select || customSelectMap.has(select)) return;
+                const wrap = select.parentElement; // .position-relative
+                if (!wrap) return;
+
+                const trigger = document.createElement("div");
+                trigger.className = select.className + " pd-select-trigger";
+                trigger.setAttribute("role", "button");
+                trigger.setAttribute("tabindex", "0");
+                wrap.insertBefore(trigger, select);
+
+                select.classList.add("pd-select-native");
+
+                const panel = document.createElement("div");
+                panel.className = "pd-select-panel";
+                Array.from(select.options).forEach((opt) => {
+                    const item = document.createElement("div");
+                    item.className = "pd-select-option";
+                    item.dataset.value = opt.value;
+                    item.textContent = opt.textContent;
+                    item.addEventListener("click", () => {
+                        select.value = opt.value;
+                        updateTriggerLabel(select);
+                        closeAllCustomSelects();
+                        select.dispatchEvent(
+                            new Event("change", { bubbles: true })
+                        );
+                    });
+                    panel.appendChild(item);
+                });
+                wrap.appendChild(panel);
+
+                trigger.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const isOpen = panel.classList.contains("show");
+                    closeAllCustomSelects();
+                    if (!isOpen) {
+                        panel.classList.add("show");
+                        trigger.classList.add("active");
+                    }
+                });
+                trigger.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        trigger.click();
+                    } else if (e.key === "Escape") {
+                        closeAllCustomSelects();
+                    }
+                });
+
+                customSelectMap.set(select, { trigger, panel });
+                updateTriggerLabel(select);
+            }
+
+            function updateTriggerLabel(select) {
+                const entry = customSelectMap.get(select);
+                if (!entry) return;
+                const opt = select.options[select.selectedIndex];
+                entry.trigger.textContent = opt ? opt.textContent : "";
+                entry.panel
+                    .querySelectorAll(".pd-select-option")
+                    .forEach((item) => {
+                        item.classList.toggle(
+                            "is-selected",
+                            item.dataset.value === select.value
+                        );
+                    });
+            }
+
+            // Dipanggil setiap kali select.value diubah SECARA PROGRAMATIK
+            // (bukan lewat klik opsi custom) — mis. tombol reset, sync dari
+            // URL — supaya label trigger ikut ter-update.
+            function syncCustomSelect(select) {
+                if (select && customSelectMap.has(select))
+                    updateTriggerLabel(select);
+            }
+
+            function closeAllCustomSelects() {
+                customSelectMap.forEach(({ trigger, panel }) => {
+                    panel.classList.remove("show");
+                    trigger.classList.remove("active");
+                });
+            }
+
+            document.addEventListener("click", closeAllCustomSelects);
+            FILTER_SELECTS.forEach(buildCustomSelect);
+
+            // Sync jenis dropdown dari URL param (mis. link dari dashboard)
+            // — dilakukan SETELAH custom dropdown dibangun supaya label
+            // trigger ikut ter-update.
+            const urlJenis = new URLSearchParams(window.location.search).get(
+                "jenis_surat"
+            );
+            if (urlJenis && jenisEl) {
+                jenisEl.value =
+                    urlJenis.charAt(0).toUpperCase() +
+                    urlJenis.slice(1).toLowerCase();
+                syncCustomSelect(jenisEl);
+            }
+
+            // Paksa tampil lewat inline style (bukan cuma toggle class),
+            // supaya visibilitas tombol reset TIDAK bergantung sama sekali
+            // pada CSS eksternal (yang bisa saja ter-cache versi lama di
+            // browser user).
             function showResetBtn(el) {
                 if (!el) return;
                 el.style.setProperty("display", "flex", "important");
                 el.classList.remove("d-none");
             }
-            function hideResetBtn(el) {
-                if (!el) return;
-                el.style.setProperty("display", "none", "important");
-                el.classList.add("d-none");
-            }
 
-            function updateResetButtons() {
-                // Tombol reset jenis hanya muncul saat jenis punya nilai DAN tidak di-lock (disabled)
-                const jenisActive = jenisEl?.value && !jenisEl?.disabled;
-                jenisActive
-                    ? showResetBtn(resetJenisEl)
-                    : hideResetBtn(resetJenisEl);
-                sortEl?.selectedIndex !== 0
-                    ? showResetBtn(resetSortEl)
-                    : hideResetBtn(resetSortEl);
-            }
-
-            jenisEl?.addEventListener("change", updateResetButtons);
-            sortEl?.addEventListener("change", updateResetButtons);
+            // Tombol reset Jenis & Sort SELALU tampil (sama seperti
+            // peserta-didik.js) — tidak perlu filter aktif dulu supaya
+            // muncul. Cukup dipanggil sekali di sini, tidak perlu
+            // show/hide dinamis lagi tiap kali dropdown berubah.
+            showResetBtn(resetJenisEl);
+            showResetBtn(resetSortEl);
 
             resetJenisEl?.addEventListener("click", () => {
                 if (jenisEl) jenisEl.value = "";
+                syncCustomSelect(jenisEl);
                 lapParams = { bulan: null, tahun: null, jenis_surat: null };
                 jenisEl?.dispatchEvent(new Event("change"));
             });
 
             resetSortEl?.addEventListener("click", () => {
                 if (sortEl) sortEl.selectedIndex = 0;
+                syncCustomSelect(sortEl);
                 lapParams = { bulan: null, tahun: null, jenis_surat: null };
                 sortEl?.dispatchEvent(new Event("change"));
             });
-
-            updateResetButtons();
 
             rebindResetButtons();
         }

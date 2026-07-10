@@ -33,6 +33,57 @@
 }
 
 /* filter-bar → dipindah ke layout.css */
+/* Halaman user: rapatkan jarak filter-bar ke tabel (tanpa ganggu halaman lain) */
+#page-user .filter-bar {
+  margin-bottom: 0.5rem;
+}
+
+/* =======================================================
+   🔄 TOMBOL RESET — icon-only, samakan dengan Master Peserta Didik
+======================================================= */
+#page-user .filter-bar .btn-reset-icon {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--user-thead-bg);
+  color: var(--user-td-color);
+  font-size: 1rem;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+#page-user .filter-bar .btn-reset-icon:hover {
+  background-color: var(--user-tr-hover);
+  border-color: #6C3EAB;
+  color: #6C3EAB;
+  transform: rotate(-45deg);
+}
+
+#page-user .filter-bar .btn-reset-icon:active {
+  transform: rotate(-90deg);
+}
+
+[data-theme="dark"] #page-user .filter-bar .btn-reset-icon {
+  background-color: #0f172a;
+  border-color: var(--border-color);
+  color: var(--user-td-color);
+}
+
+[data-theme="dark"] #page-user .filter-bar .btn-reset-icon:hover {
+  background-color: var(--user-tr-hover);
+  border-color: #8b5cf6;
+  color: #8b5cf6;
+}
+
+/* Saat tabel asli sudah dimuat (mengandung .user-card), hapus sisa padding
+   dari state loading (class py-5 di #tableContainer) yang tidak ikut dilepas JS */
+#tableContainer:has(.user-card) {
+  padding: 0 !important;
+}
 
 /* =======================================================
    📋 TABEL USER (.table-user)
@@ -274,6 +325,47 @@
   background: linear-gradient(135deg, #6C3EAB, #4F46E5);
   font-size: .75rem;
 }
+
+/* --- Badge role tabel: pill dengan gradient + ikon, beda warna per role --- */
+.badge-role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  padding: 0.38rem 0.85rem;
+  border-radius: 50px;
+  color: #fff;
+  line-height: 1;
+  white-space: nowrap;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.badge-role-pill:hover { transform: translateY(-1px); }
+.badge-role-pill i { font-size: 0.75rem; }
+
+/* Kepala Staf — emas/amber (menonjolkan posisi tertinggi) */
+.badge-role-kepala {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.35);
+}
+
+/* Staf — ungu-indigo gradient (senada brand) */
+.badge-role-staf {
+  background: linear-gradient(135deg, #6C3EAB, #4F46E5);
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+}
+
+/* Role lainnya — abu-abu netral */
+.badge-role-default {
+  background: linear-gradient(135deg, #94a3b8, #64748b);
+  box-shadow: 0 2px 6px rgba(100, 116, 139, 0.25);
+}
+
+[data-theme="dark"] .badge-role-kepala { box-shadow: 0 2px 8px rgba(217, 119, 6, 0.45); }
+[data-theme="dark"] .badge-role-staf   { box-shadow: 0 2px 8px rgba(79, 70, 229, 0.45); }
+[data-theme="dark"] .badge-role-default{ box-shadow: 0 2px 8px rgba(100, 116, 139, 0.4); }
 
 /* =======================================================
    📅 KOLOM TANGGAL TABEL USER

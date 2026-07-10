@@ -5,8 +5,8 @@
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg">
 
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title fw-bold">Tambah Peserta Didik</h5>
+     <div class="modal-header bg-primary text-white">
+  <h5 class="modal-title fw-bold">Tambah<span class="d-none d-sm-inline"> Peserta Didik</span></h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
 
@@ -362,8 +362,3 @@
     </div>
   </div>
 </div>
-
-
-
-
-

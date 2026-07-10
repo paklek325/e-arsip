@@ -33,7 +33,7 @@
         {{-- 🎓 Rombel — col-6 di mobile, col-3 di desktop --}}
         <div class="col-6 col-md-3 position-relative">
             <select name="rombel" id="rombel" class="form-select filter-select">
-                <option value="">Semua Rombel</option>
+                <option value="">Rombel</option>
                 <option value="A" {{ request('rombel') == 'A' ? 'selected' : '' }}>A</option>
                 <option value="B" {{ request('rombel') == 'B' ? 'selected' : '' }}>B</option>
             </select>
@@ -47,7 +47,7 @@
         {{-- ✅ Status — col-6 di mobile, col-3 di desktop --}}
         <div class="col-6 col-md-3 position-relative">
             <select name="status" id="statusFilter" class="form-select filter-select">
-                <option value="">Semua Status</option>
+                <option value="">Status</option>
                 <option value="lengkap"       {{ request('status') == 'lengkap'       ? 'selected' : '' }}>✅ Lengkap</option>
                 <option value="belum lengkap" {{ request('status') == 'belum lengkap' ? 'selected' : '' }}>⚠️ Belum Lengkap</option>
             </select>
@@ -61,7 +61,7 @@
         {{-- 📅 Urutan Angkatan — col-6 di mobile, col-3 di desktop --}}
         <div class="col-6 col-md-3 position-relative">
             <select name="sort_angkatan" id="sortAngkatan" class="form-select filter-select">
-                <option value="">Urutan Angkatan</option>
+                <option value="">Angkatan</option>
                 <option value="terbaru" {{ request('sort_angkatan') == 'terbaru' ? 'selected' : '' }}>📅 Terbaru</option>
                 <option value="terlama" {{ request('sort_angkatan') == 'terlama' ? 'selected' : '' }}>📆 Terlama</option>
             </select>
@@ -75,7 +75,7 @@
         {{-- 🔤 Urutan Nama — col-6 di mobile, col-3 di desktop --}}
         <div class="col-6 col-md-3 position-relative">
             <select name="sort_nama" id="sortNama" class="form-select filter-select">
-                <option value="">Urutan Nama</option>
+                <option value="">Nama</option>
                 <option value="az" {{ request('sort_nama') == 'az' ? 'selected' : '' }}>🔤 A - Z</option>
                 <option value="za" {{ request('sort_nama') == 'za' ? 'selected' : '' }}>🔡 Z - A</option>
             </select>

@@ -15,29 +15,26 @@
 @section('content')
 <div class="py-2" id="page-kode">
 
-  {{-- ====== Header ====== --}}
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  {{-- ===============================
+      🏷️ HEADER + TOMBOL RESET & TAMBAH
+  ================================ --}}
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
       <i class="bi bi-upc fs-5 text-primary"></i>
       <h5 class="fw-bold text-primary mb-0">Master Kode Surat</h5>
     </div>
-  </div>
-  {{-- ===============================
-      ðŸ” FILTER + TOMBOL TAMBAH
-  ================================ --}}
-  <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
-    
-    {{-- ðŸ” Form Filter --}}
-    <div class="flex-grow-1 kode-filter-search">
-      @include('kode.partials.filter')
-    </div>
 
-    {{-- âž• Tombol Tambah Kode --}}
-    <div>
-      <button type="button" 
-              class="btn btn-primary" 
-              id="btnTambah" 
-              data-bs-toggle="modal" 
+    <div class="d-flex align-items-center gap-2">
+      {{-- 🔄 Tombol Reset (ikon) --}}
+      <button type="button" class="btn btn-icon-reset" id="btnReset" title="Reset Filter">
+        <i class="bi bi-arrow-counterclockwise"></i>
+      </button>
+
+      {{-- ➕ Tombol Tambah Kode --}}
+      <button type="button"
+              class="btn btn-primary"
+              id="btnTambah"
+              data-bs-toggle="modal"
               data-bs-target="#addKodeModal">
         <i class="bi bi-plus-circle"></i> Tambah Kode
       </button>
@@ -45,14 +42,21 @@
   </div>
 
   {{-- ===============================
-      ðŸ“‹ TABEL DATA
+      🔍 FILTER
+  ================================ --}}
+  <div class="kode-filter-search mb-3">
+    @include('kode.partials.filter')
+  </div>
+
+  {{-- ===============================
+      📋 TABEL DATA
   ================================ --}}
   <div id="tableContainer">
     @include('kode.partials.table', ['data' => $data])
   </div>
 
   {{-- ===============================
-      ðŸ“¦ MODALS (Tambah/Edit/Hapus/Detail)
+      📦 MODALS (Tambah/Edit/Hapus/Detail)
   ================================ --}}
   @include('kode.partials.modal')
 </div>
@@ -64,8 +68,3 @@
 @push('page-js')
   @vite(['resources/js/kode.js'])
 @endpush
-
-
-
-
-

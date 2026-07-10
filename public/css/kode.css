@@ -4,49 +4,64 @@
    MENU  : Master Kode (/kode)
    FILE  : public/css/kode.css
    VIEWS : resources/views/kode/
+
+   Catatan revisi:
+   - Styling header tabel, hover row, warna dark mode, dan
+     card/card-footer SUDAH ditangani global oleh layout.css
+     (var --table-head-bg, --bs-table-hover-bg, dll) supaya
+     konsisten dengan menu lain (Peserta Didik, Surat, dst).
+   - Filter search mengikuti pola global .filter-bar milik
+     halaman Master Surat.
    ══════════════════════════════════════════════════════════ */
+
 .table-custom {
   font-size: 0.9rem;
-  text-align: center;
-  border-collapse: collapse;
 }
 
 .table-custom th,
 .table-custom td {
   vertical-align: middle;
   white-space: nowrap;
-  text-align: center;
 }
 
-.table-custom tbody tr:hover {
-  background-color: #f8f9fa;
-  transition: 0.2s ease-in-out;
+/* ── Filter search bar ──────────────────────────────────────────────────── */
+.kode-filter-search .filter-bar {
+  margin-bottom: 0;
 }
 
-.table-header {
-  background-color: #f1f3f5;
-  font-weight: 600;
-  text-transform: uppercase;
+/* ── Tombol Reset (ikon kotak) — sejajar tombol Tambah di header ────────── */
+.btn-icon-reset {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  border-radius: 10px;
+  color: var(--text-color, #495057);
+  font-size: 1.05rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
 }
 
-/* ===========================
-   CARD DAN PAGINATION
-=========================== */
-.card {
-  border-radius: 0.75rem;
+.btn-icon-reset:hover {
+  background: var(--active-color, #0d6efd);
+  border-color: var(--active-color, #0d6efd);
+  color: #fff;
+  transform: rotate(-20deg);
 }
 
-.card-footer {
-  background-color: #f8f9fa;
-  border-top: 1px solid #dee2e6;
+[data-theme="dark"] .btn-icon-reset {
+  background: #263349;
+  border-color: var(--border-color);
+  color: #94a3b8;
 }
 
-/* ===========================
-   DARK MODE SUPPORT
-=========================== */
-[data-theme="dark"] .table-custom {
-  color: #e5e7eb;
+[data-theme="dark"] .btn-icon-reset:hover {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
 }
-
-/* ── Filter search expand ───────────────────────────────────────────────── */
-.kode-filter-search { min-width: 280px; }

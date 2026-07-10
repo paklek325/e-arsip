@@ -25,9 +25,8 @@
                 <i class="bi bi-arrow-counterclockwise fs-5"></i>
             </button>
             {{-- Tombol Tambah Peserta Didik --}}
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambahPesertaDidik" id="btnTambahPesertaDidik">
-                <i class="bi bi-plus-lg me-1"></i>
-                <span class="d-none d-sm-inline">Tambah </span>Peserta Didik
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahPesertaDidik" id="btnTambahPesertaDidik">                <i class="bi bi-plus-lg me-1"></i>
+                Tambah<span class="d-none d-sm-inline"> Peserta Didik</span>
             </button>
         </div>
     </div>

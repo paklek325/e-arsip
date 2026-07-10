@@ -283,16 +283,20 @@ if (window.PesertaDidikApp) {
 
             if (sortAngkatanSelect) {
                 sortAngkatanSelect.addEventListener("change", () => {
-                    if (sortAngkatanSelect.value && sortNamaSelect)
+                    if (sortAngkatanSelect.value && sortNamaSelect) {
                         sortNamaSelect.selectedIndex = 0;
+                        syncCustomSelect(sortNamaSelect);
+                    }
                     applyFilters(true, true);
                 });
             }
 
             if (sortNamaSelect) {
                 sortNamaSelect.addEventListener("change", () => {
-                    if (sortNamaSelect.value && sortAngkatanSelect)
+                    if (sortNamaSelect.value && sortAngkatanSelect) {
                         sortAngkatanSelect.selectedIndex = 0;
+                        syncCustomSelect(sortAngkatanSelect);
+                    }
                     applyFilters(true, true);
                 });
             }
@@ -305,6 +309,7 @@ if (window.PesertaDidikApp) {
                     if (!target) return;
                     if (target.tagName === "SELECT") {
                         target.selectedIndex = 0;
+                        syncCustomSelect(target);
                     } else {
                         target.value = "";
                         document
@@ -321,6 +326,7 @@ if (window.PesertaDidikApp) {
                     const target = $(this.dataset.target);
                     if (!target) return;
                     target.selectedIndex = 0;
+                    syncCustomSelect(target);
                     applyFilters(true, true);
                 });
             });
@@ -338,6 +344,7 @@ if (window.PesertaDidikApp) {
                     document
                         .getElementById("resetSearch")
                         ?.classList.add("d-none");
+                    syncAllCustomSelects();
                     applyFilters(true, true);
                     searchInput?.focus();
                 });
@@ -356,6 +363,7 @@ if (window.PesertaDidikApp) {
                     document
                         .getElementById("resetSearch")
                         ?.classList.add("d-none");
+                    syncAllCustomSelects();
                     applyFilters(true, true);
                     searchInput?.focus();
                 });
@@ -367,6 +375,116 @@ if (window.PesertaDidikApp) {
                 applyFilters(true, true);
             });
         }
+
+        // ============================================================
+        // CUSTOM DROPDOWN — pengganti TAMPILAN <select> native filter
+        // ------------------------------------------------------------
+        // Kenapa: popup pilihan <select> native ukurannya dikendalikan
+        // browser (bukan CSS kita) — di mobile grid 2x2, popup itu bisa
+        // menimpa kolom filter di sebelahnya. Dengan dropdown custom,
+        // lebar popup kita kendalikan sendiri (ikut lebar kolom), jadi
+        // tidak menimpa apa pun.
+        //
+        // <select> ASLI TETAP ADA di DOM (cuma disembunyikan via CSS
+        // .pd-select-native), supaya SEMUA logika filter yang sudah ada
+        // di atas (getCurrentFilters, applyFilters, popstate, reset,
+        // dst) tidak perlu diubah — mereka baca/tulis select.value
+        // seperti biasa. Dropdown custom cuma "cermin" tampilannya.
+        // ============================================================
+        const FILTER_SELECTS = [
+            rombelSelect,
+            statusSelect,
+            sortAngkatanSelect,
+            sortNamaSelect,
+        ].filter(Boolean);
+        const customSelectMap = new Map(); // select -> { trigger, panel }
+
+        function buildCustomSelect(select) {
+            if (!select || customSelectMap.has(select)) return;
+            const wrap = select.parentElement; // .position-relative
+            if (!wrap) return;
+
+            const trigger = document.createElement("div");
+            trigger.className = select.className + " pd-select-trigger";
+            trigger.setAttribute("role", "button");
+            trigger.setAttribute("tabindex", "0");
+            wrap.insertBefore(trigger, select);
+
+            select.classList.add("pd-select-native");
+
+            const panel = document.createElement("div");
+            panel.className = "pd-select-panel";
+            Array.from(select.options).forEach((opt) => {
+                const item = document.createElement("div");
+                item.className = "pd-select-option";
+                item.dataset.value = opt.value;
+                item.textContent = opt.textContent;
+                item.addEventListener("click", () => {
+                    select.value = opt.value;
+                    updateTriggerLabel(select);
+                    closeAllCustomSelects();
+                    // Native change event → semua listener filter yang
+                    // sudah ada (apply, cross-reset sort, dst) tetap jalan.
+                    select.dispatchEvent(new Event("change", { bubbles: true }));
+                });
+                panel.appendChild(item);
+            });
+            wrap.appendChild(panel);
+
+            trigger.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const isOpen = panel.classList.contains("show");
+                closeAllCustomSelects();
+                if (!isOpen) {
+                    panel.classList.add("show");
+                    trigger.classList.add("active");
+                }
+            });
+            trigger.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    trigger.click();
+                } else if (e.key === "Escape") {
+                    closeAllCustomSelects();
+                }
+            });
+
+            customSelectMap.set(select, { trigger, panel });
+            updateTriggerLabel(select);
+        }
+
+        function updateTriggerLabel(select) {
+            const entry = customSelectMap.get(select);
+            if (!entry) return;
+            const opt = select.options[select.selectedIndex];
+            entry.trigger.textContent = opt ? opt.textContent : "";
+            entry.panel.querySelectorAll(".pd-select-option").forEach((item) => {
+                item.classList.toggle(
+                    "is-selected",
+                    item.dataset.value === select.value
+                );
+            });
+        }
+
+        function closeAllCustomSelects() {
+            customSelectMap.forEach(({ trigger, panel }) => {
+                panel.classList.remove("show");
+                trigger.classList.remove("active");
+            });
+        }
+
+        // Dipanggil setiap kali select.value diubah SECARA PROGRAMATIK
+        // (bukan lewat klik opsi custom) — mis. tombol reset, popstate,
+        // init halaman — supaya label trigger ikut ter-update.
+        function syncCustomSelect(select) {
+            if (select && customSelectMap.has(select)) updateTriggerLabel(select);
+        }
+        function syncAllCustomSelects() {
+            FILTER_SELECTS.forEach(syncCustomSelect);
+        }
+
+        document.addEventListener("click", closeAllCustomSelects);
+        FILTER_SELECTS.forEach(buildCustomSelect);
 
         // ============================================================
         // POPSTATE — sinkronisasi saat back/forward
@@ -381,6 +499,7 @@ if (window.PesertaDidikApp) {
                 sortAngkatanSelect.value = params.get("sort_angkatan") || "";
             if (sortNamaSelect)
                 sortNamaSelect.value = params.get("sort_nama") || "";
+            syncAllCustomSelects();
 
             // Tampilkan/sembunyikan tombol reset search
             const resetSearch = document.getElementById("resetSearch");
@@ -561,7 +680,7 @@ if (window.PesertaDidikApp) {
                 }
 
                 if (body) body.appendChild(content);
-                new bootstrap.Modal(modalEl).show();
+                bootstrap.Modal.getOrCreateInstance(modalEl).show();
             } catch (err) {
                 console.error(err);
                 toast("Gagal memuat file.", "error");
@@ -801,7 +920,7 @@ if (window.PesertaDidikApp) {
                 refreshEditDownloadAll();
 
                 const modalEl = $("#modalEditPesertaDidik");
-                new bootstrap.Modal(modalEl).show();
+                bootstrap.Modal.getOrCreateInstance(modalEl).show();
 
                 modalEl.addEventListener(
                     "hidden.bs.modal",
@@ -958,7 +1077,7 @@ if (window.PesertaDidikApp) {
                 const modalEl = $("#modalDetailPesertaDidik");
                 if (modalEl) {
                     modalEl.dataset.pesertaDidikId = id;
-                    new bootstrap.Modal(modalEl).show();
+                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
                 }
             } catch (err) {
                 console.error(err);
@@ -1270,7 +1389,7 @@ if (window.PesertaDidikApp) {
                                 ?.textContent?.trim();
                         const hapusNama = $("#hapus_nama_peserta_didik");
                         if (nama && hapusNama) hapusNama.textContent = nama;
-                        new bootstrap.Modal(
+                        bootstrap.Modal.getOrCreateInstance(
                             $("#modalHapusPesertaDidik")
                         ).show();
                     };
@@ -1413,6 +1532,7 @@ if (window.PesertaDidikApp) {
             if (statusSelect) statusSelect.selectedIndex = 0;
             if (sortAngkatanSelect) sortAngkatanSelect.selectedIndex = 0;
             if (sortNamaSelect) sortNamaSelect.selectedIndex = 0;
+            syncAllCustomSelects();
             document.getElementById("resetSearch")?.classList.add("d-none");
 
             // Bersihkan query string di URL

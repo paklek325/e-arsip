@@ -46,6 +46,14 @@
         resetButtonId: "btn_reset_filter",  // tombol Reset Filter
         tampilkanButtonId: "btn_tampilkan",     // (tidak dipakai, reset auto-load)
         downloadGroupId: "download_group",    // grup tombol Download
+
+        // Custom dropdown "Bulan" (menggantikan tampilan native <select> di mobile)
+        bulanWrapId: "bulan_select_wrap",
+        bulanTriggerId: "bulan_trigger",
+        bulanTriggerLabelId: "bulan_trigger_label",
+        bulanPanelId: "bulan_panel",
+        bulanBackdropId: "bulan_backdrop",
+        bulanPanelCloseId: "bulan_panel_close",
     };
 
     // ── Shortcut getElementById ───────────────────────────────────────────
@@ -318,6 +326,146 @@
     function toggleBulanGroup() { syncTipeFromBulan(); }
 
     /**
+     * ─────────────────────────────────────────────────────────────────
+     * CUSTOM DROPDOWN "BULAN"
+     * ─────────────────────────────────────────────────────────────────
+     * MASALAH : <select> native dirender oleh OS/browser sendiri
+     *           (terutama di mobile), sehingga tampilannya tidak bisa
+     *           di-style dan sering terlihat tidak konsisten dengan
+     *           tema aplikasi (lihat laporan.css bagian "CUSTOM SELECT").
+     * SOLUSI  : #bulan (select asli) tetap jadi satu-satunya sumber
+     *           nilai form — disembunyikan secara visual saja. Tombol
+     *           #bulan_trigger + panel #bulan_panel adalah tampilan
+     *           pengganti yang sepenuhnya kita kontrol.
+     * SINKRON : setiap kali user memilih opsi di panel kustom →
+     *           set bulanSelect.value lalu dispatchEvent("change")
+     *           supaya listener change yang sudah ada di initPage()
+     *           (filterChangeHandler → loadLaporan) tetap berjalan
+     *           TANPA perlu diubah sama sekali.
+     */
+    function syncBulanTriggerLabel() {
+        const select = $id(SELECTORS.bulanSelectId);
+        const label = $id(SELECTORS.bulanTriggerLabelId);
+        if (!select || !label) return;
+
+        const selected = select.options[select.selectedIndex];
+        label.textContent = selected ? selected.textContent.trim() : "-- Semua Bulan --";
+
+        // Tandai opsi aktif di panel (untuk highlight & aria-selected)
+        const panel = $id(SELECTORS.bulanPanelId);
+        if (panel) {
+            panel.querySelectorAll(".custom-select-option").forEach((opt) => {
+                const isSelected = opt.getAttribute("data-value") === (select.value || "");
+                opt.classList.toggle("is-selected", isSelected);
+                opt.setAttribute("aria-selected", isSelected ? "true" : "false");
+            });
+        }
+    }
+
+    function openBulanPanel() {
+        const trigger = $id(SELECTORS.bulanTriggerId);
+        const panel = $id(SELECTORS.bulanPanelId);
+        const backdrop = $id(SELECTORS.bulanBackdropId);
+        if (!trigger || !panel) return;
+
+        trigger.classList.add("is-open");
+        trigger.setAttribute("aria-expanded", "true");
+        panel.classList.add("is-open");
+        if (backdrop) backdrop.classList.add("is-open");
+
+        // Cegah scroll body di belakang bottom-sheet saat mobile terbuka
+        document.body.classList.add("custom-select-locked");
+    }
+
+    function closeBulanPanel() {
+        const trigger = $id(SELECTORS.bulanTriggerId);
+        const panel = $id(SELECTORS.bulanPanelId);
+        const backdrop = $id(SELECTORS.bulanBackdropId);
+        if (!trigger || !panel) return;
+
+        trigger.classList.remove("is-open");
+        trigger.setAttribute("aria-expanded", "false");
+        panel.classList.remove("is-open");
+        if (backdrop) backdrop.classList.remove("is-open");
+
+        document.body.classList.remove("custom-select-locked");
+    }
+
+    function isBulanPanelOpen() {
+        const panel = $id(SELECTORS.bulanPanelId);
+        return !!(panel && panel.classList.contains("is-open"));
+    }
+
+    function selectBulanOption(optionEl) {
+        if (!optionEl) return;
+        const select = $id(SELECTORS.bulanSelectId);
+        if (!select) return;
+
+        const value = optionEl.getAttribute("data-value") || "";
+        if (select.value !== value) {
+            select.value = value;
+            // Trigger listener "change" yang sudah ada di initPage()
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+
+        syncBulanTriggerLabel();
+        closeBulanPanel();
+
+        const trigger = $id(SELECTORS.bulanTriggerId);
+        if (trigger) trigger.focus();
+    }
+
+    function initCustomSelect() {
+        const wrap = $id(SELECTORS.bulanWrapId);
+        const trigger = $id(SELECTORS.bulanTriggerId);
+        const panel = $id(SELECTORS.bulanPanelId);
+        const backdrop = $id(SELECTORS.bulanBackdropId);
+        const closeBtn = $id(SELECTORS.bulanPanelCloseId);
+
+        if (!wrap || !trigger || !panel) return;
+        if (wrap.__customSelectInit) return; // hindari double-binding
+        wrap.__customSelectInit = true;
+
+        trigger.addEventListener("click", function () {
+            if (isBulanPanelOpen()) {
+                closeBulanPanel();
+            } else {
+                openBulanPanel();
+            }
+        });
+
+        panel.addEventListener("click", function (e) {
+            const opt = e.target.closest(".custom-select-option");
+            if (opt) selectBulanOption(opt);
+        });
+
+        if (closeBtn) {
+            closeBtn.addEventListener("click", closeBulanPanel);
+        }
+        if (backdrop) {
+            backdrop.addEventListener("click", closeBulanPanel);
+        }
+
+        // Klik di luar wrapper (desktop dropdown) → tutup panel
+        document.addEventListener("click", function (e) {
+            if (!isBulanPanelOpen()) return;
+            if (wrap.contains(e.target)) return;
+            closeBulanPanel();
+        });
+
+        // Tombol Escape → tutup panel
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && isBulanPanelOpen()) {
+                closeBulanPanel();
+                trigger.focus();
+            }
+        });
+
+        // Pastikan label & highlight opsi sesuai nilai select saat init
+        syncBulanTriggerLabel();
+    }
+
+    /**
      * handleResetFilter — Tombol "Reset Filter" (#btn_reset_filter)
      * ─────────────────────────────────────────────────────────
      * MENU    : Laporan — sidebar filter (laporan/partials/filter.blade.php)
@@ -348,6 +496,7 @@
 
         // 2. Sinkron tipe (akan jadi Tahun karena bulan dikosongkan)
         syncTipeFromBulan();
+        syncBulanTriggerLabel();
 
         // 3. Bersihkan parameter filter di URL (tanpa membuat history baru)
         const currentUrl = new URL(location.href);
@@ -519,6 +668,7 @@
         if (formBulan) formBulan.value = bulan;
 
         syncTipeFromBulan();
+        syncBulanTriggerLabel();
     }
 
     /**
@@ -572,6 +722,7 @@
         }
 
         attachDelegatedHandlers();
+        initCustomSelect();
     }
 
     /**

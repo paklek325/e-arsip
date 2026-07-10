@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ChatController extends Controller
 {
@@ -30,6 +32,28 @@ class ChatController extends Controller
         $message = trim($request->message);
         $page    = $request->get('page', '/dashboard');
         $history = array_slice($request->input('history', []), -6);
+
+        // ══════════════════════════════════════════════════════════
+        // AKSI TULIS DATA — dieksekusi LANGSUNG ke database, TANPA lewat AI.
+        // Ini penting: AI (LLM) tidak bisa benar-benar mengubah data, ia
+        // hanya menghasilkan teks. Kalau kita biarkan LLM "menjawab seolah
+        // sudah mengubah", itu HALUSINASI — tabel di halaman tidak pernah
+        // benar-benar berubah. Jadi untuk perintah yang jelas maksudnya
+        // mengubah data (mis. "ubah nama hasan jadi hasani"), kita proses
+        // manual di PHP dulu: cari datanya, validasi, baru update sungguhan.
+        // ══════════════════════════════════════════════════════════
+        try {
+            $writeResult = $this->tryHandlePesertaDidikRename($message);
+            if ($writeResult !== null) {
+                return response()->json(array_merge(
+                    ['success' => true, 'suggestions' => []],
+                    $writeResult
+                ));
+            }
+        } catch (\Throwable $e) {
+            Log::error('ChatController write-action error: ' . $e->getMessage());
+            // fallback: biarkan lanjut ke alur normal (AI) di bawah
+        }
 
         try {
             $contextData = $this->gatherContext($message);
@@ -603,6 +627,100 @@ PROMPT;
             'perihal' => mb_substr($s->perihal, 0, 80),
             'dari/ke' => mb_substr($s->instansi, 0, 60),
         ])->toArray(), $meta, $urlSemua];
+    }
+
+    /* ============================================================
+     * AKSI: UBAH NAMA PESERTA_DIDIK LEWAT CHAT
+     * ──────────────────────────────────────────────────────────
+     * Mengenali perintah seperti:
+     *   "ubah nama hasan jadi hasani"
+     *   "ganti hasan menjadi hasani"
+     *   "hasan tolong diubah ke hasani"
+     * Jika cocok → cari datanya di DB, lalu UPDATE SUNGGUHAN
+     * (termasuk pindah folder dokumen karena path folder berbasis nama).
+     * Return null jika pesan bukan perintah ubah nama (biar lanjut ke AI).
+     * ============================================================ */
+    private function tryHandlePesertaDidikRename(string $message): ?array
+    {
+        $trimmed = trim($message);
+        $msg     = mb_strtolower($trimmed);
+
+        // Field lain (rombel, status, dll) belum didukung di sini — biarkan
+        // pesan seperti itu lanjut ke alur AI biasa (sekadar ngobrol/panduan).
+        foreach (['rombel', 'status', 'kelamin', 'angkatan', 'tahun ', 'alamat', 'tanggal lahir', 'tempat lahir'] as $f) {
+            if (str_contains($msg, $f)) return null;
+        }
+
+        $aksi = 'ubah|ganti|rubah|edit|update|perbarui';
+
+        // Kata sambung/preposisi yang menandai nama baru SUDAH SELESAI, sehingga
+        // sisa kalimat setelahnya (mis. "...jadi rani pada menu peserta didik")
+        // tidak ikut tertangkap sebagai bagian dari nama baru.
+        $stopwords = 'pada|di|ke|untuk|dari|dengan|oleh|karena|supaya|agar|dan|atau|yang|yg|sama|via|lewat|melalui|menu|halaman|tabel|kolom|data';
+
+        // Pola 1: "ubah nama hasan jadi hasani" (kata aksi di depan)
+        $pola1 = '/\b(?:' . $aksi . ')\b\s+(?:nama\s+)?(?:peserta\s*didik\s+)?(?:yang\s+)?(?:bernama\s+)?([a-zA-Z][a-zA-Z .]{1,39}?)\s+(?:jadi|menjadi|ke)\s+([a-zA-Z][a-zA-Z .]{0,38}?)(?=\s+(?:' . $stopwords . ')\b|[.!?]*$)/iu';
+        // Pola 2: "hasan tolong diubah jadi hasani" (nama lama di depan, kata aksi di tengah)
+        $pola2 = '/^([a-zA-Z][a-zA-Z .]{1,39}?)\s+(?:tolong\s+|mohon\s+)?(?:di)?(?:' . $aksi . ')\b\s+(?:jadi|menjadi|ke)\s+([a-zA-Z][a-zA-Z .]{0,38}?)(?=\s+(?:' . $stopwords . ')\b|[.!?]*$)/iu';
+
+        if (!preg_match($pola1, $trimmed, $m) && !preg_match($pola2, $trimmed, $m)) {
+            return null;
+        }
+
+        $namaLama = trim($m[1]);
+        $namaBaru = trim(preg_replace('/[.!?]+$/', '', $m[2]));
+
+        if ($namaLama === '' || $namaBaru === '' || mb_strtolower($namaLama) === mb_strtolower($namaBaru)) {
+            return null;
+        }
+
+        // Cari data — prioritaskan kecocokan PERSIS nama, baru fallback ke LIKE
+        $kandidat = PesertaDidik::whereRaw('LOWER(nama_peserta_didik) = ?', [mb_strtolower($namaLama)])->get();
+        if ($kandidat->isEmpty()) {
+            $kandidat = PesertaDidik::whereRaw('LOWER(nama_peserta_didik) LIKE ?', ['%' . mb_strtolower($namaLama) . '%'])->limit(6)->get();
+        }
+
+        if ($kandidat->isEmpty()) {
+            return ['message' => "Maaf, saya tidak menemukan peserta didik dengan nama **{$namaLama}** di database. Coba periksa lagi ejaannya ya. 🔍"];
+        }
+
+        if ($kandidat->count() > 1) {
+            $list = $kandidat->map(fn($p) => "- {$p->nama_peserta_didik} (Rombel {$p->rombel}, Angkatan {$p->tahun_angkatan})")->implode("\n");
+            return ['message' => "Ada beberapa peserta didik dengan nama mirip **{$namaLama}**:\n\n{$list}\n\nSebutkan nama lengkapnya atau tambahkan rombel/angkatan supaya saya bisa update yang tepat ya. 🙏"];
+        }
+
+        /** @var PesertaDidik $pd */
+        $pd          = $kandidat->first();
+        $namaSebelum = $pd->nama_peserta_didik;
+
+        // Path folder dokumen berbasis nama (lihat PesertaDidikController::pathFolder) —
+        // jadi kalau nama berubah, folder & isinya HARUS ikut dipindahkan supaya
+        // dokumen yang sudah diunggah tidak "hilang" (yatim di folder lama).
+        $oldFolder = 'peserta_didik/' . $pd->tahun_angkatan . '/' . $pd->rombel . '/' . Str::slug($pd->nama_peserta_didik);
+
+        $pd->update(['nama_peserta_didik' => $namaBaru]);
+
+        $newFolder = 'peserta_didik/' . $pd->tahun_angkatan . '/' . $pd->rombel . '/' . Str::slug($pd->nama_peserta_didik);
+
+        if ($oldFolder !== $newFolder) {
+            $disk = Storage::disk('public');
+            if ($disk->exists($oldFolder)) {
+                $disk->makeDirectory($newFolder);
+                foreach ($disk->allFiles($oldFolder) as $file) {
+                    $relative = Str::after($file, $oldFolder . '/');
+                    if (!$relative) $relative = basename($file);
+                    $disk->copy($file, $newFolder . '/' . $relative);
+                }
+                $disk->deleteDirectory($oldFolder);
+            }
+        }
+
+        Log::info("[Arsy] Nama peserta_didik diubah via chat: '{$namaSebelum}' -> '{$namaBaru}' (id: {$pd->id_peserta_didik})");
+
+        return [
+            'message' => "Siap! ✅ Nama peserta didik **{$namaSebelum}** sudah saya perbarui menjadi **{$namaBaru}** di database. Tabelnya akan otomatis ter-refresh sebentar lagi. Ada lagi yang bisa saya bantu? 😊",
+            'refresh' => ['menu' => 'peserta_didik'],
+        ];
     }
 
     /* ============================================================

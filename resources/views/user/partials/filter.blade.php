@@ -6,12 +6,8 @@
            class="form-control flex-grow-1"
            placeholder="Cari nama atau email..."
            value="{{ request('search') }}">
-    <button type="button" class="btn btn-outline-secondary flex-shrink-0" id="btnReset">
-      <i class="bi bi-arrow-counterclockwise"></i> Reset
+    <button type="button" class="btn btn-reset-icon flex-shrink-0" id="btnReset" title="Reset">
+      <i class="bi bi-arrow-counterclockwise"></i>
     </button>
   </div>
 </form>
-
-
-
-

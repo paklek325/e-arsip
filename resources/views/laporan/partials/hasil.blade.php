@@ -80,9 +80,9 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
                         <tr>
                             <th class="col-no">No</th>
                             <th>Bulan</th>
-                            <th>Surat Masuk</th>
-                            <th>Surat Keluar</th>
-                            <th>Total Surat</th>
+                            <th><span class="full-text">Surat Masuk</span><span class="short-text">Masuk</span></th>
+                            <th><span class="full-text">Surat Keluar</span><span class="short-text">Keluar</span></th>
+                            <th><span class="full-text">Total Surat</span><span class="short-text">Total</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -99,7 +99,10 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
 
                             <tr @if($tot == 0) class="row-empty" @endif>
                                 <td class="col-no">{{ $loop->iteration }}</td>
-                                <td>{{ $row->bulan_nama }}</td>
+                                <td>
+                                    <span class="full-text">{{ $row->bulan_nama }}</span>
+                                    <span class="short-text">{{ \Illuminate\Support\Str::limit($row->bulan_nama, 3, '') }}</span>
+                                </td>
 
                                 <td>
                                     @if($masuk > 0)
@@ -222,15 +225,18 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
                         <tr>
                             <th class="col-no">No</th>
                             <th>Bulan</th>
-                            <th>Surat Masuk</th>
-                            <th>Surat Keluar</th>
-                            <th>Total Surat</th>
+                            <th><span class="full-text">Surat Masuk</span><span class="short-text">Masuk</span></th>
+                            <th><span class="full-text">Surat Keluar</span><span class="short-text">Keluar</span></th>
+                            <th><span class="full-text">Total Surat</span><span class="short-text">Total</span></th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td class="col-no">1</td>
-                            <td><strong>{{ $bulan_nama }}</strong></td>
+                            <td>
+                                <strong class="full-text">{{ $bulan_nama }}</strong>
+                                <strong class="short-text">{{ \Illuminate\Support\Str::limit($bulan_nama, 3, '') }}</strong>
+                            </td>
                             <td>
                                 @if($monthlyTotalMasuk > 0)
                                     <a href="{{ $urlMasuk }}" class="badge-masuk">{{ $monthlyTotalMasuk }} Surat</a>

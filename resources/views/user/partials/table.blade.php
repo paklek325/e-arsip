@@ -28,9 +28,20 @@
           <td class="fw-medium text-start">{{ $u->name }}</td>
           <td class="text-muted">{{ $u->email }}</td>
           <td>
-            <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-1 rounded-pill badge-role">
-              {{ $u->role?->name ?? '-' }}
-            </span>
+            @php $roleName = $u->role?->name ?? '-'; @endphp
+            @if(strtolower($roleName) === 'kepala staf')
+              <span class="badge-role-pill badge-role-kepala">
+                <i class="bi bi-award-fill"></i> {{ $roleName }}
+              </span>
+            @elseif(strtolower($roleName) === 'staf')
+              <span class="badge-role-pill badge-role-staf">
+                <i class="bi bi-person-badge-fill"></i> {{ $roleName }}
+              </span>
+            @else
+              <span class="badge-role-pill badge-role-default">
+                <i class="bi bi-person-fill"></i> {{ $roleName }}
+              </span>
+            @endif
           </td>
           <td class="text-muted user-date-col">
             {{ $u->created_at ? $u->created_at->format('d M Y') : '-' }}
@@ -79,7 +90,3 @@
   </div>
   @endif
 </div>
-
-
-
-
