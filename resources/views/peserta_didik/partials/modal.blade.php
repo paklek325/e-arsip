@@ -13,7 +13,7 @@
       {{-- ALERT (AJAX) --}}
       <div class="alert alert-danger d-none mx-3 mt-3" id="alertTambahPesertaDidik"></div>
 
-      <form id="formTambahPesertaDidik" enctype="multipart/form-data" autocomplete="off">
+      <form id="formTambahPesertaDidik" enctype="multipart/form-data" autocomplete="off" novalidate>
         @csrf
 
         <div class="modal-body">
@@ -24,7 +24,7 @@
               <input type="text" name="nama_peserta_didik" id="add_nama_peserta_didik" class="form-control" required>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-3 position-relative">
               <label class="form-label fw-semibold">Jenis Kelamin</label>
               <select name="jenis_kelamin" id="add_jenis_kelamin" class="form-select" required>
                 <option value="">-- Pilih --</option>
@@ -48,7 +48,7 @@
               <input type="date" name="tanggal_lahir" id="add_tanggal_lahir" class="form-control" required>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-6 position-relative">
               <label class="form-label fw-semibold">Rombel</label>
               <select name="rombel" id="add_rombel" class="form-select" required>
                 <option value="">-- Pilih Rombel --</option>
@@ -72,7 +72,7 @@
               'file_kk' => 'Kartu Keluarga',
               'file_akte' => 'Akte Kelahiran',
               'file_ktp' => 'KTP Orang Tua',
-              'file_kts' => 'Kartu Peserta Didik',
+              'file_kts' => '<span class="d-none d-sm-inline">Kartu Peserta Didik</span><span class="d-inline d-sm-none">KTS</span>',
               'file_foto' => 'Foto 3x4',
               'file_ijazah_smp' => 'Ijazah SMP',
               'file_ijazah_sma' => 'Ijazah SMA <span class="badge bg-secondary fw-normal ms-1">Opsional</span>',
@@ -102,7 +102,7 @@
 
         <div class="modal-footer">
           <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-success">Simpan</button>
+          <button type="submit" class="btn btn-primary">Simpan</button>
         </div>
 
       </form>
@@ -140,7 +140,7 @@
               <input type="text" name="nama_peserta_didik" id="edit_nama_peserta_didik" class="form-control">
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-3 position-relative">
               <label class="form-label fw-semibold">Jenis Kelamin</label>
               <select name="jenis_kelamin" id="edit_jenis_kelamin" class="form-select">
                 <option value="">-- Pilih --</option>
@@ -164,7 +164,7 @@
               <input type="date" name="tanggal_lahir" id="edit_tanggal_lahir" class="form-control">
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-6 position-relative">
               <label class="form-label fw-semibold">Rombel</label>
               <select name="rombel" id="edit_rombel" class="form-select">
                 <option value="">-- Pilih Rombel --</option>

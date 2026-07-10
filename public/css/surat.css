@@ -275,7 +275,49 @@
   color: #f87171 !important;
 }
 
-/* modal global → dipindah ke layout.css */
+/* =======================================================
+   📝 CUSTOM DROPDOWN DI DALAM MODAL SURAT
+   -------------------------------------------------------
+   .pd-select-panel di filter bar punya z-index:40.
+   Di dalam modal Bootstrap (z-index ~1055) panel perlu
+   z-index lebih tinggi agar tidak tertutup oleh konten
+   modal lain. Tambahkan juga z-index positional stacking
+   pada container col agar panel keluar di atas form.
+======================================================= */
+#addSuratModal .pd-select-panel,
+#editSuratModal .pd-select-panel {
+  z-index: 1080;
+  /* Alinyemen sempurna dengan input-group / form control yang berada di dalam col padding.
+     Bootstrap meletakkan content di col-md-* tergeser oleh padding setengah dari gutter.
+     Dengan menyamakan left & right dengan padding tersebut, panel tidak akan menjorok keluar. */
+  left: calc(var(--bs-gutter-x, 1.5rem) * 0.5) !important;
+  right: calc(var(--bs-gutter-x, 1.5rem) * 0.5) !important;
+  width: auto !important;
+}
+
+/* Penyesuaian panah chevron select box di modal: karena di modal tidak ada tombol X (reset filter),
+   panah chevron digeser kembali ke kanan dekat tepi, tidak terlalu ke tengah (seperti di filter-bar). */
+#addSuratModal .pd-select-trigger,
+#editSuratModal .pd-select-trigger {
+  background-position: right 1rem center !important;
+  padding-right: 2.5rem !important;
+}
+
+/* Sembunyikan trigger custom jika select native-nya di-disable atau disembunyikan */
+.pd-select-native[style*="display: none"] + .pd-select-trigger,
+.pd-select-native[disabled] + .pd-select-trigger,
+.pd-select-native.d-none + .pd-select-trigger {
+  display: none !important;
+}
+
+/* Trigger di dalam input-group: ambil flex agar tidak
+   menggeser tombol kalender */
+#addSuratModal .input-group .pd-select-trigger,
+#editSuratModal .input-group .pd-select-trigger {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 
 .modal-header .btn-close { opacity: 0.8; transition: opacity 0.2s; }
 .modal-header .btn-close:hover { opacity: 1; }
@@ -395,6 +437,80 @@
   .search-group .form-control,
   #btnAiSearch {
     height: 44px;
+  }
+
+  /* ── Modal Tambah & Edit Surat — Mobile ─────────────────────────────── */
+
+  /* Semua select di dalam modal surat: tinggi sama seperti filter (44px),
+     tidak boleh overflow viewport, dan teks tidak terpotong */
+  #addSuratModal .form-select,
+  #editSuratModal .form-select {
+    height: 44px;
+    font-size: 0.88rem;
+    min-width: 0;
+  }
+
+  /* Input-group (select + tombol kalender / generate) — jangan overflow */
+  #addSuratModal .input-group,
+  #editSuratModal .input-group {
+    flex-wrap: nowrap;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  /* Semua form-control di dalam input-group modal: tinggi konsisten 44px */
+  #addSuratModal .input-group .form-control,
+  #addSuratModal .input-group .form-select,
+  #editSuratModal .input-group .form-control,
+  #editSuratModal .input-group .form-select {
+    height: 44px;
+    font-size: 0.88rem;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  /* Tombol kalender / generate: ukuran compact, tidak mengambil terlalu lebar */
+  #addSuratModal .input-group .btn,
+  #editSuratModal .input-group .btn {
+    height: 44px;
+    padding: 0 0.75rem;
+    flex-shrink: 0;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  /* Generate button: teks "Generate" dipersingkat agar muat di mobile */
+  #btnGenerateNoSuratAdd .bi,
+  #btnGenerateNoSuratEdit .bi {
+    margin-right: 0 !important;
+  }
+  #btnGenerateNoSuratAdd,
+  #btnGenerateNoSuratEdit {
+    font-size: 0 !important; /* sembunyikan teks, tampilkan hanya icon */
+    padding: 0 0.7rem !important;
+  }
+  #btnGenerateNoSuratAdd .bi,
+  #btnGenerateNoSuratEdit .bi {
+    font-size: 1rem !important;
+  }
+
+  /* Semua form-control standalone (bukan di input-group) di modal surat */
+  #addSuratModal .modal-body .form-control:not(.input-group .form-control),
+  #editSuratModal .modal-body .form-control:not(.input-group .form-control) {
+    font-size: 0.88rem;
+  }
+
+  /* Modal body padding lebih rapat di mobile */
+  #addSuratModal .modal-body,
+  #editSuratModal .modal-body {
+    padding: 0.85rem 0.9rem;
+  }
+
+  /* Row gap sedikit lebih kecil */
+  #addSuratModal .row.g-3,
+  #editSuratModal .row.g-3 {
+    --bs-gutter-y: 0.65rem;
+    --bs-gutter-x: 0.65rem;
   }
 }
 

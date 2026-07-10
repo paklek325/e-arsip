@@ -127,41 +127,41 @@
                                     data-default="{{ asset('assets/img/default_staf.png') }}"
                                     onerror="this.src='{{ asset('assets/img/default_staf.png') }}'; this.onerror=null;"
                                     width="100" height="100"
-                                    loading="lazy" decoding="async">
+                                    loading="lazy" decoding="async" alt="Pratinjau Foto Profil">
                             </div>
                             <input type="file" name="foto" id="profil_foto" class="form-control mt-2"
-                                accept="image/jpeg,image/png,image/jpg">
+                                accept="image/jpeg,image/png,image/jpg" aria-label="Pilih Foto Profil">
                             <small class="text-muted">Format JPG/PNG, maks. 4MB</small>
                             <div class="invalid-feedback d-block" id="error_profil_foto"></div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Nama</label>
+                            <label class="form-label" for="profil_name">Nama</label>
                             <input type="text" name="name" id="profil_name" class="form-control"
-                                value="{{ $authUser->name }}" required>
+                                value="{{ $authUser->name }}" required autocomplete="name">
                             <div class="invalid-feedback" id="error_profil_name"></div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
+                            <label class="form-label" for="profil_email">Email</label>
                             <input type="email" name="email" id="profil_email" class="form-control"
-                                value="{{ $authUser->email }}" required>
+                                value="{{ $authUser->email }}" required autocomplete="email">
                             <div class="invalid-feedback" id="error_profil_email"></div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Role</label>
-                            <input type="text" class="form-control bg-body-secondary" value="{{ $roleName }}"
-                                readonly>
+                            <label class="form-label" for="profil_role">Role</label>
+                            <input type="text" id="profil_role" name="role" class="form-control bg-body-secondary" value="{{ $roleName }}"
+                                readonly autocomplete="off">
                             <div class="form-text">Role tidak dapat diubah sendiri.</div>
                         </div>
 
                         <div class="mb-1">
-                            <label class="form-label">Password Baru (Opsional)</label>
+                            <label class="form-label" for="profil_password">Password Baru (Opsional)</label>
                             <div class="input-group">
                                 <input type="password" name="password" id="profil_password" class="form-control"
-                                    placeholder="Kosongkan jika tidak ingin mengubah">
-                                <span class="input-group-text togglePasswordProfil">
+                                    placeholder="Kosongkan jika tidak ingin mengubah" autocomplete="new-password">
+                                <span class="input-group-text togglePasswordProfil" style="cursor: pointer;">
                                     <i class="bi bi-eye-slash"></i>
                                 </span>
                             </div>

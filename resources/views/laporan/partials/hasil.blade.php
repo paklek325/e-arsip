@@ -106,7 +106,7 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
 
                                 <td>
                                     @if($masuk > 0)
-                                        <a href="{{ $urlMasuk }}" class="badge-masuk">{{ $masuk }} Surat</a>
+                                        <a href="{{ $urlMasuk }}" class="badge-masuk">{{ $masuk }} <span class="full-text">Surat</span></a>
                                     @else
                                         <span class="badge-zero">0</span>
                                     @endif
@@ -114,7 +114,7 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
 
                                 <td>
                                     @if($keluar > 0)
-                                        <a href="{{ $urlKeluar }}" class="badge-keluar">{{ $keluar }} Surat</a>
+                                        <a href="{{ $urlKeluar }}" class="badge-keluar">{{ $keluar }} <span class="full-text">Surat</span></a>
                                     @else
                                         <span class="badge-zero">0</span>
                                     @endif
@@ -122,7 +122,7 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
 
                                 <td>
                                     @if($tot > 0)
-                                        <a href="{{ $urlSemua }}" class="badge-total">{{ $tot }} Surat</a>
+                                        <a href="{{ $urlSemua }}" class="badge-total">{{ $tot }} <span class="full-text">Surat</span></a>
                                     @else
                                         <span class="badge-zero">0</span>
                                     @endif
@@ -136,21 +136,21 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
                             <td colspan="2"><strong>TOTAL TAHUN {{ $tahun }}</strong></td>
                             <td>
                                 @if($tmTotal > 0)
-                                    <a href="{{ $urlTotalMasuk }}" class="badge-masuk">{{ $tmTotal }} Surat</a>
+                                    <a href="{{ $urlTotalMasuk }}" class="badge-masuk">{{ $tmTotal }} <span class="full-text">Surat</span></a>
                                 @else
                                     <span class="badge-zero">0</span>
                                 @endif
                             </td>
                             <td>
                                 @if($tkTotal > 0)
-                                    <a href="{{ $urlTotalKeluar }}" class="badge-keluar">{{ $tkTotal }} Surat</a>
+                                    <a href="{{ $urlTotalKeluar }}" class="badge-keluar">{{ $tkTotal }} <span class="full-text">Surat</span></a>
                                 @else
                                     <span class="badge-zero">0</span>
                                 @endif
                             </td>
                             <td>
                                 @if(($tmTotal + $tkTotal) > 0)
-                                    <a href="{{ $urlTotalSemua }}" class="badge-total">{{ $tmTotal + $tkTotal }} Surat</a>
+                                    <a href="{{ $urlTotalSemua }}" class="badge-total">{{ $tmTotal + $tkTotal }} <span class="full-text">Surat</span></a>
                                 @else
                                     <span class="badge-zero">0</span>
                                 @endif
@@ -239,21 +239,21 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
                             </td>
                             <td>
                                 @if($monthlyTotalMasuk > 0)
-                                    <a href="{{ $urlMasuk }}" class="badge-masuk">{{ $monthlyTotalMasuk }} Surat</a>
+                                    <a href="{{ $urlMasuk }}" class="badge-masuk">{{ $monthlyTotalMasuk }} <span class="full-text">Surat</span></a>
                                 @else
                                     <span class="badge-zero">0</span>
                                 @endif
                             </td>
                             <td>
                                 @if($monthlyTotalKeluar > 0)
-                                    <a href="{{ $urlKeluar }}" class="badge-keluar">{{ $monthlyTotalKeluar }} Surat</a>
+                                    <a href="{{ $urlKeluar }}" class="badge-keluar">{{ $monthlyTotalKeluar }} <span class="full-text">Surat</span></a>
                                 @else
                                     <span class="badge-zero">0</span>
                                 @endif
                             </td>
                             <td>
                                 @if($totalBulan > 0)
-                                    <a href="{{ $urlSemua }}" class="badge-total">{{ $totalBulan }} Surat</a>
+                                    <a href="{{ $urlSemua }}" class="badge-total">{{ $totalBulan }} <span class="full-text">Surat</span></a>
                                 @else
                                     <span class="badge-zero">0</span>
                                 @endif
@@ -266,21 +266,21 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
                             <td colspan="2"><strong>TOTAL BULAN {{ strtoupper($bulan_nama ?? '') }}</strong></td>
                             <td>
                                 @if($monthlyTotalMasuk > 0)
-                                    <a href="{{ $urlMasuk }}" class="badge-masuk">{{ $monthlyTotalMasuk }} Surat</a>
+                                    <a href="{{ $urlMasuk }}" class="badge-masuk">{{ $monthlyTotalMasuk }} <span class="full-text">Surat</span></a>
                                 @else
                                     <span class="badge-zero">0</span>
                                 @endif
                             </td>
                             <td>
                                 @if($monthlyTotalKeluar > 0)
-                                    <a href="{{ $urlKeluar }}" class="badge-keluar">{{ $monthlyTotalKeluar }} Surat</a>
+                                    <a href="{{ $urlKeluar }}" class="badge-keluar">{{ $monthlyTotalKeluar }} <span class="full-text">Surat</span></a>
                                 @else
                                     <span class="badge-zero">0</span>
                                 @endif
                             </td>
                             <td>
                                 @if($totalBulan > 0)
-                                    <a href="{{ $urlSemua }}" class="badge-total">{{ $totalBulan }} Surat</a>
+                                    <a href="{{ $urlSemua }}" class="badge-total">{{ $totalBulan }} <span class="full-text">Surat</span></a>
                                 @else
                                     <span class="badge-zero">0</span>
                                 @endif

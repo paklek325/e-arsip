@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Laporan Rekapitulasi Surat')
 
@@ -7,8 +7,8 @@
     <li class="breadcrumb-item">
         <a href="{{ route('dashboard.index') }}"><i class="bi bi-house-door-fill"></i>Home</a>
     </li>
-    <li class="breadcrumb-item">Arsip</li>
-    <li class="breadcrumb-item active" aria-current="page">Laporan Rekap</li>
+    <li class="breadcrumb-item">Laporan</li>
+    <li class="breadcrumb-item active" aria-current="page">Rekap</li>
 </ol>
 @endsection
 
@@ -123,14 +123,14 @@
 /* ---------- MOBILE (layar HP) ---------- */
 @media (max-width: 576px) {
     #page-laporan .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    #page-laporan .table-wrapper table { font-size: .74rem; }
+    #page-laporan .table-wrapper table { font-size: .72rem; }
 
     /* Lebar kolom No sudah diatur terpusat di laporan.css (.table-wrapper
        th.col-no / td.col-no) supaya tidak ada aturan ganda yang bentrok. */
 
     #page-laporan .table-wrapper th,
     #page-laporan .table-wrapper td {
-        padding: 5px 6px;
+        padding: 4px 4px !important;
         white-space: nowrap;
     }
 
@@ -143,8 +143,8 @@
     #page-laporan .badge-keluar,
     #page-laporan .badge-total,
     #page-laporan .badge-zero {
-        padding: 2px 8px;
-        font-size: .68rem;
+        padding: 2px 6px !important;
+        font-size: .65rem !important;
     }
 
     #page-laporan .stat-cards { flex-wrap: wrap; gap: 6px; }

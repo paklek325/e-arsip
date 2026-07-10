@@ -4,7 +4,7 @@
     <li class="breadcrumb-item">
         <a href="{{ route('dashboard.index') }}"><i class="bi bi-house-door-fill"></i>Home</a>
     </li>
-    <li class="breadcrumb-item">Arsip</li>
+    <li class="breadcrumb-item">Master</li>
     <li class="breadcrumb-item active" aria-current="page">Peserta Didik</li>
 </ol>
 @endsection

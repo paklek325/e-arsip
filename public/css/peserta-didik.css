@@ -457,6 +457,73 @@
 /* ── Delete modal icon ──────────────────────────────────────────────────── */
 .pd-delete-icon { font-size: 3rem; }
 
+/* ══════════════════════════════════════════════════════════
+   FIX BUG: MODAL TEMBUS PANDANG (LIHAT ISI TABEL DI BELAKANG)
+   ──────────────────────────────────────────────────────────
+   Root cause: .modal-content untuk modal2 halaman ini tidak
+   pernah diberi background-color solid di sini, jadi kalau
+   variabel Bootstrap (--bs-modal-bg) tidak ter-set dengan benar
+   oleh layout.css / tema, modal jadi transparan dan konten tabel
+   di baliknya (header "NO", "NAMA PESERTA DIDIK", "AKSI", dst)
+   ikut kelihatan menembus. Dikunci solid + opaque di sini supaya
+   tidak bergantung ke file lain.
+   ══════════════════════════════════════════════════════════ */
+#modalTambahPesertaDidik .modal-content,
+#modalEditPesertaDidik .modal-content,
+#modalHapusPesertaDidik .modal-content,
+#modalDetailPesertaDidik .modal-content,
+#modalPreviewFile .modal-content {
+  background-color: #ffffff;
+  opacity: 1;
+  isolation: isolate;
+}
+
+#modalTambahPesertaDidik .modal-body,
+#modalEditPesertaDidik .modal-body,
+#modalHapusPesertaDidik .modal-body,
+#modalDetailPesertaDidik .modal-body,
+#modalPreviewFile .modal-body,
+#modalTambahPesertaDidik .modal-footer,
+#modalEditPesertaDidik .modal-footer,
+#modalHapusPesertaDidik .modal-footer,
+#modalDetailPesertaDidik .modal-footer {
+  background-color: #ffffff;
+}
+
+[data-theme="dark"] #modalTambahPesertaDidik .modal-content,
+[data-theme="dark"] #modalEditPesertaDidik .modal-content,
+[data-theme="dark"] #modalHapusPesertaDidik .modal-content,
+[data-theme="dark"] #modalDetailPesertaDidik .modal-content,
+[data-theme="dark"] #modalPreviewFile .modal-content {
+  background-color: #1f2937;
+}
+
+[data-theme="dark"] #modalTambahPesertaDidik .modal-body,
+[data-theme="dark"] #modalEditPesertaDidik .modal-body,
+[data-theme="dark"] #modalHapusPesertaDidik .modal-body,
+[data-theme="dark"] #modalDetailPesertaDidik .modal-body,
+[data-theme="dark"] #modalPreviewFile .modal-body,
+[data-theme="dark"] #modalTambahPesertaDidik .modal-footer,
+[data-theme="dark"] #modalEditPesertaDidik .modal-footer,
+[data-theme="dark"] #modalHapusPesertaDidik .modal-footer,
+[data-theme="dark"] #modalDetailPesertaDidik .modal-footer {
+  background-color: #1f2937;
+  color: #e5e7eb;
+}
+
+/* Pastikan backdrop gelap benar-benar menutupi halaman di baliknya
+   TERMASUK navbar/topbar (yang biasanya fixed/sticky dengan z-index
+   sendiri di layout.css). Backdrop dinaikkan di atas navbar, modal
+   dinaikkan lagi di atas backdrop, supaya urutan tumpukan benar:
+   halaman < backdrop < modal. */
+.modal-backdrop.show {
+  opacity: 0.55 !important;
+  z-index: 1050 !important;
+}
+.modal.show {
+  z-index: 1056 !important;
+}
+
 /* ── Animasi fade-in (modal/card) ──────────────────────────────────────── */
 .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
 @keyframes fadeIn {
@@ -611,6 +678,35 @@
     font-size: 0.78rem;
     padding: 0.4rem 0.55rem;
   }
+
+  /* ══════════════════════════════════════════════════════════
+     FIX: MODAL TIDAK PAS DI LAYAR HP (ada celah di tepi layar
+     yang menampakkan halaman di baliknya).
+     ──────────────────────────────────────────────────────────
+     Sebelumnya modal-dialog diberi margin 0.6rem di semua sisi,
+     jadi di layar HP kecil, tepi halaman di belakang modal
+     "mengintip" dari celah itu. Dibuat full-bleed (nempel pas
+     ke 4 tepi layar) supaya tidak ada celah sama sekali. */
+  #modalTambahPesertaDidik .modal-dialog,
+  #modalEditPesertaDidik .modal-dialog,
+  #modalDetailPesertaDidik .modal-dialog,
+  #modalHapusPesertaDidik .modal-dialog,
+  #modalPreviewFile .modal-dialog {
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+  #modalTambahPesertaDidik .modal-content,
+  #modalEditPesertaDidik .modal-content,
+  #modalDetailPesertaDidik .modal-content,
+  #modalHapusPesertaDidik .modal-content,
+  #modalPreviewFile .modal-content {
+    border-radius: 0 !important;
+    height: 100% !important;
+    max-height: 100dvh !important;
+  }
 }
 
 /* ==== TOMBOL TAMBAH: TEKS LEBIH JELAS/KONTRAS ==== */
@@ -763,4 +859,351 @@
 }
 [data-theme="dark"] #page-peserta-didik .table-custom td {
   color: #e2e8f0 !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   MODAL PESERTA DIDIK — RESPONSIVE MOBILE
+   ──────────────────────────────────────────────────────────
+   Berlaku untuk: modalTambahPesertaDidik, modalEditPesertaDidik,
+   modalDetailPesertaDidik, modalHapusPesertaDidik, modalPreviewFile.
+   Sebelumnya modal ini murni pakai ukuran default Bootstrap
+   (modal-lg/xl) yang terlalu lega utk layar kecil: dialog tidak
+   memanfaatkan lebar layar, padding & jarak antar field kebesaran,
+   label/teks/ikon proporsinya kurang pas, tombol footer sempit
+   utk jempol. Section ini merapikan semua itu tanpa mengubah
+   tampilan desktop.
+   ══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* Dialog memanfaatkan lebar layar, margin tipis simetris */
+  #modalTambahPesertaDidik .modal-dialog,
+  #modalEditPesertaDidik .modal-dialog,
+  #modalDetailPesertaDidik .modal-dialog,
+  #modalHapusPesertaDidik .modal-dialog,
+  #modalPreviewFile .modal-dialog {
+    margin: 0.6rem;
+    max-width: calc(100% - 1.2rem);
+  }
+
+  /* Header: judul & tombol close lebih proporsional */
+  #modalTambahPesertaDidik .modal-header,
+  #modalEditPesertaDidik .modal-header,
+  #modalDetailPesertaDidik .modal-header,
+  #modalHapusPesertaDidik .modal-header,
+  #modalPreviewFile .modal-header {
+    padding: 0.7rem 1rem;
+  }
+  #modalTambahPesertaDidik .modal-title,
+  #modalEditPesertaDidik .modal-title,
+  #modalDetailPesertaDidik .modal-title,
+  #modalHapusPesertaDidik .modal-title {
+    font-size: 1rem;
+  }
+  #modalPreviewFile .modal-title {
+    font-size: 0.9rem;
+  }
+  #modalTambahPesertaDidik .btn-close,
+  #modalEditPesertaDidik .btn-close,
+  #modalDetailPesertaDidik .btn-close,
+  #modalHapusPesertaDidik .btn-close,
+  #modalPreviewFile .btn-close {
+    width: 0.8em;
+    height: 0.8em;
+    padding: 0.4em;
+  }
+
+  /* Body: padding lebih rapat, jarak antar field diperkecil */
+  #modalTambahPesertaDidik .modal-body,
+  #modalEditPesertaDidik .modal-body,
+  #modalDetailPesertaDidik .modal-body {
+    padding: 0.9rem 0.95rem;
+  }
+  #modalTambahPesertaDidik .modal-body .row.g-3,
+  #modalEditPesertaDidik .modal-body .row.g-3,
+  #modalDetailPesertaDidik .modal-body .row.g-3 {
+    --bs-gutter-y: 0.75rem;
+    --bs-gutter-x: 0.75rem;
+  }
+  #modalTambahPesertaDidik .modal-body hr,
+  #modalEditPesertaDidik .modal-body hr,
+  #modalDetailPesertaDidik .modal-body hr {
+    margin: 0.85rem 0;
+  }
+
+  /* Label field: sedikit lebih kecil supaya tidak makan tempat */
+  #modalTambahPesertaDidik .form-label,
+  #modalEditPesertaDidik .form-label {
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+  }
+
+  /* Input/select/textarea: tinggi lebih compact, font tetap ≥16px
+     (1rem) supaya iOS Safari tidak auto-zoom saat difokus */
+  #modalTambahPesertaDidik .form-control,
+  #modalTambahPesertaDidik .form-select,
+  #modalTambahPesertaDidik textarea,
+  #modalEditPesertaDidik .form-control,
+  #modalEditPesertaDidik .form-select,
+  #modalEditPesertaDidik textarea {
+    padding: 0.5rem 0.7rem;
+    font-size: 1rem;
+  }
+  #modalTambahPesertaDidik textarea,
+  #modalEditPesertaDidik textarea {
+    min-height: 2.6rem;
+  }
+
+  /* === FILE ITEM (checkbox + label + input file) === */
+  #modalTambahPesertaDidik .file-item,
+  #modalEditPesertaDidik .file-item {
+    padding: 0.7rem 0.8rem 0.7rem 1.1rem !important;
+    border-radius: 0.6rem;
+    background: rgba(13, 110, 253, 0.03);
+    /* FIX: rata kiri KONSISTEN untuk semua item, apa pun panjang
+       labelnya. Sebelumnya dicoba rata tengah, tapi label pendek
+       (KTS, Foto 3x4) jadi kelihatan beda sendiri (mengambang di
+       tengah) dibanding label panjang (Formulir PPDB, dst) yang
+       otomatis mepet kiri karena teksnya nyaris penuh. Rata kiri
+       untuk semua membuat seluruh baris sejajar rapi. Tetap
+       flex column + justify-content:center supaya vertikal tetap
+       center terhadap tinggi kotak (perlu utk baris "Ijazah SMA"
+       yang lebih tinggi karena badge). */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  [data-theme="dark"] #modalTambahPesertaDidik .file-item,
+  [data-theme="dark"] #modalEditPesertaDidik .file-item {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  #modalTambahPesertaDidik .file-item .form-check,
+  #modalEditPesertaDidik .file-item .form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding-left: 0;
+    margin: 0;
+  }
+  #modalTambahPesertaDidik .file-item .form-check-input,
+  #modalEditPesertaDidik .file-item .form-check-input {
+    margin: 0;
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  #modalTambahPesertaDidik .file-item .form-check-label,
+  #modalEditPesertaDidik .file-item .form-check-label {
+    font-size: 0.85rem;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+  /* Badge "Opsional" di label: jangan sampai patah tanggung */
+  #modalTambahPesertaDidik .file-item .form-check-label .badge,
+  #modalEditPesertaDidik .file-item .form-check-label .badge {
+    font-size: 0.65rem;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  /* Input file: full width, ukuran tombol browser & teks compact */
+  #modalTambahPesertaDidik .file-item .file-input,
+  #modalEditPesertaDidik .file-item .file-input {
+    width: 100%;
+    font-size: 0.78rem;
+    padding: 0.4rem 0.5rem;
+  }
+  #modalTambahPesertaDidik .file-item .file-input::file-selector-button,
+  #modalEditPesertaDidik .file-item .file-input::file-selector-button {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+    margin-right: 0.5rem;
+  }
+  /* Pesan validasi ("Isi file terlebih dahulu") lebih kecil */
+  #modalTambahPesertaDidik .file-item .invalid-feedback,
+  #modalEditPesertaDidik .file-item .invalid-feedback {
+    font-size: 0.72rem;
+  }
+
+  /* Footer: padding nyaman disentuh di mobile */
+  #modalTambahPesertaDidik .modal-footer,
+  #modalEditPesertaDidik .modal-footer,
+  #modalDetailPesertaDidik .modal-footer,
+  #modalHapusPesertaDidik .modal-footer,
+  #modalPreviewFile .modal-footer {
+    padding: 0.7rem 0.95rem;
+  }
+
+  /* === MODAL DETAIL (view) === */
+  #modalDetailPesertaDidik .detail-box {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.65rem;
+  }
+  #modalDetailPesertaDidik .form-label.small {
+    font-size: 0.7rem;
+  }
+  #modalDetailPesertaDidik .file-item {
+    padding: 0.6rem 0.7rem;
+  }
+  #modalDetailPesertaDidik .file-item .fw-semibold {
+    font-size: 0.85rem;
+  }
+  #modalDetailPesertaDidik #detail-download-all-container,
+  #modalDetailPesertaDidik #detail-download-selected-container {
+    padding: 0.5rem !important;
+    font-size: 0.82rem;
+  }
+  #modalEditPesertaDidik #edit-download-all-container {
+    padding: 0.5rem !important;
+    font-size: 0.82rem;
+  }
+
+  /* === MODAL HAPUS (delete confirm) === */
+  #modalHapusPesertaDidik .pd-delete-icon {
+    font-size: 2.2rem;
+  }
+  #modalHapusPesertaDidik .modal-body h5 {
+    font-size: 0.95rem;
+  }
+  #modalHapusPesertaDidik .modal-body p {
+    font-size: 0.82rem;
+  }
+
+  /* === MODAL PREVIEW FILE === */
+  #modalPreviewFile .modal-loader-body {
+    min-height: 140px;
+  }
+  #modalPreviewFile #pd-preview-container img,
+  #modalPreviewFile #pd-preview-container iframe,
+  #modalPreviewFile #pd-preview-container embed {
+    max-width: 100%;
+    height: auto;
+  }
+  #modalPreviewFile .modal-footer .btn {
+    flex: 1 1 0;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.6rem;
+  }
+}
+
+@media (max-width: 380px) {
+  /* Layar sangat sempit: rapatkan lagi padding form field */
+  #modalTambahPesertaDidik .form-control,
+  #modalTambahPesertaDidik .form-select,
+  #modalEditPesertaDidik .form-control,
+  #modalEditPesertaDidik .form-select {
+    padding: 0.45rem 0.6rem;
+  }
+  #modalTambahPesertaDidik .file-item .file-input,
+  #modalEditPesertaDidik .file-item .file-input {
+    font-size: 0.72rem;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   MODAL TAMBAH/EDIT — PEMANGKASAN TINGGI DI MOBILE
+   ──────────────────────────────────────────────────────────
+   Root cause "modal masih terasa besar": SEMUA field (7 baris)
+   dan SEMUA 8 kolom file berbaris satu-satu ke bawah di mobile
+   karena kelas grid aslinya cuma col-md-*, jadi <768px otomatis
+   100% lebar. Total tinggi body bisa >1000px di layar ~800px
+   tinggi → modal terasa raksasa & scroll panjang. Dua perbaikan:
+   1) Pasangkan field yang cocok jadi 2 kolom (Jenis Kelamin +
+      Tahun Angkatan, Tempat Lahir + Tanggal Lahir) → 2 baris
+      lebih sedikit.
+   2) modal-body dibatasi tinggi & scroll sendiri, header/footer
+      tetap terlihat (seperti pola modal app native), supaya
+      dialog tidak "meluber" jauh melebihi layar.
+   ══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* --- Pasangkan field jadi 2 kolom — HANYA untuk field berupa
+     input teks/tanggal biasa (Tempat Lahir + Tanggal Lahir).
+     CATATAN PENTING: field <select> (Jenis Kelamin, Tahun Angkatan
+     bukan select, tapi Jenis Kelamin & Rombel adalah select) SENGAJA
+     TIDAK dipasangkan 2 kolom. Lebar popup opsi <select> native
+     ditentukan browser sendiri (mengikuti teks opsi terpanjang,
+     BUKAN lebar kotak select) dan ini TIDAK BISA dikontrol lewat
+     CSS di semua browser — kalau kotak select dipersempit jadi
+     setengah kolom, popup opsinya tetap lebar penuh dan menimpa
+     kolom/field di sebelah & di bawahnya. Karena itu Jenis Kelamin
+     dibiarkan full width supaya popup-nya otomatis sejajar dengan
+     kotaknya. --- */
+  #modalTambahPesertaDidik .modal-body > .row.g-3:first-of-type > div:nth-child(4),
+  #modalTambahPesertaDidik .modal-body > .row.g-3:first-of-type > div:nth-child(5),
+  #modalEditPesertaDidik .modal-body > .row.g-3:first-of-type > div:nth-child(4),
+  #modalEditPesertaDidik .modal-body > .row.g-3:first-of-type > div:nth-child(5) {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+  }
+
+  /* --- File items: 2 kolom juga supaya list 8 dokumen tidak
+     memanjang jadi 8 baris penuh. Checkbox+label tetap wrap rapi,
+     tombol "Choose File" bawaan browser otomatis menyesuaikan
+     lebar kolom.
+     FIX BUG "KOTAK TIDAK LURUS": sebelumnya pakai flexbox (flex:0 0 50%)
+     untuk bikin 2 kolom, tapi flexbox menyamakan tinggi SEMUA baris ke
+     item paling tinggi (mis. "Ijazah SMA" yang ada badge "Opsional"),
+     jadi kotak "Kartu Keluarga" dkk ikut jadi tinggi padahal isinya
+     cuma 1 baris teks — checkbox+label jadi mengambang di tengah
+     kotak kebesaran. CSS Grid menyamakan tinggi HANYA antar pasangan
+     di baris yang sama, tidak memengaruhi baris lain, jadi tiap
+     pasangan tingginya pas sesuai isinya sendiri. --- */
+  #modalTambahPesertaDidik .modal-body > .row.g-3:last-of-type,
+  #modalEditPesertaDidik .modal-body > .row.g-3:last-of-type {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin: 0 !important;
+  }
+  #modalTambahPesertaDidik .modal-body > .row.g-3:last-of-type > div,
+  #modalEditPesertaDidik .modal-body > .row.g-3:last-of-type > div {
+    flex: unset !important;
+    max-width: unset !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  #modalTambahPesertaDidik .file-item,
+  #modalEditPesertaDidik .file-item {
+    height: 100%;
+  }
+
+  /* --- modal-body scroll sendiri, header & footer selalu terlihat --- */
+  #modalTambahPesertaDidik .modal-dialog,
+  #modalEditPesertaDidik .modal-dialog,
+  #modalDetailPesertaDidik .modal-dialog {
+    display: flex;
+    max-height: calc(100dvh - 1.2rem);
+  }
+  #modalTambahPesertaDidik .modal-content,
+  #modalEditPesertaDidik .modal-content,
+  #modalDetailPesertaDidik .modal-content {
+    max-height: calc(100dvh - 1.2rem);
+    display: flex;
+    flex-direction: column;
+  }
+  #modalTambahPesertaDidik .modal-body,
+  #modalEditPesertaDidik .modal-body,
+  #modalDetailPesertaDidik .modal-body {
+    overflow-y: auto;
+    flex: 1 1 auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #modalTambahPesertaDidik .modal-header,
+  #modalEditPesertaDidik .modal-header,
+  #modalDetailPesertaDidik .modal-header,
+  #modalTambahPesertaDidik .modal-footer,
+  #modalEditPesertaDidik .modal-footer,
+  #modalDetailPesertaDidik .modal-footer {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 400px) {
+  /* Di layar sangat sempit (<400px) label field 50% kolom bisa
+     terlalu mepet — kecilkan sedikit lagi biar tidak wrap jelek */
+  #modalTambahPesertaDidik .modal-body > .row.g-3:first-of-type .form-label,
+  #modalEditPesertaDidik .modal-body > .row.g-3:first-of-type .form-label {
+    font-size: 0.74rem;
+  }
 }

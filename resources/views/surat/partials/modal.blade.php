@@ -46,7 +46,7 @@
           </div>
 
           {{-- Jenis Surat --}}
-          <div class="col-md-4">
+          <div class="col-md-4 position-relative">
             <label for="jenis_surat_add" class="form-label">Jenis Surat <span class="text-danger">*</span></label>
             <select id="jenis_surat_add" name="jenis_surat" class="form-select" required
                     @if($lockJenis ?? null) aria-readonly="true" @endif>
@@ -61,7 +61,7 @@
           </div>
 
           {{-- Kode Surat --}}
-          <div class="col-md-6" id="kode-container-add">
+          <div class="col-md-6 position-relative" id="kode-container-add">
             <label class="form-label" id="kode-surat-label-add">
               Kode Surat
               @if(($lockJenis ?? null) === 'Keluar')
@@ -117,7 +117,7 @@
           </div>
 
           {{-- Bulan --}}
-          <div class="col-md-4">
+          <div class="col-md-4 position-relative">
             <label for="add_bulan" class="form-label">Bulan <span class="text-danger">*</span></label>
             <div class="input-group">
               <select id="add_bulan" name="bulan_surat" class="form-select">
@@ -248,7 +248,7 @@
           </div>
 
           {{-- Jenis Surat --}}
-          <div class="col-md-4">
+          <div class="col-md-4 position-relative">
             <label for="edit_jenis" class="form-label">Jenis Surat <span class="text-danger">*</span></label>
             <select id="edit_jenis" name="jenis_surat" class="form-select" required
                     @if($lockJenis ?? null) aria-readonly="true" @endif>
@@ -262,7 +262,7 @@
           </div>
 
           {{-- Kode Surat --}}
-          <div class="col-md-6" id="kode-container-edit">
+          <div class="col-md-6 position-relative" id="kode-container-edit">
             <label for="kode_input_edit" class="form-label">Kode Surat</label>
             <input type="text" id="kode_input_edit" name="kode_surat"
                    class="form-control"
@@ -280,7 +280,7 @@
           </div>
 
           {{-- Bulan --}}
-          <div class="col-md-4">
+          <div class="col-md-4 position-relative">
             <label for="edit_bulan" class="form-label">Bulan <span class="text-danger">*</span></label>
             <div class="input-group">
               <select id="edit_bulan" name="bulan_surat" class="form-select">

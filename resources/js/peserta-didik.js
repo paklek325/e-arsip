@@ -397,6 +397,20 @@ if (window.PesertaDidikApp) {
             sortAngkatanSelect,
             sortNamaSelect,
         ].filter(Boolean);
+
+        // Select di dalam modal Tambah/Edit (Jenis Kelamin, Rombel) — bukan
+        // bagian dari filter, tapi butuh perlakuan sama: dropdown native di
+        // sini juga overlap di mobile (lihat catatan CSS di peserta-didik.css,
+        // section "MODAL TAMBAH/EDIT"). Dipakaikan custom dropdown yang sama
+        // persis mekanismenya dengan FILTER_SELECTS di atas.
+        const MODAL_SELECTS = [
+            $("#add_jenis_kelamin"),
+            $("#add_rombel"),
+            $("#edit_jenis_kelamin"),
+            $("#edit_rombel"),
+        ].filter(Boolean);
+        const ALL_CUSTOM_SELECTS = [...FILTER_SELECTS, ...MODAL_SELECTS];
+
         const customSelectMap = new Map(); // select -> { trigger, panel }
 
         function buildCustomSelect(select) {
@@ -480,11 +494,11 @@ if (window.PesertaDidikApp) {
             if (select && customSelectMap.has(select)) updateTriggerLabel(select);
         }
         function syncAllCustomSelects() {
-            FILTER_SELECTS.forEach(syncCustomSelect);
+            ALL_CUSTOM_SELECTS.forEach(syncCustomSelect);
         }
 
         document.addEventListener("click", closeAllCustomSelects);
-        FILTER_SELECTS.forEach(buildCustomSelect);
+        ALL_CUSTOM_SELECTS.forEach(buildCustomSelect);
 
         // ============================================================
         // POPSTATE — sinkronisasi saat back/forward
@@ -849,6 +863,10 @@ if (window.PesertaDidikApp) {
                     const el = $(`#edit_${f}`);
                     if (el) el.value = s[f] ?? "";
                 });
+                // Select custom (Jenis Kelamin, Rombel) butuh sync manual
+                // karena diisi programatik (bukan lewat klik opsi custom).
+                syncCustomSelect($("#edit_jenis_kelamin"));
+                syncCustomSelect($("#edit_rombel"));
 
                 fileFields.forEach((field) => {
                     const check = $(`#edit_check_${field}`);
@@ -1098,6 +1116,9 @@ if (window.PesertaDidikApp) {
             modalTambah.addEventListener("show.bs.modal", () => {
                 formTambah.reset();
                 hideFormAlert("#alertTambahPesertaDidik");
+                // Select custom (Jenis Kelamin, Rombel) ikut direset labelnya
+                syncCustomSelect($("#add_jenis_kelamin"));
+                syncCustomSelect($("#add_rombel"));
                 $$("input[type=file]", formTambah).forEach((f) => {
                     f.value = "";
                     f.disabled = true;

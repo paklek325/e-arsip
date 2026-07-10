@@ -389,6 +389,146 @@ if (window.SuratApp) {
             return params.toString();
         }
 
+        /* ================================================================
+         * CUSTOM DROPDOWN UNTUK MODAL TAMBAH & EDIT SURAT
+         * ----------------------------------------------------------------
+         * Native <select> yang dibuka di mobile melebar ke seluruh viewport
+         * (perilaku browser, tidak bisa di-override via CSS). Solusinya:
+         * ganti tampilan select dengan .pd-select-trigger + .pd-select-panel
+         * — sama persis dengan yang sudah dipakai di filter bar.
+         * <select> asli TETAP di DOM (tersembunyi via .pd-select-native)
+         * agar FormData saat submit dan semua event listener tetap jalan.
+         * ================================================================ */
+
+        const modalSelectMap = new Map(); // select el → { trigger, panel }
+
+        function buildModalCustomSelect(select) {
+            if (!select) return;
+            if (modalSelectMap.has(select)) {
+                _syncModalSelectLabel(select);
+                return;
+            }
+            const wrap = select.parentElement;
+            if (!wrap) return;
+
+            const trigger = document.createElement("div");
+            trigger.className = select.className + " pd-select-trigger";
+            trigger.setAttribute("role", "button");
+            trigger.setAttribute("tabindex", "0");
+            wrap.insertBefore(trigger, select.nextSibling);
+            select.classList.add("pd-select-native");
+
+            const panel = document.createElement("div");
+            panel.className = "pd-select-panel";
+
+            function rebuildOptions() {
+                panel.innerHTML = "";
+                Array.from(select.options).forEach((opt) => {
+                    const item = document.createElement("div");
+                    item.className = "pd-select-option";
+                    item.dataset.value = opt.value;
+                    item.textContent = opt.textContent;
+                    item.addEventListener("click", () => {
+                        select.value = opt.value;
+                        _syncModalSelectLabel(select);
+                        closeAllModalSelects();
+                        select.dispatchEvent(
+                            new Event("change", { bubbles: true })
+                        );
+                    });
+                    panel.appendChild(item);
+                });
+            }
+
+            rebuildOptions();
+
+            // Jika select ada di dalam .input-group (mis. select Bulan
+            // yang punya tombol kalender di sebelahnya), gunakan parent
+            // dari input-group (.col.position-relative) sebagai container
+            // panel agar panel muncul di bawah seluruh baris input-group,
+            // bukan di dalam input-group yang tidak punya position:relative.
+            const panelContainer =
+                wrap.classList.contains("input-group")
+                    ? wrap.parentElement
+                    : wrap;
+            if (panelContainer) {
+                panelContainer.appendChild(panel);
+            } else {
+                wrap.appendChild(panel);
+            }
+
+            trigger.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const isOpen = panel.classList.contains("show");
+                closeAllModalSelects();
+                if (!isOpen) {
+                    rebuildOptions();
+                    _syncModalSelectLabel(select);
+                    panel.classList.add("show");
+                    trigger.classList.add("active");
+                }
+            });
+
+            trigger.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    trigger.click();
+                } else if (e.key === "Escape") {
+                    closeAllModalSelects();
+                }
+            });
+
+            modalSelectMap.set(select, { trigger, panel });
+            _syncModalSelectLabel(select);
+        }
+
+        function _syncModalSelectLabel(select) {
+            const entry = modalSelectMap.get(select);
+            if (!entry) return;
+            const opt = select.options[select.selectedIndex];
+            entry.trigger.textContent = opt ? opt.textContent : "";
+            entry.panel
+                .querySelectorAll(".pd-select-option")
+                .forEach((item) => {
+                    item.classList.toggle(
+                        "is-selected",
+                        item.dataset.value === select.value
+                    );
+                });
+        }
+
+        function syncModalSelect(select) {
+            if (select && modalSelectMap.has(select))
+                _syncModalSelectLabel(select);
+        }
+
+        function closeAllModalSelects() {
+            modalSelectMap.forEach(({ trigger, panel }) => {
+                panel.classList.remove("show");
+                trigger.classList.remove("active");
+            });
+        }
+
+        document.addEventListener("click", closeAllModalSelects);
+
+        // Inisiasi custom dropdown untuk semua select (non-disabled) di modal
+        function initModalSelects(modalId) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            modal.querySelectorAll("select:not([disabled])").forEach((sel) => {
+                buildModalCustomSelect(sel);
+            });
+        }
+
+        // Sync semua label setelah value diset programatik
+        function syncAllModalSelects(modalId) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            modal.querySelectorAll("select").forEach((sel) => {
+                if (modalSelectMap.has(sel)) _syncModalSelectLabel(sel);
+            });
+        }
+
         async function loadTable(url = "/surat") {
             try {
                 const q = buildFilterParams();
@@ -757,6 +897,7 @@ if (window.SuratApp) {
                     kodeSelect.required = true;
                     if (initialValue) kodeSelect.value = initialValue;
                     if (reqSpan) reqSpan.style.display = "";
+                    buildModalCustomSelect(kodeSelect);
                 } else if (val === "masuk") {
                     kodeInput.style.display = "";
                     kodeInput.disabled = false;
@@ -987,6 +1128,13 @@ if (window.SuratApp) {
                             }
                         };
                     }
+
+                    // Konversi semua <select> di modal ke custom dropdown
+                    // (harus SETELAH setupAddKodeSurat selesai agar select
+                    //  kode_surat yang mungkin visible sudah siap)
+                    initModalSelects("addSuratModal");
+                    // Sync label setelah value diset programatik (bulan, jenis)
+                    syncAllModalSelects("addSuratModal");
                 });
             }
         }
@@ -1074,6 +1222,7 @@ if (window.SuratApp) {
                         .join("");
 
                 sel.disabled = false;
+                buildModalCustomSelect(sel);
             } else {
                 // Untuk surat MASUK:
                 // - Jika data asli dari server memang Masuk → tampilkan kode_surat lama
@@ -1281,6 +1430,10 @@ if (window.SuratApp) {
                 }
 
                 getOrCreateModal("#editSuratModal")?.show();
+                // Konversi semua <select> di modal edit ke custom dropdown
+                // (harus SETELAH semua value di-set agar label sync dengan benar)
+                initModalSelects("editSuratModal");
+                syncAllModalSelects("editSuratModal");
             } catch (err) {
                 console.error(err);
                 toast("Gagal memuat data edit", "error");
