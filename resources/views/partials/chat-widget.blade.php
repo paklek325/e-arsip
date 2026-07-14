@@ -5,8 +5,301 @@
      Pastikan <meta name="csrf-token" content="{{ csrf_token() }}"> ada di <head>
      ============================================================ --}}
 
+{{-- ══ Style ══ --}}
+<style>
+    /* ══════════════════════════════════════════════════════════
+       ARSY CHAT WIDGET — DESIGN SYSTEM
+       Semua warna lewat CSS variable supaya otomatis mengikuti
+       tema gelap/terang (data-theme di <html>, sinkron dgn
+       tampilan.js & tombol tema di header widget ini).
+       ══════════════════════════════════════════════════════════ */
+    :root{
+        --eac-primary:#6C3EAB;
+        --eac-primary-dark:#4F46E5;
+        --eac-primary-light:#8b5fd6;
+        --eac-bg:#ffffff;
+        --eac-bg-soft:#f7f5fc;
+        --eac-border:#e7e1f5;
+        --eac-text:#2c2440;
+        --eac-text-muted:#7a7290;
+        --eac-bubble-bot:#f2effa;
+        --eac-bubble-user-a:#6C3EAB;
+        --eac-bubble-user-b:#4F46E5;
+        --eac-success:#2d7a4f;
+        --eac-warning:#856404;
+        --eac-danger:#c0392b;
+        --eac-shadow:0 20px 55px -12px rgba(76,40,140,.35), 0 4px 18px rgba(76,40,140,.12);
+        --eac-radius:18px;
+    }
+    [data-theme="dark"]{
+        --eac-bg:#1b1730;
+        --eac-bg-soft:#241f3d;
+        --eac-border:#352c56;
+        --eac-text:#eee9fb;
+        --eac-text-muted:#a89ecb;
+        --eac-bubble-bot:#2a2447;
+        --eac-shadow:0 20px 55px -12px rgba(0,0,0,.55), 0 4px 18px rgba(0,0,0,.3);
+    }
+
+    #earsipchat-btn, #earsipchat-panel, #earsipchat-panel *{ box-sizing:border-box; }
+
+    /* ── Tombol mengambang ── */
+    #earsipchat-btn{
+        position:fixed; right:22px; bottom:22px; z-index:2147483000;
+        width:58px; height:58px; border:none; border-radius:50%;
+        display:flex; align-items:center; justify-content:center;
+        background:linear-gradient(135deg,var(--eac-primary),var(--eac-primary-dark));
+        color:#fff; cursor:pointer;
+        box-shadow:0 12px 28px -8px rgba(76,40,140,.55), 0 3px 10px rgba(76,40,140,.3);
+        transition:transform .2s ease, box-shadow .2s ease;
+        animation:eac-pop .35s ease;
+    }
+    #earsipchat-btn:hover{ transform:translateY(-3px) scale(1.04); box-shadow:0 16px 34px -8px rgba(76,40,140,.6); }
+    #earsipchat-btn svg{ width:26px; height:26px; }
+    @keyframes eac-pop{ from{ transform:scale(.4); opacity:0; } to{ transform:scale(1); opacity:1; } }
+
+    /* ── Panel ── */
+    #earsipchat-panel{
+        position:fixed; right:22px; bottom:22px; z-index:2147483000;
+        width:400px; max-width:calc(100vw - 24px);
+        height:auto !important; max-height:calc(100vh - 80px) !important;
+        background:var(--eac-bg); color:var(--eac-text);
+        border-radius:var(--eac-radius); box-shadow:var(--eac-shadow);
+        display:flex; flex-direction:column; overflow:hidden;
+        opacity:0; pointer-events:none; transform:translateY(16px) scale(.97);
+        transition:opacity .22s ease, transform .22s ease;
+        font-family:'Segoe UI',Roboto,Inter,Arial,sans-serif; font-size:12px;
+    }
+    #earsipchat-panel.open{ opacity:1; pointer-events:auto; transform:translateY(0) scale(1); }
+
+    /* ── Header ── */
+    .eac-header{
+        display:flex; align-items:center; justify-content:space-between;
+        padding:11px 14px; flex-shrink:0;
+        background:linear-gradient(120deg,var(--eac-primary),var(--eac-primary-dark));
+        color:#fff;
+    }
+    .eac-header-left{ display:flex; align-items:center; gap:9px; min-width:0; }
+    .eac-avatar{
+        width:33px; height:33px; border-radius:50%; flex-shrink:0;
+        background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center;
+        font-size:16px;
+    }
+    .eac-header-info h4{ margin:0; font-size:13px; font-weight:700; line-height:1.2; }
+    .eac-header-info span{ font-size:10px; opacity:.85; display:flex; align-items:center; gap:4px; }
+    .eac-header-info span::before{ content:''; width:6px; height:6px; border-radius:50%; background:#4ade80; display:inline-block; }
+    .eac-header-actions{ display:flex; align-items:center; gap:4px; flex-shrink:0; }
+    .eac-header-actions button{
+        width:27px; height:27px; border:none; border-radius:8px; cursor:pointer;
+        background:rgba(255,255,255,.14); color:#fff; font-size:12.5px;
+        display:flex; align-items:center; justify-content:center;
+        transition:background .15s ease, transform .15s ease;
+    }
+    .eac-header-actions button:hover{ background:rgba(255,255,255,.28); transform:translateY(-1px); }
+    #eac-theme-btn{ position:relative; }
+    #eac-theme-btn svg{ width:14px; height:14px; position:absolute; transition:opacity .2s ease, transform .3s ease; }
+    #eac-theme-btn .eac-theme-icon-sun{ opacity:1; transform:rotate(0deg); }
+    #eac-theme-btn .eac-theme-icon-moon{ opacity:0; transform:rotate(-60deg); }
+    #eac-theme-btn.is-dark .eac-theme-icon-sun{ opacity:0; transform:rotate(60deg); }
+    #eac-theme-btn.is-dark .eac-theme-icon-moon{ opacity:1; transform:rotate(0deg); }
+
+    /* ── Tabs ── */
+    .eac-tabs{ display:flex; flex-shrink:0; background:var(--eac-bg-soft); border-bottom:1px solid var(--eac-border); }
+    .eac-tab{
+        flex:1; border:none; background:transparent; cursor:pointer;
+        padding:8px 6px; font-size:11.5px; font-weight:600; color:var(--eac-text-muted);
+        border-bottom:2px solid transparent; transition:color .15s ease, border-color .15s ease;
+    }
+    .eac-tab:hover{ color:var(--eac-primary); }
+    .eac-tab.active{ color:var(--eac-primary); border-bottom-color:var(--eac-primary); }
+
+    /* ── Messages ── */
+    .eac-messages{ flex:1 !important; min-height:0 !important; height:auto !important; overflow-y:auto; padding:12px 10px; display:flex; flex-direction:column; gap:8px; background:var(--eac-bg); }
+    .eac-messages::-webkit-scrollbar{ width:6px; }
+    .eac-messages::-webkit-scrollbar-thumb{ background:var(--eac-border); border-radius:6px; }
+
+    .eac-bubble{ display:flex; gap:7px; max-width:100%; animation:eac-rise .18s ease; }
+    @keyframes eac-rise{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
+    .eac-bubble-avatar{
+        width:23px; height:23px; border-radius:50%; flex-shrink:0; font-size:11.5px;
+        display:flex; align-items:center; justify-content:center; background:var(--eac-bubble-bot);
+    }
+    .eac-bubble-text{ padding:8px 11px; border-radius:13px; line-height:1.45; word-break:break-word; }
+    .eac-bubble.bot{ align-self:flex-start; }
+    .eac-bubble.bot .eac-bubble-text{ background:var(--eac-bubble-bot); color:var(--eac-text); border-bottom-left-radius:4px; }
+    .eac-bubble.user{ align-self:flex-end; flex-direction:row-reverse; }
+    .eac-bubble.user .eac-bubble-text{
+        background:linear-gradient(135deg,var(--eac-bubble-user-a),var(--eac-bubble-user-b));
+        color:#fff; border-bottom-right-radius:4px;
+    }
+    .eac-bubble.user .eac-bubble-avatar{ background:var(--eac-primary); color:#fff; }
+
+    .eac-error{
+        align-self:center; background:#fde8e6; color:var(--eac-danger); border:1px solid #f6c6c1;
+        padding:7px 12px; border-radius:10px; font-size:12px; max-width:90%;
+    }
+    [data-theme="dark"] .eac-error{ background:#3a1f1f; border-color:#5c2d2d; color:#f4a19a; }
+
+    .eac-typing{ display:flex; gap:4px; padding:2px 0; }
+    .eac-typing span{ width:6px; height:6px; border-radius:50%; background:var(--eac-primary); opacity:.5; animation:eac-blink 1.1s infinite ease-in-out; }
+    .eac-typing span:nth-child(2){ animation-delay:.15s; }
+    .eac-typing span:nth-child(3){ animation-delay:.3s; }
+    @keyframes eac-blink{ 0%,80%,100%{ opacity:.3; transform:scale(.8);} 40%{ opacity:1; transform:scale(1);} }
+    .eac-typing-label{ font-size:10.5px; color:var(--eac-text-muted); margin-top:2px; }
+
+    /* ── Saran cepat ── */
+    .eac-suggestions{ display:flex; flex-wrap:wrap; row-gap:4px; column-gap:5px; padding:6px 10px 7px; border-top:1px solid var(--eac-border); background:var(--eac-bg-soft); flex-shrink:0; }
+    .eac-suggestions > span{ width:100%; font-size:10px; color:var(--eac-text-muted); font-weight:600; margin-bottom:0; line-height:1.2; }
+    .eac-sug-btn, .eac-quick-chip{
+        border:1px solid var(--eac-border); background:var(--eac-bg); color:var(--eac-primary);
+        border-radius:999px; padding:4px 9px; font-size:10.5px; font-weight:600; cursor:pointer;
+        transition:background .15s ease, transform .15s ease, box-shadow .15s ease;
+    }
+    .eac-sug-btn:hover, .eac-quick-chip:hover{ background:var(--eac-primary); color:#fff; transform:translateY(-1px); box-shadow:0 4px 10px -3px rgba(76,40,140,.4); }
+
+    /* ── File preview ── */
+    #eac-file-preview{ display:none; flex-wrap:wrap; gap:6px; padding:8px 12px 0; flex-shrink:0; }
+    .eac-file-thumb{
+        display:flex; align-items:center; gap:6px; background:var(--eac-bg-soft); border:1px solid var(--eac-border);
+        border-radius:10px; padding:5px 8px; font-size:11px; color:var(--eac-text); max-width:170px;
+    }
+    .eac-file-thumb img{ width:28px; height:28px; border-radius:6px; object-fit:cover; }
+    .eac-file-thumb span:nth-child(2){ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .eac-file-thumb button{ border:none; background:transparent; color:var(--eac-text-muted); cursor:pointer; font-size:12px; flex-shrink:0; }
+    .eac-file-thumb button:hover{ color:var(--eac-danger); }
+
+    /* ── Input bar ── */
+    .eac-input-bar{ display:flex; align-items:flex-end; gap:6px; padding:8px 10px; border-top:1px solid var(--eac-border); background:var(--eac-bg); flex-shrink:0; }
+    #eac-file-input{ display:none; }
+    #eac-attach{
+        width:32px; height:32px; flex-shrink:0; border:none; border-radius:9px; cursor:pointer;
+        background:var(--eac-bg-soft); color:var(--eac-primary); font-size:13px;
+        display:flex; align-items:center; justify-content:center; transition:background .15s ease;
+    }
+    #eac-attach:hover{ background:var(--eac-border); }
+    #eac-input{
+        flex:1; resize:none; border:1px solid var(--eac-border); border-radius:11px; padding:7px 9px;
+        font:inherit; font-size:11.5px; color:var(--eac-text); background:var(--eac-bg-soft);
+        max-height:80px; min-height:32px; line-height:1.35; outline:none;
+        overflow-y:auto; white-space:pre-wrap; word-break:break-word;
+        transition:border-color .15s ease, box-shadow .15s ease;
+    }
+    #eac-input:focus{ border-color:var(--eac-primary); box-shadow:0 0 0 3px rgba(108,62,171,.15); }
+    #eac-input::placeholder{ color:var(--eac-text-muted); white-space:normal; }
+    #eac-input::-webkit-scrollbar{ width:5px; }
+    #eac-input::-webkit-scrollbar-track{ background:transparent; }
+    #eac-input::-webkit-scrollbar-thumb{ background:var(--eac-border); border-radius:6px; }
+    #eac-send{
+        width:32px; height:32px; flex-shrink:0; border:none; border-radius:10px; cursor:pointer;
+        background:linear-gradient(135deg,var(--eac-primary),var(--eac-primary-dark)); color:#fff;
+        display:flex; align-items:center; justify-content:center; transition:transform .15s ease, opacity .15s ease;
+    }
+    #eac-send:hover{ transform:scale(1.06); }
+    #eac-send:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
+    #eac-send svg{ width:14px; height:14px; }
+
+    /* ── Rekap toolbar ── */
+    .eac-rekap-toolbar{ padding:8px 10px; border-bottom:1px solid var(--eac-border); background:var(--eac-bg-soft); flex-shrink:0; }
+    .eac-rekap-row1{ display:flex; flex-wrap:wrap; gap:5px; }
+    .eac-rekap-row1 select{
+        flex:1; min-width:70px; border:1px solid var(--eac-border); border-radius:8px; padding:6px 7px;
+        font-size:10.5px; color:var(--eac-text); background:var(--eac-bg); outline:none;
+    }
+    .eac-rekap-row1 select:focus{ border-color:var(--eac-primary); }
+    .eac-btn-reset{
+        border:none; border-radius:8px; padding:6px 10px; font-size:10.5px; font-weight:700; cursor:pointer;
+        transition:transform .15s ease, opacity .15s ease; white-space:nowrap;
+        background:var(--eac-bg); color:var(--eac-text-muted); border:1px solid var(--eac-border);
+    }
+    .eac-btn-reset:hover{ transform:translateY(-1px); color:var(--eac-danger); border-color:var(--eac-danger); }
+
+    .eac-export-btns{ display:none; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .eac-export-btns.show{ display:flex; }
+    .eac-export-btn{
+        border:1px solid var(--eac-border); background:var(--eac-bg); color:var(--eac-text);
+        border-radius:8px; padding:6px 10px; font-size:11px; font-weight:600; cursor:pointer;
+        transition:background .15s ease, transform .15s ease;
+    }
+    .eac-export-btn:hover{ transform:translateY(-1px); background:var(--eac-bg-soft); }
+    .eac-btn-print:hover{ border-color:var(--eac-primary); color:var(--eac-primary); }
+
+    /* ── Dropdown Download (PDF/Word) ── */
+    .eac-dropdown{ position:relative; display:inline-block; }
+    .eac-btn-download{ display:flex; align-items:center; gap:4px; }
+    .eac-btn-download:hover{ border-color:var(--eac-primary); color:var(--eac-primary); }
+    .eac-dropdown-caret{ font-size:9px; transition:transform .15s ease; }
+    .eac-dropdown.open .eac-dropdown-caret{ transform:rotate(180deg); }
+    .eac-dropdown-menu{
+        display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:20;
+        min-width:130px; background:var(--eac-bg); border:1px solid var(--eac-border);
+        border-radius:10px; box-shadow:0 12px 28px -8px rgba(76,40,140,.28), 0 4px 10px rgba(0,0,0,.08);
+        overflow:hidden; padding:4px;
+    }
+    .eac-dropdown.open .eac-dropdown-menu{ display:block; }
+    .eac-dropdown-menu button{
+        display:flex; align-items:center; gap:7px; width:100%; text-align:left;
+        border:none; background:transparent; color:var(--eac-text); cursor:pointer;
+        padding:7px 9px; font-size:11.5px; font-weight:600; border-radius:7px;
+        transition:background .15s ease;
+    }
+    .eac-dropdown-menu button:hover{ background:var(--eac-bg-soft); color:var(--eac-primary); }
+
+    /* ── Rekap body ── */
+    .eac-rekap-body{ flex:1; overflow-y:auto; padding:12px; background:var(--eac-bg); }
+    .eac-empty{ text-align:center; color:var(--eac-text-muted); font-size:12px; padding:30px 10px; }
+    .eac-loading{ display:flex; align-items:center; justify-content:center; padding:40px 0; }
+    .eac-loading-dots{ display:flex; gap:6px; }
+    .eac-loading-dots span{ width:8px; height:8px; border-radius:50%; background:var(--eac-primary); animation:eac-blink 1.1s infinite ease-in-out; }
+    .eac-loading-dots span:nth-child(2){ animation-delay:.15s; }
+    .eac-loading-dots span:nth-child(3){ animation-delay:.3s; }
+
+    .eac-rekap-info{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; margin-bottom:10px; font-size:12px; color:var(--eac-text); }
+    .eac-rekap-badges{ display:flex; gap:6px; flex-wrap:wrap; }
+    .eac-badge{ padding:3px 9px; border-radius:999px; font-size:10.5px; font-weight:700; }
+    .eac-badge.masuk{ background:#e3f5ea; color:var(--eac-success); }
+    .eac-badge.keluar{ background:#fff3cd; color:var(--eac-warning); }
+    .eac-badge.total{ background:var(--eac-bg-soft); color:var(--eac-primary); border:1px solid var(--eac-border); }
+    [data-theme="dark"] .eac-badge.masuk{ background:#173628; }
+    [data-theme="dark"] .eac-badge.keluar{ background:#3a3110; }
+
+    .eac-tbl{ width:100%; border-collapse:collapse; font-size:11.5px; }
+    .eac-tbl th{ text-align:left; padding:7px 6px; background:var(--eac-bg-soft); color:var(--eac-text-muted); font-weight:700; border-bottom:1px solid var(--eac-border); }
+    .eac-tbl td{ padding:7px 6px; border-bottom:1px solid var(--eac-border); color:var(--eac-text); vertical-align:top; }
+    .eac-tbl tr:hover td{ background:var(--eac-bg-soft); }
+    .eac-tbl .total-row td{ font-weight:800; background:var(--eac-bg-soft); }
+    .eac-tbl-link{ color:var(--eac-primary); font-weight:700; text-decoration:none; }
+    .eac-tbl-link:hover{ text-decoration:underline; }
+
+    .eac-pagination{ display:flex; justify-content:center; gap:5px; margin-top:12px; flex-wrap:wrap; }
+    .eac-pg-btn{
+        border:1px solid var(--eac-border); background:var(--eac-bg); color:var(--eac-text);
+        border-radius:7px; padding:5px 9px; font-size:11px; cursor:pointer; transition:background .15s ease;
+    }
+    .eac-pg-btn:hover{ background:var(--eac-bg-soft); }
+    .eac-pg-btn.active{ background:var(--eac-primary); color:#fff; border-color:var(--eac-primary); }
+
+    /* ── Mobile ── */
+    @media (max-width:480px){
+        #earsipchat-panel{
+            right:12px; left:12px; bottom:12px; top:auto; width:auto; max-width:360px; margin-left:auto;
+            height:auto; max-height:min(64vh, 480px);
+            font-size:11px;
+        }
+        .eac-avatar{ width:28px; height:28px; font-size:14px; }
+        .eac-header-info h4{ font-size:12px; }
+        .eac-header-info span{ font-size:9.5px; }
+        .eac-header-actions button{ width:24px; height:24px; font-size:11px; }
+        .eac-bubble-avatar{ width:20px; height:20px; font-size:10px; }
+        .eac-bubble-text{ font-size:11px; padding:7px 9px; line-height:1.4; }
+        .eac-sug-btn, .eac-quick-chip{ font-size:9.5px; padding:3px 8px; }
+        #eac-input{ font-size:11px; }
+        #earsipchat-btn{ right:16px; bottom:16px; }
+    }
+</style>
+
 {{-- ══ Tombol ══ --}}
-<button id="earsipchat-btn" title="Buka Asisten E-Arsip" aria-label="Buka chat asisten">
+<button id="earsipchat-btn" title="Buka Asisten E-Arsip" aria-label="Buka chat asisten"
+    data-user="{{ Auth::id() }}" data-sid="{{ session()->getId() }}">
     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round"
               d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4-.84L3 20l1.09-3.14C3.4 15.5 3 13.79 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
@@ -26,6 +319,15 @@
             </div>
         </div>
         <div class="eac-header-actions">
+            <button id="eac-theme-btn" title="Ganti tema gelap/terang" aria-label="Ganti tema">
+                <svg class="eac-theme-icon eac-theme-icon-sun" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="4"/>
+                    <path stroke-linecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+                </svg>
+                <svg class="eac-theme-icon eac-theme-icon-moon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                </svg>
+            </button>
             <button id="eac-clear-btn" title="Hapus percakapan">🗑</button>
             <button id="earsipchat-close" title="Tutup">✕</button>
         </div>
@@ -45,31 +347,33 @@
                 <div class="eac-bubble-text">
                     Halo <strong>{{ Auth::user()->name ?? 'Pengguna' }}</strong>! 👋<br>
                     Saya <strong>Arsy</strong> — asisten E-Arsip SMA Babussalam.<br>
-                    <span style="display:block;margin-top:8px;line-height:2.1">
+                    <span style="display:block;margin-top:6px;line-height:1.85">
                         🔍 <strong>Cari surat</strong> — "carikan surat wisuda bulan ini"<br>
                         🎓 <strong>Data peserta_didik</strong> — "cari peserta_didik IPA angkatan 2024"<br>
                         📊 <strong>Statistik</strong> — "berapa total surat masuk tahun ini?"<br>
                         🧭 <strong>Navigasi</strong> — "buka menu laporan"<br>
-                        📎 <strong>Analisis file</strong> — lampirkan PDF/Word/Excel
+                        🎨 <strong>Ganti tema</strong> — "ubah ke mode gelap"<br>
+                        📎 <strong>Analisis file</strong> — lampirkan PDF atau Word
                     </span>
-                    <span style="display:block;margin-top:8px;color:#7c5cbf;font-size:12px">Ketik pertanyaan atau pilih menu cepat di bawah ⬇️</span>
+                    <span style="display:block;margin-top:6px;color:#7c5cbf;font-size:11px">Ketik pertanyaan atau pilih menu cepat di bawah ⬇️</span>
                 </div>
             </div>
         </div>
         <div class="eac-suggestions" id="eac-suggestions">
             <span>Tanya cepat:</span>
-            <button class="eac-sug-btn" data-msg="menu surat">📁 Menu Surat</button>
-            <button class="eac-sug-btn" data-msg="menu peserta_didik">🎓 Menu Peserta Didik</button>
-            <button class="eac-sug-btn" data-msg="menu laporan">📊 Laporan</button>
+            <button class="eac-sug-btn" data-url="/dashboard">🏠 Menu Dashboard</button>
+            <button class="eac-sug-btn" data-url="/surat">📁 Menu Surat</button>
+            <button class="eac-sug-btn" data-url="/peserta-didik">🎓 Menu Peserta Didik</button>
+            <button class="eac-sug-btn" data-url="/laporan">📊 Laporan</button>
             <button class="eac-sug-btn" data-msg="tampilkan statistik arsip hari ini">📈 Statistik</button>
             <button class="eac-sug-btn" data-msg="carikan surat bulan ini">🔍 Surat Bulan Ini</button>
             <button class="eac-sug-btn" data-msg="apa saja yang bisa kamu bantu?">❓ Apa yang bisa Arsy bantu?</button>
         </div>
         <div id="eac-file-preview"></div>
         <div class="eac-input-bar">
-            <input type="file" id="eac-file-input" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" multiple>
-            <button id="eac-attach" title="Lampirkan file (gambar/PDF/Word/Excel/PPT)">📎</button>
-            <textarea id="eac-input" rows="1" placeholder="Tanya cara pakai / cari surat / lampirkan file..."></textarea>
+            <input type="file" id="eac-file-input" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple>
+            <button id="eac-attach" title="Lampirkan file (PDF atau Word)">📎</button>
+            <textarea id="eac-input" rows="1" placeholder="Tanya atau lampirkan PDF/Word..."></textarea>
             <button id="eac-send" title="Kirim">
                 <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2v-4"/>
@@ -84,36 +388,42 @@
         {{-- Toolbar Filter --}}
         <div class="eac-rekap-toolbar">
             <div class="eac-rekap-row1">
-                <select id="eac-r-bulan">
+                <select id="eac-r-bulan" onchange="eacLoadRekap(1)">
                     <option value="">— Semua Bulan —</option>
                     @foreach(['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'] as $i => $b)
                         <option value="{{ $i+1 }}" {{ (date('n') == $i+1) ? 'selected' : '' }}>{{ $b }}</option>
                     @endforeach
                 </select>
-                <select id="eac-r-tahun">
+                <select id="eac-r-tahun" onchange="eacLoadRekap(1)">
                     @for($y = date('Y'); $y >= date('Y')-5; $y--)
                         <option value="{{ $y }}" {{ $y == date('Y') ? 'selected' : '' }}>{{ $y }}</option>
                     @endfor
                 </select>
-                <select id="eac-r-jenis">
+                <select id="eac-r-jenis" onchange="eacLoadRekap(1)">
                     <option value="">Semua</option>
                     <option value="masuk">Masuk</option>
                     <option value="keluar">Keluar</option>
                 </select>
-                <button class="eac-btn-tampil" onclick="eacLoadRekap(1)">Tampilkan</button>
+                <button class="eac-btn-reset" onclick="eacResetRekap()" title="Reset filter & tabel rekap">↺ Reset</button>
             </div>
             {{-- Tombol Export (muncul setelah data tampil) --}}
             <div class="eac-export-btns" id="eac-export-btns">
                 <button class="eac-export-btn eac-btn-print" onclick="eacCetak()">🖨 Cetak</button>
-                <button class="eac-export-btn eac-btn-pdf"   onclick="eacExport('pdf')">📄 PDF</button>
-                <button class="eac-export-btn eac-btn-excel" onclick="eacExport('excel')">📊 Excel</button>
-                <button class="eac-export-btn eac-btn-word"  onclick="eacExport('word')">📝 Word</button>
+                <div class="eac-dropdown" id="eac-download-dropdown">
+                    <button class="eac-export-btn eac-btn-download" onclick="eacToggleDownloadMenu(event)">
+                        ⬇ Download <span class="eac-dropdown-caret">▾</span>
+                    </button>
+                    <div class="eac-dropdown-menu" id="eac-download-menu">
+                        <button onclick="eacExport('pdf'); eacToggleDownloadMenu();">📄 PDF</button>
+                        <button onclick="eacExport('word'); eacToggleDownloadMenu();">📝 Word</button>
+                    </div>
+                </div>
             </div>
         </div>
 
         {{-- Body / Tabel --}}
         <div class="eac-rekap-body" id="eac-rekap-body">
-            <div class="eac-empty">📋 Pilih periode lalu klik <strong>Tampilkan</strong></div>
+            <div class="eac-empty">📋 Pilih periode di atas — rekap otomatis tampil</div>
         </div>
     </div>
 </div>
@@ -121,677 +431,10 @@
 {{-- Frame tersembunyi untuk cetak --}}
 <iframe id="eac-print-frame" style="display:none;"></iframe>
 
-<script>
-(function () {
-    /* ── Storage keys (percakapan bertahan saat pindah menu, hilang saat logout) ── */
-    const HKEY = 'eac_history';
-    const MKEY = 'eac_messages_html';
-    const PKEY = 'eac_panel_open';
-
-    /* ── Deteksi ganti user / logout — bersihkan state ── */
-    const CURRENT_USER  = '{{ Auth::id() }}';
-    const STORED_USER   = sessionStorage.getItem('eac_user');
-    const isSameSession = !!STORED_USER && STORED_USER === CURRENT_USER;
-    if (!isSameSession) {
-        // User baru / habis logout-login — riwayat chat lama tidak relevan lagi
-        sessionStorage.removeItem(HKEY);
-        sessionStorage.removeItem(MKEY);
-        sessionStorage.removeItem(PKEY);
-        // Reset rekap tab secara eksplisit (mencegah DOM lama tampil via bfcache)
-        const _rb = document.getElementById('eac-rekap-body');
-        if (_rb) _rb.innerHTML = '<div class="eac-empty">📋 Pilih periode lalu klik <strong>Tampilkan</strong></div>';
-        const _eb = document.getElementById('eac-export-btns');
-        if (_eb) _eb.classList.remove('show');
-    }
-    sessionStorage.setItem('eac_user', CURRENT_USER);
-
-    /* ── state ── */
-    let history = [];
-    if (isSameSession) {
-        try { history = JSON.parse(sessionStorage.getItem(HKEY) || '[]'); } catch (_) { history = []; }
-    }
-    function persistHistory() {
-        try { sessionStorage.setItem(HKEY, JSON.stringify(history.slice(-20))); } catch (_) {}
-    }
-    let isTyping  = false;
-    let currentPage = 1;
-    let lastFilter  = {};
-
-    /* ── elements ── */
-    const btn      = document.getElementById('earsipchat-btn');
-    const panel    = document.getElementById('earsipchat-panel');
-    const closeBtn = document.getElementById('earsipchat-close');
-    const clearBtn = document.getElementById('eac-clear-btn');
-    const msgs     = document.getElementById('eac-messages');
-    const WELCOME_HTML = msgs.innerHTML; // tampilan awal (sebelum dipulihkan dari sessionStorage), dipakai lagi saat "Hapus Percakapan"
-    const input    = document.getElementById('eac-input');
-    const sendBtn  = document.getElementById('eac-send');
-    const sugsEl   = document.getElementById('eac-suggestions');
-    const exportBtns = document.getElementById('eac-export-btns');
-    const attachBtn  = document.getElementById('eac-attach');
-    const fileInput  = document.getElementById('eac-file-input');
-    const filePreview = document.getElementById('eac-file-preview');
-    let pendingFiles = []; // file yang belum dikirim
-
-    /* ── File attach ── */
-    attachBtn.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', () => {
-        Array.from(fileInput.files).forEach(f => {
-            if (pendingFiles.length >= 3) return; // max 3 file
-            pendingFiles.push(f);
-        });
-        fileInput.value = '';
-        renderFilePreviews();
-    });
-
-    function renderFilePreviews() {
-        filePreview.innerHTML = '';
-        if (pendingFiles.length === 0) { filePreview.style.display='none'; return; }
-        filePreview.style.display = 'flex';
-        pendingFiles.forEach((f, i) => {
-            const isImg = f.type.startsWith('image/');
-            const icon = getFileIcon(f.name);
-            const chip = document.createElement('div');
-            chip.className = 'eac-file-thumb';
-            if (isImg) {
-                const url = URL.createObjectURL(f);
-                chip.innerHTML = `<img src="${url}" alt="preview"><span title="${esc(f.name)}">${esc(f.name)}</span><button onclick="removeFile(${i})" title="Hapus">✕</button>`;
-            } else {
-                chip.innerHTML = `<span class="eac-file-icon">${icon}</span><span title="${esc(f.name)}">${esc(f.name)}</span><button onclick="removeFile(${i})" title="Hapus">✕</button>`;
-            }
-            filePreview.appendChild(chip);
-        });
-    }
-
-    window.removeFile = function(i) {
-        pendingFiles.splice(i, 1);
-        renderFilePreviews();
-    };
-
-    function getFileIcon(name) {
-        const ext = name.split('.').pop().toLowerCase();
-        const map = { pdf:'📄', doc:'📝', docx:'📝', xls:'📊', xlsx:'📊', ppt:'📋', pptx:'📋',
-                      jpg:'🖼', jpeg:'🖼', png:'🖼', gif:'🖼', webp:'🖼' };
-        return map[ext] || '📎';
-    }
-
-    /* ── bersihkan Bootstrap backdrop yang tertinggal ── */
-    function cleanBackdrop() {
-        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-        document.body.classList.remove('modal-open');
-        document.body.style.removeProperty('overflow');
-        document.body.style.removeProperty('padding-right');
-    }
-
-    /* ── toggle panel ── */
-    btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        cleanBackdrop();
-        panel.classList.add('open');
-        btn.style.display = 'none';
-        try { sessionStorage.setItem(PKEY, '1'); } catch (_) {}
-        input.focus();
-    });
-    closeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        panel.classList.remove('open');
-        btn.style.display = 'flex';
-        cleanBackdrop();
-        try { sessionStorage.setItem(PKEY, '0'); } catch (_) {}
-    });
-    document.addEventListener('click', (e) => {
-        if (panel.classList.contains('open') && !panel.contains(e.target) && !btn.contains(e.target))
-            { panel.classList.remove('open'); btn.style.display='flex'; cleanBackdrop(); try { sessionStorage.setItem(PKEY, '0'); } catch (_) {} }
-    });
-
-    /* ── clear ── */
-    clearBtn.addEventListener('click', () => {
-        history.length = 0;
-        persistHistory();
-        try { sessionStorage.removeItem(MKEY); } catch (_) {}
-        msgs.innerHTML = WELCOME_HTML;
-        sugsEl.style.display = 'flex';
-    });
-
-    /* ── tabs ── */
-    document.querySelectorAll('.eac-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.eac-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            const t = tab.dataset.tab;
-            document.getElementById('eac-tab-chat').style.display  = t==='chat'  ? 'flex' : 'none';
-            document.getElementById('eac-tab-rekap').style.display = t==='rekap' ? 'flex' : 'none';
-        });
-    });
-
-    /* ── saran ── */
-    sugsEl.addEventListener('click', e => {
-        const b = e.target.closest('.eac-sug-btn');
-        if (b) sendMessage(b.dataset.msg);
-    });
-
-    /* ── input ── */
-    input.addEventListener('input', () => { input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,90)+'px'; });
-    input.addEventListener('keydown', e => { if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage(input.value.trim());} });
-    sendBtn.addEventListener('click', () => sendMessage(input.value.trim()));
-
-    /* ── CSRF ── */
-    function csrf() {
-        const m = document.querySelector('meta[name="csrf-token"]');
-        return m ? m.getAttribute('content') : '';
-    }
-
-    /* ── Refresh CSRF token jika expired (419) ── */
-    async function refreshCsrf() {
-        try {
-            const r = await fetch('/chat/csrf-token', { credentials: 'same-origin' });
-            if (r.ok) {
-                const data = await r.json();
-                if (data.token) {
-                    const m = document.querySelector('meta[name="csrf-token"]');
-                    if (m) m.setAttribute('content', data.token);
-                }
-            }
-        } catch (_) {}
-    }
-
-    async function fetchWithCsrf(url, options) {
-        let r = await fetch(url, { ...options, headers: { ...options.headers, 'X-CSRF-TOKEN': csrf() } });
-        if (r.status === 419) {
-            // Token expired — refresh dan coba lagi sekali
-            await refreshCsrf();
-            r = await fetch(url, { ...options, headers: { ...options.headers, 'X-CSRF-TOKEN': csrf() } });
-        }
-        return r;
-    }
-
-    /* ══ SEND MESSAGE ══ */
-    function sendMessage(text) {
-        const hasFile = pendingFiles.length > 0;
-        if (!text && !hasFile) return;
-        if (isTyping) return;
-
-        const msg = text || (hasFile ? 'Tolong analisis file ini.' : '');
-        input.value = ''; input.style.height = 'auto';
-        sugsEl.style.display = 'none';
-
-        // Tampilkan bubble user dengan preview file jika ada
-        addUserBubble(msg, [...pendingFiles]);
-        const typingEl = addTypingIndicator();
-        isTyping = true; sendBtn.disabled = true;
-
-        if (hasFile) {
-            const files = [...pendingFiles];
-            pendingFiles = [];
-            renderFilePreviews();
-            fetchFile(msg, files, typingEl);
-        } else {
-            fetchData(msg, typingEl);
-        }
-    }
-
-    /* ── Upload + analisis file ── */
-    function fetchFile(caption, files, typingEl) {
-        const fd = new FormData();
-        fd.append('message', caption || 'Tolong analisis file ini dan berikan ringkasan.');
-        files.forEach((f, i) => fd.append(`files[${i}]`, f));
-
-        fetchWithCsrf('/chat/upload', {
-            method: 'POST',
-            headers: { 'Accept': 'application/json' },
-            body: fd
-        })
-        .then(r => r.json())
-        .then(data => {
-            typingEl.remove();
-            if (data.success && data.message) {
-                addBotBubble(data.message);
-                history.push({role:'user', content: caption || '[File dikirim]'});
-                history.push({role:'assistant', content: data.message});
-                persistHistory();
-            } else {
-                addErrorBubble(data.message || 'Gagal menganalisis file.');
-            }
-        })
-        .catch(() => { typingEl.remove(); addErrorBubble('Koneksi bermasalah saat upload file.'); })
-        .finally(() => { isTyping=false; sendBtn.disabled=false; input.focus(); });
-    }
-
-    function fetchData(text, typingEl) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 25000); // 25s timeout
-
-        fetchWithCsrf('/chat/ask', {
-            method:'POST',
-            headers:{'Content-Type':'application/json','Accept':'application/json'},
-            body: JSON.stringify({ message:text, history:history.slice(-8), page:window.location.pathname }),
-            signal: controller.signal,
-        })
-        .then(r => {
-            clearTimeout(timeout);
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            return r.json();
-        })
-        .then(data => {
-            typingEl.remove();
-            const reply = data.message || '';
-            if (reply) {
-                addBotBubble(reply);
-                history.push({role:'user',content:text});
-                history.push({role:'assistant',content:reply});
-                persistHistory();
-                // sugsEl (tanya cepat awal) tetap tersembunyi setelah chat dimulai
-                if (Array.isArray(data.suggestions) && data.suggestions.length) {
-                    addQuickChips(data.suggestions);
-                }
-                // Jika AI baru saja benar-benar mengubah data (bukan cuma teks),
-                // refresh tabel di halaman supaya user langsung lihat perubahannya
-                // tanpa perlu reload manual.
-                if (data.refresh && data.refresh.menu) {
-                    refreshMenuTable(data.refresh.menu);
-                }
-            } else {
-                addErrorBubble('Maaf, tidak ada respons dari server. Coba lagi.');
-            }
-        })
-        .catch(err => {
-            clearTimeout(timeout);
-            typingEl.remove();
-            if (err.name === 'AbortError') {
-                addErrorBubble('⏱️ Permintaan terlalu lama. Coba pertanyaan yang lebih singkat.');
-            } else if (err.message.includes('HTTP 5')) {
-                addErrorBubble('⚠️ Server sedang bermasalah. Coba beberapa saat lagi.');
-            } else {
-                addErrorBubble('🔌 Koneksi bermasalah. Periksa internet dan coba lagi.');
-            }
-        })
-        .finally(()=>{ isTyping=false; sendBtn.disabled=false; input.focus(); });
-    }
-
-    /* ══════════════════════════════════════════════════════════
-       REFRESH TABEL HALAMAN SETELAH AI MENGUBAH DATA
-       ──────────────────────────────────────────────────────────
-       Pola generik: setiap halaman yang datanya bisa diubah lewat
-       chat cukup punya wrapper <div id="wrapper-table-<menu>"
-       data-base-url="...">, mengikuti pola yang sudah dipakai di
-       halaman Peserta Didik (lihat index.blade.php). Controller-nya
-       cukup mendukung request AJAX (X-Requested-With) yang me-return
-       partial view tabel saja — pola ini sudah ada di
-       PesertaDidikController@index, tinggal dipakai ulang untuk
-       menu lain (Surat, Kode, dst) saat aksi tulis-data via chat
-       ditambahkan ke menu tersebut.
-    ══════════════════════════════════════════════════════════ */
-    function refreshMenuTable(menu) {
-        const wrapper = document.getElementById('wrapper-table-' + menu);
-        if (!wrapper) return; // user sedang tidak berada di halaman menu ini — tidak perlu refresh
-        const url = wrapper.dataset.baseUrl || window.location.pathname;
-        fetch(url, {
-            method: 'GET',
-            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
-            credentials: 'same-origin',
-        })
-        .then(r => r.ok ? r.text() : Promise.reject(r.status))
-        .then(html => {
-            wrapper.innerHTML = html;
-            // restart animasi fade-in biar user sadar tabelnya baru saja diperbarui
-            wrapper.classList.remove('animate-fade-in');
-            void wrapper.offsetWidth;
-            wrapper.classList.add('animate-fade-in');
-        })
-        .catch(() => { /* diamkan — tabel tetap akan sinkron saat halaman di-refresh manual */ });
-    }
-
-    /* ── bubble helpers ── */
-    function addUserBubble(t, files) {
-        const d=document.createElement('div'); d.className='eac-bubble user';
-        let fileHtml = '';
-        if (files && files.length > 0) {
-            fileHtml = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:' + (t?'5px':'0') + '">';
-            files.forEach(f => {
-                if (f.type.startsWith('image/')) {
-                    const url = URL.createObjectURL(f);
-                    fileHtml += `<img src="${url}" style="max-width:110px;max-height:80px;border-radius:8px;object-fit:cover;" alt="${esc(f.name)}">`;
-                } else {
-                    fileHtml += `<span style="background:rgba(255,255,255,.2);border-radius:8px;padding:3px 8px;font-size:11px;display:inline-flex;align-items:center;gap:4px">${getFileIcon(f.name)} ${esc(f.name)}</span>`;
-                }
-            });
-            fileHtml += '</div>';
-        }
-        d.innerHTML=`<div class="eac-bubble-avatar">👤</div><div class="eac-bubble-text">${fileHtml}${t ? esc(t) : ''}</div>`;
-        msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
-    }
-    function addBotBubble(html) {
-        const d=document.createElement('div'); d.className='eac-bubble bot';
-        d.innerHTML=`<div class="eac-bubble-avatar">🤖</div><div class="eac-bubble-text">${md(html)}</div>`;
-        msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; return d;
-    }
-    function addErrorBubble(msg) {
-        const d=document.createElement('div'); d.className='eac-error';
-        d.innerHTML=`⚠️ ${esc(msg)}`; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
-    }
-    function addTypingIndicator() {
-        const d=document.createElement('div'); d.className='eac-bubble bot';
-        d.innerHTML=`<div class="eac-bubble-avatar">🤖</div><div class="eac-bubble-text"><div class="eac-typing"><span></span><span></span><span></span></div><div class="eac-typing-label">Arsy sedang mengetik...</div></div>`;
-        msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; return d;
-    }
-
-    /* ── Saran tanya cepat inline (muncul setelah jawaban navigasi menu) ── */
-    function addQuickChips(suggestions) {
-        const wrap = document.createElement('div');
-        wrap.className = 'eac-inline-chips';
-        wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 4px 36px;';
-        suggestions.forEach(s => {
-            const b = document.createElement('button');
-            b.type = 'button';
-            b.className = 'eac-sug-btn eac-quick-chip';
-            b.dataset.msg = s.msg;
-            b.textContent = s.label;
-            wrap.appendChild(b);
-        });
-        msgs.appendChild(wrap);
-        msgs.scrollTop = msgs.scrollHeight;
-    }
-
-    msgs.addEventListener('click', e => {
-        const chip = e.target.closest('.eac-quick-chip');
-        if (chip && !isTyping) sendMessage(chip.dataset.msg);
-    });
-    function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-    function md(t) {
-        // Langkah 1: ekstrak semua link markdown dulu, ganti dengan placeholder
-        // agar tanda kurung/kutip di URL tidak ikut di-escape
-        const links = [];
-        let s = t;
-
-        // Link markdown [label](url) — internal /path atau eksternal http
-        s = s.replace(/\[([^\]]+)\]\(((?:https?:\/\/|\/)[^)]+)\)/g, (_, label, url) => {
-            const isInternal = url.startsWith('/') || url.includes(window.location.hostname);
-            const attrs = isInternal
-                ? `href="${url}" onclick="window.location.href='${url}';return false;" style="color:#6C3EAB;font-weight:600"`
-                : `href="${url}" target="_blank" rel="noopener" style="color:#6C3EAB;font-weight:600"`;
-            const idx = links.push(`<a ${attrs}>${label}</a>`) - 1;
-            return `\x00LINK${idx}\x00`;
-        });
-
-        // Langkah 2: baru escape HTML pada teks biasa
-        s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-        // Langkah 3: kembalikan placeholder link
-        s = s.replace(/\x00LINK(\d+)\x00/g, (_, i) => links[+i]);
-
-        // Plain URLs (belum jadi anchor)
-        s = s.replace(/(?<!href=")(https?:\/\/[^\s<"&]+)/g, u=>`<a href="${u}" target="_blank" rel="noopener" style="color:#6C3EAB">${u}</a>`);
-
-        // Headers
-        s = s.replace(/^### (.+)$/gm,'<strong style="font-size:12.5px;color:#5a3d96">$1</strong>');
-        s = s.replace(/^## (.+)$/gm,'<strong style="font-size:13px;color:#4F46E5">$1</strong>');
-        // Bold & italic
-        s = s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-        s = s.replace(/\*(.+?)\*/g,'<em>$1</em>');
-        // Bullet lists
-        s = s.replace(/^[\-•] (.+)$/gm,'<span style="display:block;padding-left:10px">• $1</span>');
-        // Numbered list
-        s = s.replace(/^(\d+)\. (.+)$/gm,'<span style="display:block;padding-left:4px"><strong>$1.</strong> $2</span>');
-        // Divider
-        s = s.replace(/^---+$/gm,'<hr style="border:none;border-top:1px solid #e0dcf0;margin:6px 0">');
-        // Newlines
-        s = s.replace(/\n/g,'<br>');
-        return s;
-    }
-
-    /* ══════════════════════════════════════
-       REKAP SURAT
-    ══════════════════════════════════════ */
-
-    const MONTHS = ['','Januari','Februari','Maret','April','Mei','Juni',
-                    'Juli','Agustus','September','Oktober','November','Desember'];
-
-    window.eacLoadRekap = function(page) {
-        page = page || 1;
-        const bulan = document.getElementById('eac-r-bulan').value;
-        const tahun = document.getElementById('eac-r-tahun').value;
-        const jenis = document.getElementById('eac-r-jenis').value;
-
-        lastFilter = { bulan, tahun, jenis };
-        currentPage = page;
-
-        const body = document.getElementById('eac-rekap-body');
-        body.innerHTML = '<div class="eac-loading"><div class="eac-loading-dots"><span></span><span></span><span></span></div></div>';
-        exportBtns.classList.remove('show');
-
-        if (bulan) {
-            fetchRekapJSON(bulan, tahun, jenis, page, (err, data) => {
-                if (err || !data) {
-                    body.innerHTML = '<div class="eac-empty" style="color:#c00">⚠️ Gagal memuat data.</div>';
-                    return;
-                }
-                renderBulan(data, bulan, tahun, jenis, page);
-            });
-        } else {
-            fetchRekapTahunanJSON(tahun, jenis, (err, data) => {
-                if (err || !data) {
-                    body.innerHTML = '<div class="eac-empty" style="color:#c00">⚠️ Gagal memuat data.</div>';
-                    return;
-                }
-                renderTahunan(data, tahun, jenis);
-            });
-        }
-    };
-
-    /* Render detail bulanan */
-    function renderBulan(data, bulan, tahun, jenis, page) {
-        const body = document.getElementById('eac-rekap-body');
-        const { surat, total_masuk, total_keluar, current_page, last_page } = data;
-        const bulanNama = MONTHS[parseInt(bulan)];
-        const jenisLabel = jenis === 'masuk' ? ' — Masuk' : jenis === 'keluar' ? ' — Keluar' : '';
-
-        let html = `<div class="eac-rekap-info">
-            <span>📋 <strong>${bulanNama} ${tahun}${jenisLabel}</strong></span>
-            <div class="eac-rekap-badges">`;
-        if (!jenis || jenis==='masuk')  html += `<span class="eac-badge masuk">Masuk: ${total_masuk}</span>`;
-        if (!jenis || jenis==='keluar') html += `<span class="eac-badge keluar">Keluar: ${total_keluar}</span>`;
-        html += `</div></div>`;
-
-        if (!surat || surat.length === 0) {
-            html += `<div class="eac-empty">Tidak ada surat untuk periode ini.</div>`;
-            body.innerHTML = html;
-            exportBtns.classList.remove('show');
-            return;
-        }
-
-        html += `<table class="eac-tbl">
-            <thead><tr>
-                <th>#</th>
-                <th>No. Surat</th>
-                <th>Perihal</th>
-                <th>Tgl</th>
-                <th>Jenis</th>
-            </tr></thead><tbody>`;
-
-        const offset = (current_page - 1) * 10;
-        surat.forEach((s, i) => {
-            const badge = s.jenis_surat === 'Masuk'
-                ? `<span class="eac-badge masuk">Masuk</span>`
-                : `<span class="eac-badge keluar">Keluar</span>`;
-            const tgl = s.tanggal_surat ? new Date(s.tanggal_surat).toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'}) : '-';
-            html += `<tr>
-                <td>${offset + i + 1}</td>
-                <td><a class="eac-tbl-link" href="/surat/${s.id}" onclick="window.location.href='/surat/${s.id}';return false;">${esc(s.no_surat||'-')}</a></td>
-                <td>${esc(s.perihal||'-')}</td>
-                <td style="white-space:nowrap;font-size:11px">${tgl}</td>
-                <td>${badge}</td>
-            </tr>`;
-        });
-        html += `</tbody></table>`;
-
-        if (last_page > 1) {
-            html += `<div class="eac-pagination">`;
-            if (current_page > 1) html += `<button class="eac-pg-btn" onclick="eacLoadRekap(${current_page-1})">‹ Prev</button>`;
-            for (let p = Math.max(1,current_page-2); p <= Math.min(last_page,current_page+2); p++) {
-                html += `<button class="eac-pg-btn${p===current_page?' active':''}" onclick="eacLoadRekap(${p})">${p}</button>`;
-            }
-            if (current_page < last_page) html += `<button class="eac-pg-btn" onclick="eacLoadRekap(${current_page+1})">Next ›</button>`;
-            html += `</div>`;
-        }
-
-        body.innerHTML = html;
-        exportBtns.classList.add('show');
-    }
-
-    /* Render tahunan */
-    function renderTahunan(data, tahun, jenis) {
-        const body = document.getElementById('eac-rekap-body');
-        const { bulan_data, total_masuk_all, total_keluar_all } = data;
-        const jenisLabel = jenis === 'masuk' ? ' — Masuk' : jenis === 'keluar' ? ' — Keluar' : '';
-
-        let out = `<div class="eac-rekap-info">
-            <span>📅 <strong>Rekap Tahunan ${tahun}${jenisLabel}</strong></span>
-            <div class="eac-rekap-badges">
-                <span class="eac-badge total">Total: ${total_masuk_all + total_keluar_all}</span>
-            </div>
-        </div>`;
-
-        out += `<table class="eac-tbl eac-tbl-year">
-            <thead><tr>
-                <th>Bulan</th>`;
-        if (!jenis || jenis==='masuk')  out += `<th>Masuk</th>`;
-        if (!jenis || jenis==='keluar') out += `<th>Keluar</th>`;
-        if (!jenis) out += `<th>Total</th>`;
-        out += `</tr></thead><tbody>`;
-
-        let totalM = 0, totalK = 0;
-        bulan_data.forEach(row => {
-            const m = row.total_masuk || 0;
-            const k = row.total_keluar || 0;
-            totalM += m; totalK += k;
-
-            out += `<tr><td><strong>${row.bulan_nama}</strong></td>`;
-            if (!jenis || jenis==='masuk')  out += `<td>${m > 0 ? `<strong style="color:#2d7a4f">${m}</strong>` : '<span style="color:#ccc">0</span>'}</td>`;
-            if (!jenis || jenis==='keluar') out += `<td>${k > 0 ? `<strong style="color:#856404">${k}</strong>` : '<span style="color:#ccc">0</span>'}</td>`;
-            if (!jenis) out += `<td>${m+k > 0 ? m+k : '<span style="color:#ccc">0</span>'}</td>`;
-            out += `</tr>`;
-        });
-
-        out += `<tr class="total-row"><td>TOTAL</td>`;
-        if (!jenis || jenis==='masuk')  out += `<td>${totalM}</td>`;
-        if (!jenis || jenis==='keluar') out += `<td>${totalK}</td>`;
-        if (!jenis) out += `<td>${totalM + totalK}</td>`;
-        out += `</tr></tbody></table>`;
-
-        body.innerHTML = out;
-        exportBtns.classList.add('show');
-    }
-
-    /* ── FETCH JSON untuk rekap bulanan ── */
-    function fetchRekapJSON(bulan, tahun, jenis, page, cb) {
-        const params = new URLSearchParams({ bulan, tahun, ...(jenis?{jenis}:{}), page });
-        fetch('/chat/rekap?' + params.toString(), {
-            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() }
-        })
-        .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-        .then(d => cb(null, d))
-        .catch(e => cb(e, null));
-    }
-
-    /* ── FETCH JSON untuk rekap tahunan ── */
-    function fetchRekapTahunanJSON(tahun, jenis, cb) {
-        const params = new URLSearchParams({ tahun, tipe:'Tahun', ...(jenis?{jenis}:{}) });
-        fetch('/chat/rekap-tahunan?' + params.toString(), {
-            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() }
-        })
-        .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-        .then(d => cb(null, d))
-        .catch(e => cb(e, null));
-    }
-
-    /* ══ EXPORT ══ */
-    window.eacExport = function(format) {
-        const { bulan, tahun, jenis } = lastFilter;
-        if (!tahun) return;
-        const params = new URLSearchParams({
-            format,
-            tipe: bulan ? 'Bulan' : 'Tahun',
-            tahun,
-            ...(bulan ? { bulan } : {}),
-            ...(jenis ? { jenis } : {}),
-        });
-        window.open('/laporan/export?' + params.toString(), '_blank');
-    };
-
-    /* ══ CETAK ══ */
-    window.eacCetak = function() {
-        const { bulan, tahun, jenis } = lastFilter;
-        if (!tahun) return;
-        const params = new URLSearchParams({
-            format: 'pdf',
-            tipe: bulan ? 'Bulan' : 'Tahun',
-            tahun,
-            ...(bulan ? { bulan } : {}),
-            ...(jenis ? { jenis } : {}),
-        });
-        const url = '/laporan/export?' + params.toString();
-        const frame = document.getElementById('eac-print-frame');
-        frame.src = url;
-        frame.onload = () => { try { frame.contentWindow.print(); } catch(e) { window.open(url,'_blank'); } };
-    };
-
-    /* ══════════════════════════════════════
-       PERSISTENSI PERCAKAPAN ANTAR HALAMAN
-       (chat tidak hilang saat pindah menu,
-        hanya dibersihkan saat logout)
-    ══════════════════════════════════════ */
-
-    // Simpan ulang isi #eac-messages setiap kali berubah
-    // Hanya simpan jika sudah ada bubble chat (bukan sekadar welcome message)
-    try {
-        const messagesObserver = new MutationObserver(() => {
-            // Hanya simpan jika sudah ada pesan dari user (bukan sekadar welcome bot)
-            if (msgs.querySelector('.eac-bubble.user')) {
-                try { sessionStorage.setItem(MKEY, msgs.innerHTML); } catch (_) {}
-            }
-        });
-        messagesObserver.observe(msgs, { childList: true });
-    } catch (_) {}
-
-    /* ── bfcache: reset rekap & CSRF saat halaman dipulihkan via tombol Back ── */
-    window.addEventListener('pageshow', function(e) {
-        if (!e.persisted) return;
-        lastFilter = {};
-        const rekapBody = document.getElementById('eac-rekap-body');
-        if (rekapBody) rekapBody.innerHTML = '<div class="eac-empty">📋 Pilih periode lalu klik <strong>Tampilkan</strong></div>';
-        exportBtns.classList.remove('show');
-        refreshCsrf();
-    });
-
-    // Pulihkan percakapan & status panel dari halaman sebelumnya
-    (function restoreChatState() {
-        if (!isSameSession) return; // user baru / habis logout — biarkan tampilan default
-
-        try {
-            const savedHtml = sessionStorage.getItem(MKEY);
-            // Hanya restore jika ada pesan dari user (bukan sekadar welcome bot)
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = savedHtml || '';
-            const hasUserBubble = tempDiv.querySelector('.eac-bubble.user') !== null;
-
-            if (savedHtml && savedHtml.trim() !== '' && hasUserBubble) {
-                msgs.innerHTML = savedHtml;
-                sugsEl.style.display = 'none'; // tanya cepat tidak tampil jika ada riwayat chat
-                msgs.scrollTop = msgs.scrollHeight;
-            } else {
-                // Tidak ada riwayat chat dari user — bersihkan & tampilkan tanya cepat
-                sessionStorage.removeItem(MKEY);
-                sugsEl.style.display = 'flex';
-            }
-        } catch (_) {}
-
-        try {
-            if (sessionStorage.getItem(PKEY) === '1') {
-                panel.classList.add('open');
-                btn.style.display = 'none';
-            }
-        } catch (_) {}
-    })();
-
-})();
-</script>
+{{-- ══ JS ══
+     Semua logika widget ini ada di resources/js/chat.js (bukan inline
+     lagi) — supaya file komponen ini bersih dari JS dan JS-nya bisa
+     di-cache/minify seperti file resources/js lain (dashboard.js, dst).
+     Sesuaikan pemanggilan asset di bawah ini dengan setup build kamu
+     (Vite/Mix/plain asset()). --}}
+<script src="{{ asset('js/chat.js') }}" defer></script>

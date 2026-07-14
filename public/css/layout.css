@@ -23,11 +23,11 @@
   --transition: all 0.3s ease;
 
   /* Table */
-  --table-head-bg:    #1f2a44;
+  --table-head-bg: var(--sidebar-bg);
   --table-head-color: #e5e7eb;
-  --table-border:     rgba(0, 0, 0, 0.18);
-  --table-row-hover:  rgba(13, 110, 253, 0.05);
-  --table-td-color:   #212529;
+  --table-border: rgba(0, 0, 0, 0.18);
+  --table-row-hover: rgba(13, 110, 253, 0.05);
+  --table-td-color: #212529;
   --mobile-label-color: #374151;
 }
 
@@ -45,33 +45,34 @@
   --border-color: rgba(255, 255, 255, 0.08);
 
   /* Table dark */
-  --table-head-bg:    #1e293b;
+  --table-head-bg: var(--sidebar-bg);
   --table-head-color: #94a3b8;
-  --table-border:     rgba(255, 255, 255, 0.18);
-  --table-row-hover:  rgba(34, 211, 238, 0.06);
-  --table-td-color:   #e2e8f0;
+  --table-border: rgba(255, 255, 255, 0.18);
+  --table-row-hover: rgba(34, 211, 238, 0.06);
+  --table-td-color: #e2e8f0;
   --mobile-label-color: #94a3b8;
 
   /* Bootstrap 5 CSS variable overrides — supaya utility class BS ikut dark mode */
-  --bs-body-color:          #e5e7eb;
-  --bs-body-color-rgb:      229, 231, 235;
-  --bs-body-bg:             #0f172a;
-  --bs-secondary-color:     rgba(229, 231, 235, 0.65);
+  --bs-body-color: #e5e7eb;
+  --bs-body-color-rgb: 229, 231, 235;
+  --bs-body-bg: #0f172a;
+  --bs-secondary-color: rgba(229, 231, 235, 0.65);
   --bs-secondary-color-rgb: 229, 231, 235;
-  --bs-card-color:          #e5e7eb;
-  --bs-card-bg:             #1f2937;
-  --bs-card-cap-bg:         rgba(255, 255, 255, 0.03);
-  --bs-card-border-color:   rgba(255, 255, 255, 0.08);
-  --bs-border-color:        rgba(255, 255, 255, 0.12);
-  --bs-heading-color:       #f1f5f9;
-  --bs-link-color:          #93c5fd;
-  --bs-link-hover-color:    #bfdbfe;
+  --bs-card-color: #e5e7eb;
+  --bs-card-bg: #1f2937;
+  --bs-card-cap-bg: rgba(255, 255, 255, 0.03);
+  --bs-card-border-color: rgba(255, 255, 255, 0.08);
+  --bs-border-color: rgba(255, 255, 255, 0.12);
+  --bs-heading-color: #f1f5f9;
+  --bs-link-color: #93c5fd;
+  --bs-link-hover-color: #bfdbfe;
 }
 
 /* =======================================================
    🌍 BASE STYLE
 ======================================================= */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   font-family: 'Poppins', 'Open Sans', sans-serif;
@@ -81,7 +82,10 @@ html, body {
   overflow-x: hidden;
 }
 
-a { text-decoration: none; color: inherit; }
+a {
+  text-decoration: none;
+  color: inherit;
+}
 
 /* =======================================================
    🧭 SIDEBAR — Datta Able Style
@@ -93,7 +97,7 @@ a { text-decoration: none; color: inherit; }
   width: 260px;
   height: 100vh;
   background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1c2539 100%);
-  box-shadow: inset -1px 0 0 rgba(255,255,255,0.04), 3px 0 10px rgba(0,0,0,0.25);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04), 3px 0 10px rgba(0, 0, 0, 0.25);
   color: #cfd6e4;
   overflow-y: auto;
   transition: var(--transition);
@@ -107,8 +111,35 @@ a { text-decoration: none; color: inherit; }
   padding: 1.4rem 1rem;
   gap: 12px;
   background: var(--sidebar-header);
-  box-shadow: inset 0 -1px 0 rgba(255,255,255,0.05);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
 }
+
+/* Garis aksen gradasi biru-ungu di dark mode — identik dengan garis shimmer
+   di atas card login (.login-card::before), supaya brand-nya konsisten. */
+[data-theme="dark"] .m-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #7c3aed, #3b82f6);
+  background-size: 200% 100%;
+  animation: sidebarShimmer 4s linear infinite;
+}
+
+@keyframes sidebarShimmer {
+  0% {
+    background-position: 0% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 .m-header .logo {
   width: 42px;
   height: 42px;
@@ -119,7 +150,33 @@ a { text-decoration: none; color: inherit; }
   justify-content: center;
   transition: transform 0.3s ease;
 }
-.m-header .logo:hover { transform: rotate(10deg) scale(1.05); }
+
+.m-header .logo:hover {
+  transform: rotate(10deg) scale(1.05);
+}
+
+/* ── Logo sidebar: terang/gelap swap otomatis (identik pola di halaman login) ── */
+.m-header .logo img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.sidebar-logo-dark {
+  display: none;
+}
+
+.sidebar-logo-light {
+  display: block;
+}
+
+[data-theme="dark"] .sidebar-logo-light {
+  display: none;
+}
+
+[data-theme="dark"] .sidebar-logo-dark {
+  display: block;
+}
 
 .brand-text {
   font-size: 1.15rem;
@@ -127,7 +184,10 @@ a { text-decoration: none; color: inherit; }
   color: #fff;
   letter-spacing: 0.4px;
 }
-.brand-text span { color: var(--active-color); }
+
+.brand-text span {
+  color: var(--active-color);
+}
 
 .b-brand {
   display: flex;
@@ -137,10 +197,11 @@ a { text-decoration: none; color: inherit; }
   text-decoration: none;
   gap: 1px;
 }
+
 .brand-sub {
   font-size: 0.65rem;
   font-weight: 400;
-  color: rgba(255,255,255,0.6);
+  color: rgba(255, 255, 255, 0.6);
   letter-spacing: 0.3px;
 }
 
@@ -156,6 +217,7 @@ a { text-decoration: none; color: inherit; }
   letter-spacing: 0.8px;
   padding: 0.8rem 1.2rem 0.3rem;
 }
+
 .pc-caption i {
   font-size: 0.75rem;
   opacity: 0.7;
@@ -174,15 +236,18 @@ a { text-decoration: none; color: inherit; }
   line-height: 1.4;
   transition: var(--transition);
 }
+
 .pc-link:hover {
   background: var(--sidebar-hover);
   color: #fff;
 }
+
 .pc-link.active {
   background: rgba(34, 211, 238, 0.15);
   color: var(--active-color);
   font-weight: 600;
 }
+
 .pc-link i {
   font-size: 1.05rem;
   opacity: 0.85;
@@ -191,6 +256,7 @@ a { text-decoration: none; color: inherit; }
   flex-shrink: 0;
   line-height: 1;
 }
+
 .pc-link span {
   flex: 1;
   white-space: nowrap;
@@ -199,13 +265,17 @@ a { text-decoration: none; color: inherit; }
 }
 
 /* === SCROLLBAR === */
-.pc-sidebar::-webkit-scrollbar { width: 6px; }
+.pc-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
 .pc-sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 3px;
 }
+
 .pc-sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* =======================================================
@@ -222,12 +292,13 @@ a { text-decoration: none; color: inherit; }
   align-items: center;
   justify-content: space-between;
   padding: 0 1rem;
-  border-bottom: 1px solid rgba(0,0,0,0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   transition: var(--transition);
   z-index: 1050;
 }
+
 [data-theme="dark"] .pc-header {
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 #sidebar-hide {
@@ -244,12 +315,16 @@ a { text-decoration: none; color: inherit; }
 ======================================================= */
 .pc-container {
   margin-left: 260px;
-  top: 56px;               /* override template's 74px — header kita 56px */
+  top: 56px;
+  /* override template's 74px — header kita 56px */
   min-height: calc(100vh - 56px);
   background: var(--body-bg);
   transition: var(--transition);
 }
-body.sidebar-collapsed .pc-container { margin-left: 0; }
+
+body.sidebar-collapsed .pc-container {
+  margin-left: 0;
+}
 
 /* =======================================================
    📄 CARD + TABLE
@@ -257,7 +332,7 @@ body.sidebar-collapsed .pc-container { margin-left: 0; }
 .card {
   background: var(--card-bg);
   border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -277,7 +352,7 @@ body.sidebar-collapsed .pc-container { margin-left: 0; }
   color: var(--text-color);
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* =======================================================
@@ -301,6 +376,7 @@ thead {
   text-transform: uppercase;
   vertical-align: bottom;
 }
+
 thead th {
   font-weight: 600;
   font-size: 0.8rem;
@@ -312,7 +388,9 @@ thead th {
 }
 
 /* Body rows */
-tbody tr { transition: background 0.2s ease; }
+tbody tr {
+  transition: background 0.2s ease;
+}
 
 /* Dark mode — override Bootstrap CSS variables */
 [data-theme="dark"] .table {
@@ -323,7 +401,7 @@ tbody tr { transition: background 0.2s ease; }
   color: var(--table-td-color);
 }
 
-[data-theme="dark"] .table > :not(caption) > * > * {
+[data-theme="dark"] .table> :not(caption)>*>* {
   color: var(--table-td-color);
   border-color: rgba(255, 255, 255, 0.12);
 }
@@ -350,14 +428,17 @@ tbody tr { transition: background 0.2s ease; }
   text-transform: capitalize;
   letter-spacing: 0.3px;
 }
+
 .badge-success {
   background: rgba(16, 185, 129, 0.2);
   color: #34d399;
 }
+
 .badge-info {
   background: rgba(59, 130, 246, 0.2);
   color: #60a5fa;
 }
+
 .badge-danger {
   background: rgba(239, 68, 68, 0.2);
   color: #ef4444;
@@ -375,27 +456,35 @@ tbody tr { transition: background 0.2s ease; }
   cursor: pointer;
   transition: var(--transition);
 }
-.btn i { font-size: 1rem; }
+
+.btn i {
+  font-size: 1rem;
+}
 
 .btn-primary {
   background: linear-gradient(90deg, #0ea5e9, #2563eb);
   color: #fff;
-  box-shadow: 0 2px 6px rgba(37,99,235,0.4);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
 }
+
 .btn-primary:hover {
   filter: brightness(1.15);
   transform: translateY(-1px);
 }
+
 .btn-warning {
   background: #fbbf24;
   color: #1f2937;
 }
-.btn-warning:hover { filter: brightness(1.1); }
+
+.btn-warning:hover {
+  filter: brightness(1.1);
+}
 
 /* === FORM INPUT (hanya di dalam sidebar) === */
 .pc-sidebar input,
 .pc-sidebar select {
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 0.6rem 0.8rem;
   font-size: 0.9rem;
@@ -403,11 +492,12 @@ tbody tr { transition: background 0.2s ease; }
   background: var(--card-bg);
   transition: var(--transition);
 }
+
 .pc-sidebar input:focus,
 .pc-sidebar select:focus {
   border-color: var(--active-color);
   outline: none;
-  box-shadow: 0 0 0 2px rgba(34,211,238,0.15);
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.15);
 }
 
 /* =======================================================
@@ -417,7 +507,10 @@ body {
   opacity: 1;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
-body[data-theme-transition] * { transition: none !important; }
+
+body[data-theme-transition] * {
+  transition: none !important;
+}
 
 /* =======================================================
    🌙 DARK MODE — GLOBAL TEXT COLOR OVERRIDES
@@ -426,32 +519,81 @@ body[data-theme-transition] * { transition: none !important; }
    semua teks halaman (label, heading, muted, dll) ikut
    berubah saat dark mode aktif.
 ======================================================= */
-[data-theme="dark"] .text-muted        { color: #94a3b8 !important; }
-[data-theme="dark"] .text-body         { color: #e5e7eb !important; }
-[data-theme="dark"] .text-dark         { color: #e2e8f0 !important; }
-[data-theme="dark"] .text-secondary    { color: #94a3b8 !important; }
-[data-theme="dark"] .text-black        { color: #f1f5f9 !important; }
-[data-theme="dark"] h1, [data-theme="dark"] h2,
-[data-theme="dark"] h3, [data-theme="dark"] h4,
-[data-theme="dark"] h5, [data-theme="dark"] h6 { color: #f1f5f9; }
+[data-theme="dark"] .text-muted {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .text-body {
+  color: #e5e7eb !important;
+}
+
+[data-theme="dark"] .text-dark {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .text-secondary {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .text-black {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+  color: #f1f5f9;
+}
+
 [data-theme="dark"] p,
 [data-theme="dark"] span:not(.badge):not(.toggle-thumb),
 [data-theme="dark"] label,
-[data-theme="dark"] small              { color: inherit; }
-[data-theme="dark"] .card-body        { color: #e2e8f0; }
-[data-theme="dark"] .card-title       { color: #f1f5f9 !important; }
-[data-theme="dark"] .card-text        { color: #cbd5e1 !important; }
-[data-theme="dark"] .small            { color: inherit; }
-[data-theme="dark"] .fw-bold          { color: inherit; }
+[data-theme="dark"] small {
+  color: inherit;
+}
+
+[data-theme="dark"] .card-body {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .card-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .card-text {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .small {
+  color: inherit;
+}
+
+[data-theme="dark"] .fw-bold {
+  color: inherit;
+}
 
 /* =======================================================
    📱 RESPONSIVE FIX
 ======================================================= */
 @media (max-width: 992px) {
-  .pc-sidebar { transform: translateX(-100%); }
-  .pc-sidebar.show { transform: translateX(0); }
-  .pc-header { left: 0; }
-  .pc-container { margin-left: 0; }
+  .pc-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .pc-sidebar.show {
+    transform: translateX(0);
+  }
+
+  .pc-header {
+    left: 0;
+  }
+
+  .pc-container {
+    margin-left: 0;
+  }
 }
 
 /* =======================================================
@@ -468,7 +610,7 @@ body[data-theme-transition] * { transition: none !important; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     z-index: 1100;
   }
 
@@ -483,37 +625,118 @@ body[data-theme-transition] * { transition: none !important; }
 
   /* Pastikan tombol hamburger mobile selalu tampil */
   .pc-header .pc-h-item.pc-sidebar-popup {
-    display: list-item !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
   }
+
   .pc-header .pc-h-item.pc-sidebar-collapse {
     display: none !important;
   }
+
   .pc-header .pc-mob-drp {
     display: flex !important;
-    align-items: center;
+    align-items: center !important;
+    height: 100% !important;
   }
+
   .pc-header .pc-mob-drp ul {
     display: flex !important;
-    align-items: center;
-    margin: 0;
-    padding: 0;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100% !important;
   }
+
+  .pc-header .pc-mob-drp li {
+    display: flex !important;
+    align-items: center !important;
+    height: 100% !important;
+  }
+
+  /* Tombol hamburger mobile: ukuran & posisi diperbaiki supaya area
+     tap cukup besar (min. 40x40, sesuai rekomendasi target sentuh)
+     dan ikon selalu center vertikal-horizontal terhadap header,
+     tidak "mepet" ke atas/kiri seperti sebelumnya. */
   #mobile-collapse {
     display: flex !important;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    font-size: 1.3rem;
+    align-items: center !important;
+    justify-content: center !important;
+    align-self: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    font-size: 1.4rem;
     color: var(--text-color);
     text-decoration: none;
     border-radius: 8px;
+    flex-shrink: 0;
   }
+
+  #mobile-collapse i {
+    font-size: 1.4rem !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
   #mobile-collapse:hover {
-    background: rgba(0,0,0,0.06);
+    background: rgba(0, 0, 0, 0.06);
   }
+
+  #mobile-collapse:active {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
   [data-theme="dark"] #mobile-collapse:hover {
-    background: rgba(255,255,255,0.08);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  [data-theme="dark"] #mobile-collapse:active {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+
+  /* Navbar user profile di mobile: avatar diperkecil, TAPI nama & role
+     tetap ditampilkan (bukan disembunyikan/dipotong). Sebelumnya wrapper
+     dipaksa 34x34px persegi sehingga teks nama tidak muat dan "bocor"
+     keluar kotak / terlihat terpotong. Sekarang wrapper melebar sesuai
+     konten dengan batas lebar maksimum yang aman untuk layar sempit. */
+  .pc-header .header-user-profile .pc-head-link {
+    height: 38px !important;
+    width: auto !important;
+    max-width: calc(100vw - 130px) !important;
+    /* sisakan ruang utk hamburger + toggle tema */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    padding: 2px 6px !important;
+  }
+
+  .pc-header .header-user-profile .user-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    border-width: 1px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .pc-header .header-user-profile .navbar-username {
+    max-width: 92px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .pc-header .header-user-profile .navbar-user-role {
+    font-size: 0.62rem !important;
+  }
+
+  .pc-header .header-user-profile .bi-chevron-down {
+    display: none;
+    /* hemat ruang di mobile, dropdown tetap bisa dibuka via tap avatar/nama */
   }
 
   .pc-sidebar {
@@ -523,7 +746,7 @@ body[data-theme-transition] * { transition: none !important; }
     width: 230px;
     height: 100vh;
     background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1c2539 100%);
-    box-shadow: 3px 0 15px rgba(0,0,0,0.4);
+    box-shadow: 3px 0 15px rgba(0, 0, 0, 0.4);
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     z-index: 1101;
@@ -539,7 +762,7 @@ body[data-theme-transition] * { transition: none !important; }
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.45);
+    background: rgba(0, 0, 0, 0.45);
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
@@ -573,6 +796,64 @@ body[data-theme-transition] * { transition: none !important; }
 
   .pc-header .user-info {
     display: none;
+  }
+
+  /* ── Dropdown profil navbar: rapikan di mobile ──────────────────────
+     Secara default lebar dropdown Bootstrap bisa melebar aneh / mepet
+     ke tepi layar di viewport sempit. Dikunci lebarnya + dikasih jarak
+     rapi dari tepi kanan & dari header, supaya konsisten dgn tampilan
+     desktop (lihat .dropdown-user-profile) dan tidak menabrak konten
+     di bawahnya. */
+  #userProfileDropdown.dropdown-user-profile {
+    position: fixed !important;
+    top: 54px !important;
+    right: 10px !important;
+    left: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    width: auto !important;
+    max-width: min(230px, calc(100vw - 20px)) !important;
+    transform: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .25) !important;
+    z-index: 1102 !important;
+    max-height: calc(100vh - 70px) !important;
+    overflow-y: auto !important;
+    font-size: 12.5px !important;
+  }
+
+  #userProfileDropdown .dropdown-user-header {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+  }
+
+  #userProfileDropdown .dropdown-user-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    border-width: 1.5px !important;
+  }
+
+  #userProfileDropdown .dropdown-user-header h6 {
+    font-size: 12.5px !important;
+  }
+
+  #userProfileDropdown .dropdown-user-header small {
+    font-size: 10px !important;
+  }
+
+  #userProfileDropdown .btn-logout-header {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: .8rem !important;
+  }
+
+  #userProfileDropdown .dropdown-body .dropdown-item {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+
+  #userProfileDropdown .dropdown-body .dropdown-item i {
+    font-size: .85rem !important;
   }
 
   /* .pc-container di atas sudah punya padding-top (58px) khusus utk
@@ -618,6 +899,7 @@ body[data-theme-transition] * { transition: none !important; }
     padding: 0 !important;
     margin-top: 0.3rem !important;
   }
+
   .page-header {
     padding: 0 !important;
     border: none !important;
@@ -644,7 +926,8 @@ body[data-theme-transition] * { transition: none !important; }
   }
 
   /* Title h4/h5 di header halaman */
-  h4.fw-bold, h5.fw-bold {
+  h4.fw-bold,
+  h5.fw-bold {
     font-size: 1rem !important;
   }
 
@@ -684,9 +967,11 @@ body[data-theme-transition] * { transition: none !important; }
     flex-wrap: nowrap !important;
     align-items: stretch !important;
   }
+
   .filter-bar .input-group .input-group-text {
     flex-shrink: 0 !important;
   }
+
   .filter-bar .input-group .form-control {
     flex: 1 !important;
     min-width: 0 !important;
@@ -699,6 +984,7 @@ body[data-theme-transition] * { transition: none !important; }
     bottom: 16px !important;
     right: 14px !important;
   }
+
   #earsipchat-btn svg {
     width: 20px !important;
     height: 20px !important;
@@ -708,95 +994,98 @@ body[data-theme-transition] * { transition: none !important; }
   .mb-4:not(.stat-cards):not(.laporan-tahunan):not(.laporan-bulanan) {
     margin-bottom: 0.75rem !important;
   }
-  .mb-3:not(.stat-cards) { margin-bottom: 0.5rem !important; }
+
+  .mb-3:not(.stat-cards) {
+    margin-bottom: 0.5rem !important;
+  }
 }
 
 @media print {
-  .card, .table {
+
+  .card,
+  .table {
     page-break-inside: avoid !important;
   }
 }
+
 /* =====================================
    REKAP CARD
 ===================================== */
 
 .rekap-card {
-    position: relative;
-    overflow: hidden;
+  position: relative;
+  overflow: hidden;
 }
 
 .rekap-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-        radial-gradient(
-            circle at top right,
-            rgba(34,211,238,.15),
-            transparent 60%
-        );
-    pointer-events: none;
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right,
+      rgba(34, 211, 238, .15),
+      transparent 60%);
+  pointer-events: none;
 }
 
 .rekap-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 5px;
 }
 
 .rekap-title {
-    font-size: .9rem;
-    font-weight: 500;
-    opacity: .9;
-    margin: 0;
+  font-size: .9rem;
+  font-weight: 500;
+  opacity: .9;
+  margin: 0;
 }
 
 .rekap-badge {
-    background: rgba(255,255,255,.9);
-    color: #0f172a;
-    padding: .65rem 1rem;
-    border-radius: 10px;
-    font-weight: 600;
-    border: none;
+  background: rgba(255, 255, 255, .9);
+  color: #0f172a;
+  padding: .65rem 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  border: none;
 }
 
 /* DARK MODE */
 
 [data-theme="dark"] .rekap-card {
-    background:
-        linear-gradient(
-            135deg,
-            #0f172a,
-            #0f2d45,
-            #164e63
-        ) !important;
+  background:
+    linear-gradient(135deg,
+      #0f172a,
+      #0f2d45,
+      #164e63) !important;
 
-    border: 1px solid rgba(34,211,238,.15);
+  border: 1px solid rgba(34, 211, 238, .15);
 }
 
 [data-theme="dark"] .rekap-card .dashboard-label {
-    color: #e0f7ff !important;
+  color: #e0f7ff !important;
 }
 
 [data-theme="dark"] .rekap-card .icon-wrapper {
-    background: rgba(255,255,255,.08);
+  background: rgba(255, 255, 255, .08);
 }
 
 [data-theme="dark"] .rekap-card .icon-animated {
-    color: #67e8f9 !important;
+  color: #67e8f9 !important;
 }
 
 [data-theme="dark"] .rekap-title {
-    color: #cbd5e1;
+  color: #cbd5e1;
 }
 
 [data-theme="dark"] .rekap-badge {
-    background: rgba(34,211,238,.15);
-    color: #a5f3fc;
-    border: 1px solid rgba(34,211,238,.25);
+  background: rgba(34, 211, 238, .15);
+  color: #a5f3fc;
+  border: 1px solid rgba(34, 211, 238, .25);
 }
+
 /* =======================================================
    🌙 DARK MODE TOGGLE SWITCH — .theme-toggle-label
 ======================================================= */
@@ -823,12 +1112,13 @@ body[data-theme-transition] * { transition: none !important; }
   inset: 0;
   border-radius: 999px;
   background: #cbd5e1;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   transition: background 0.35s ease, border-color 0.35s ease;
 }
-.theme-toggle-label input:checked + .tt-track {
+
+.theme-toggle-label input:checked+.tt-track {
   background: #1e293b;
-  border-color: rgba(255,255,255,0.12);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 /* Thumb (lingkaran geser) */
@@ -840,8 +1130,8 @@ body[data-theme-transition] * { transition: none !important; }
   height: 22px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
-  transition: transform 0.35s cubic-bezier(.4,0,.2,1), background 0.35s ease, box-shadow 0.35s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.35s cubic-bezier(.4, 0, .2, 1), background 0.35s ease, box-shadow 0.35s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -849,10 +1139,11 @@ body[data-theme-transition] * { transition: none !important; }
   pointer-events: none;
   user-select: none;
 }
-.theme-toggle-label input:checked + .tt-track + .tt-thumb {
+
+.theme-toggle-label input:checked+.tt-track+.tt-thumb {
   transform: translateX(24px);
   background: #334155;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 /* Icon sun — tampil di light mode (unchecked) */
@@ -861,6 +1152,7 @@ body[data-theme-transition] * { transition: none !important; }
   color: #f59e0b;
   font-size: 11px;
 }
+
 .tt-icon-moon {
   display: none;
   color: #93c5fd;
@@ -868,8 +1160,13 @@ body[data-theme-transition] * { transition: none !important; }
 }
 
 /* Icon moon — tampil di dark mode (checked) */
-.theme-toggle-label input:checked ~ .tt-thumb .tt-icon-sun  { display: none;  }
-.theme-toggle-label input:checked ~ .tt-thumb .tt-icon-moon { display: block; }
+.theme-toggle-label input:checked~.tt-thumb .tt-icon-sun {
+  display: none;
+}
+
+.theme-toggle-label input:checked~.tt-thumb .tt-icon-moon {
+  display: block;
+}
 
 /* =======================================================
    🎨 BADGE GENDER — Light & Dark Mode
@@ -881,6 +1178,7 @@ body[data-theme-transition] * { transition: none !important; }
   font-size: 0.75rem;
   white-space: nowrap;
 }
+
 .badge-gender-perempuan {
   background: #fce7f3;
   color: #be185d;
@@ -894,6 +1192,7 @@ body[data-theme-transition] * { transition: none !important; }
   color: #93c5fd;
   border: 1px solid rgba(59, 130, 246, 0.35);
 }
+
 [data-theme="dark"] .badge-gender-perempuan {
   background: rgba(236, 72, 153, 0.18);
   color: #f9a8d4;
@@ -909,7 +1208,7 @@ body[data-theme-transition] * { transition: none !important; }
 .chart-card input[type="number"] {
   background: var(--card-bg);
   color: var(--text-color);
-  border: 1px solid rgba(0,0,0,0.15);
+  border: 1px solid rgba(0, 0, 0, 0.15);
   transition: background 0.3s, color 0.3s, border-color 0.3s;
 }
 
@@ -918,7 +1217,7 @@ body[data-theme-transition] * { transition: none !important; }
 [data-theme="dark"] .chart-card input[type="number"] {
   background: #1e293b;
   color: #e2e8f0;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 [data-theme="dark"] .chart-card .form-control::placeholder,
@@ -942,10 +1241,11 @@ body[data-theme-transition] * { transition: none !important; }
 ======================================================= */
 [data-theme="dark"] .chart-card {
   background: var(--card-bg);
-  border: 1px solid rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
+
 [data-theme="dark"] .chart-card .card-header {
-  border-bottom: 1px solid rgba(255,255,255,0.07) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
 }
 
 /* =======================================================
@@ -985,7 +1285,7 @@ body[data-theme-transition] * { transition: none !important; }
 [data-theme="dark"] .filter-bar {
   background-color: var(--filter-bg) !important;
   border-color: var(--border-color) !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
 [data-theme="dark"] .filter-bar .form-control,
@@ -1030,7 +1330,9 @@ body[data-theme-transition] * { transition: none !important; }
 }
 
 @media (max-width: 768px) {
-  .filter-bar { padding: 0.75rem; }
+  .filter-bar {
+    padding: 0.75rem;
+  }
 }
 
 /* =======================================================
@@ -1175,12 +1477,12 @@ body[data-theme-transition] * { transition: none !important; }
 
   /* Setiap baris jadi kartu */
   .table-responsive:not(.no-mobile-card) tbody tr {
-    border: 1px solid var(--table-border, rgba(0,0,0,.1)) !important;
+    border: 1px solid var(--table-border, rgba(0, 0, 0, .1)) !important;
     border-radius: 10px !important;
     margin-bottom: 0.85rem !important;
     padding: 0.4rem 0 !important;
     background: var(--card-bg, #fff) !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,.07) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .07) !important;
   }
 
   /* Setiap sel jadi baris label : nilai */
@@ -1190,7 +1492,7 @@ body[data-theme-transition] * { transition: none !important; }
     justify-content: space-between !important;
     padding: 0.45rem 0.85rem !important;
     border: none !important;
-    border-bottom: 1px solid var(--table-border, rgba(0,0,0,.06)) !important;
+    border-bottom: 1px solid var(--table-border, rgba(0, 0, 0, .06)) !important;
     text-align: right !important;
     white-space: normal !important;
     word-break: break-word !important;
@@ -1233,25 +1535,72 @@ body[data-theme-transition] * { transition: none !important; }
   /* Dark mode card-view */
   [data-theme="dark"] .table-responsive:not(.no-mobile-card) tbody tr {
     background: var(--card-bg, #1f2937) !important;
-    border-color: rgba(255,255,255,.08) !important;
+    border-color: rgba(255, 255, 255, .08) !important;
   }
 
   [data-theme="dark"] .table-responsive:not(.no-mobile-card) td {
-    border-bottom-color: rgba(255,255,255,.05) !important;
+    border-bottom-color: rgba(255, 255, 255, .05) !important;
   }
 }
 
 /* ===== LOGO SWITCHER (light/dark) ===== */
-.logo-light { display: block; }
-.logo-dark  { display: none;  }
-[data-theme="dark"] .logo-light { display: none;  }
-[data-theme="dark"] .logo-dark  { display: block; }
+.logo-light {
+  display: block;
+}
+
+.logo-dark {
+  display: none;
+}
+
+[data-theme="dark"] .logo-light {
+  display: none;
+}
+
+[data-theme="dark"] .logo-dark {
+  display: block;
+}
+
+/* Kotak pembungkus logo di navbar/header — pola sama seperti .logo-ring
+   di halaman login, tapi diperkecil supaya muat di header (tinggi 56px) */
+.pc-header-logo {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e8eeff, #dce8ff);
+  border: 1px solid rgba(37, 99, 235, .08);
+  box-shadow: 0 2px 8px rgba(13, 110, 253, .10);
+  transition: background .3s ease, box-shadow .3s ease, border .3s ease, transform .25s ease;
+}
+
+.pc-header-logo:hover {
+  transform: rotate(-4deg) scale(1.06);
+  box-shadow: 0 4px 14px rgba(13, 110, 253, .2);
+}
+
+[data-theme="dark"] .pc-header-logo {
+  background: linear-gradient(135deg, #1a2545, #1e2d50);
+  border-color: rgba(255, 255, 255, .06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .4);
+}
+
+[data-theme="dark"] .pc-header-logo:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .55);
+}
 
 .navbar-logo {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   object-fit: contain;
-  border-radius: 6px;
+}
+
+@media (max-width: 992px) {
+  .pc-header-logo {
+    display: none;
+  }
 }
 
 /* ===== BREADCRUMB ===== */
@@ -1277,7 +1626,7 @@ body[data-theme-transition] * { transition: none !important; }
 }
 
 /* Separator tidak lagi float — ikut flow flex */
-.pc-breadcrumb-bar .breadcrumb-item + .breadcrumb-item::before {
+.pc-breadcrumb-bar .breadcrumb-item+.breadcrumb-item::before {
   float: none;
   display: inline-flex;
   align-items: center;
@@ -1301,7 +1650,9 @@ body[data-theme-transition] * { transition: none !important; }
   line-height: 1;
 }
 
-.pc-breadcrumb-bar .breadcrumb-item a:hover { text-decoration: underline; }
+.pc-breadcrumb-bar .breadcrumb-item a:hover {
+  text-decoration: underline;
+}
 
 .pc-breadcrumb-bar .breadcrumb-item.active {
   display: inline-flex;
@@ -1322,17 +1673,18 @@ body[data-theme-transition] * { transition: none !important; }
   padding: 0;
   margin-top: 0.4rem;
 }
+
 /* Template menambah padding-top:24px ke .row tepat setelah .page-header — hapus */
-.pc-container .page-header + .row {
+.pc-container .page-header+.row {
   padding-top: 0 !important;
 }
 
 /* ===== JUDUL HALAMAN (icon + h5 sejajar) ===================================
    Icon Bootstrap (.bi) punya line-height berbeda dengan h5 (1.2).
    Paksa keduanya line-height:1 + vertical-align:middle agar lurus. */
-.pc-content .d-flex.align-items-center > .bi,
-.pc-content .d-flex.align-items-center > h5,
-.pc-content .d-flex.align-items-center > h4 {
+.pc-content .d-flex.align-items-center>.bi,
+.pc-content .d-flex.align-items-center>h5,
+.pc-content .d-flex.align-items-center>h4 {
   line-height: 1;
   vertical-align: middle;
   margin-top: 0;
@@ -1340,205 +1692,504 @@ body[data-theme-transition] * { transition: none !important; }
 }
 
 /* ── Sidebar initial visibility ─────────────────────────────────────────── */
-.pc-sidebar { visibility: visible; }
-html { transition: background-color 0.3s, color 0.3s; }
+.pc-sidebar {
+  visibility: visible;
+}
+
+html {
+  transition: background-color 0.3s, color 0.3s;
+}
 
 /* ── Theme Switch (Navbar) ───────────────────────────────────────────────── */
 header.pc-header #theme-switch {
-    position: relative; width: 58px; height: 30px;
-    border-radius: 50px; border: 1.5px solid rgba(0,0,0,0.1);
-    background: #e8edf5; display: flex; align-items: center;
-    justify-content: space-between; padding: 0 7px; cursor: pointer;
-    transition: background .4s ease, border .4s ease, box-shadow .3s ease;
-    box-shadow: 0 2px 8px rgba(0,0,0,.1); flex-shrink: 0;
+  position: relative;
+  width: 58px;
+  height: 30px;
+  border-radius: 50px !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.1) !important;
+  background: #e8edf5 !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 !important;
+  cursor: pointer;
+  transition: background .4s ease, border .4s ease, box-shadow .3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .1) !important;
+  flex-shrink: 0;
 }
-header.pc-header #theme-switch:hover { box-shadow: 0 4px 14px rgba(0,0,0,.18); }
-header.pc-header #theme-switch i { font-size: 1rem; transition: opacity .3s; position: relative; z-index: 2; }
-header.pc-header #theme-switch .sun  { color: #f59e0b; }
-header.pc-header #theme-switch .moon { color: #64748b; opacity: .35; }
+
+header.pc-header #theme-switch:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .18) !important;
+}
+
+/* Thumb: satu-satunya elemen yang tampak, membawa icon-nya sendiri saat
+   bergeser — jadi icon TIDAK PERNAH ketutup/hilang di posisi manapun. */
 header.pc-header .toggle-thumb {
-    position: absolute; top: 3px; left: 3px;
-    width: 22px; height: 22px; background: #fff; border-radius: 50%;
-    z-index: 1; transition: left .4s cubic-bezier(.4,0,.2,1);
-    box-shadow: 0 1px 5px rgba(0,0,0,.2); pointer-events: none;
+  position: absolute !important;
+  top: 3px !important;
+  left: 3px !important;
+  width: 22px !important;
+  height: 22px !important;
+  background: #fff !important;
+  border-radius: 50% !important;
+  z-index: 1;
+  transition: left .4s cubic-bezier(.4, 0, .2, 1), background .4s ease;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .2) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
-[data-theme="dark"] header.pc-header #theme-switch { background: #1e293b; border-color: rgba(255,255,255,.08); }
-[data-theme="dark"] header.pc-header #theme-switch .sun  { opacity: .3; }
-[data-theme="dark"] header.pc-header #theme-switch .moon { opacity: 1; color: #93c5fd; }
-[data-theme="dark"] header.pc-header .toggle-thumb { left: calc(100% - 25px); background: #334155; }
+
+header.pc-header .toggle-thumb i {
+  position: absolute !important;
+  font-size: .68rem !important;
+  line-height: 1 !important;
+  transition: opacity .3s ease, transform .3s ease;
+}
+
+header.pc-header .toggle-thumb .sun {
+  color: #f59e0b !important;
+  opacity: 1 !important;
+  transform: scale(1) rotate(0deg);
+}
+
+header.pc-header .toggle-thumb .moon {
+  color: #64748b !important;
+  opacity: 0 !important;
+  transform: scale(.4) rotate(-45deg);
+}
+
+[data-theme="dark"] header.pc-header #theme-switch {
+  background: #1e293b !important;
+  border-color: rgba(255, 255, 255, .08) !important;
+}
+
+[data-theme="dark"] header.pc-header .toggle-thumb {
+  left: calc(100% - 25px) !important;
+  background: #334155 !important;
+}
+
+[data-theme="dark"] header.pc-header .toggle-thumb .sun {
+  opacity: 0 !important;
+  transform: scale(.4) rotate(45deg);
+}
+
+[data-theme="dark"] header.pc-header .toggle-thumb .moon {
+  opacity: 1 !important;
+  color: #93c5fd !important;
+  transform: scale(1) rotate(0deg);
+}
+
+/* ── Hamburger button — center vertikal, tidak mepet ─────────────────────── */
+.pc-mob-drp .pc-h-item {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Cegah hamburger dobel: tombol khusus mobile (.pc-sidebar-popup) disembunyikan
+   secara default di desktop. Sebelumnya tidak ada rule ini sehingga di layar
+   desktop dua tombol hamburger (desktop collapse + mobile popup) tampil
+   bersamaan. Di ≤992px, rule di dalam media query "MOBILE OPTIMIZATION" akan
+   menampilkannya kembali dan menyembunyikan versi desktop sebagai gantinya. */
+@media (min-width: 993px) {
+  .pc-header .pc-h-item.pc-sidebar-popup {
+    display: none !important;
+  }
+}
+
+.pc-mob-drp .pc-head-link,
+.pc-sidebar-collapse .pc-head-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 40px !important;
+  width: 40px !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
+  transition: background .2s ease !important;
+}
+
+.pc-mob-drp .pc-head-link:hover,
+.pc-sidebar-collapse .pc-head-link:hover {
+  background: rgba(0, 0, 0, .06) !important;
+}
+
+[data-theme="dark"] .pc-mob-drp .pc-head-link:hover,
+[data-theme="dark"] .pc-sidebar-collapse .pc-head-link:hover {
+  background: rgba(255, 255, 255, .08) !important;
+}
+
+/* ── Nama user di navbar ─────────────────────────────────────────────────── */
+.navbar-username {
+  font-size: .82rem;
+  font-weight: 600;
+  color: #374151;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+  transition: color .3s ease;
+}
+
+.navbar-user-role {
+  font-size: .7rem;
+  font-weight: 400;
+  color: #6b7280;
+  line-height: 1.2;
+  transition: color .3s ease;
+}
+
+[data-theme="dark"] .navbar-username {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .navbar-user-role {
+  color: #94a3b8;
+}
+
+/* Nama & role user SELALU tampil, termasuk di layar sangat sempit —
+   sebelumnya di-display:none di bawah 400px. Sekarang cukup dipersempit
+   lebih lanjut supaya tetap muat, dengan ellipsis kalau nama panjang. */
+@media (max-width: 400px) {
+  .pc-header .header-user-profile .navbar-username {
+    max-width: 64px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .pc-header .header-user-profile .navbar-user-role {
+    font-size: 0.58rem !important;
+  }
+
+  .pc-header .header-user-profile .pc-head-link {
+    max-width: calc(100vw - 110px) !important;
+  }
+}
 
 /* ── User Profile Dropdown (Navbar) ──────────────────────────────────────── */
 .pc-header .header-user-profile .user-avatar {
-    width: 36px;
-    height: 36px;
-    object-fit: cover;
-    object-position: center;
-    border-radius: 50%;
-    border: 2px solid rgba(108, 62, 171, .35);
-    box-shadow: 0 1px 4px rgba(0,0,0,.2);
-    position: relative; /* naik di atas ::before overlay (z-index:1) */
-    z-index: 5;
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+  border: 2px solid rgba(108, 62, 171, .35);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .2);
+  position: relative;
+  /* naik di atas ::before overlay (z-index:1) */
+  z-index: 5;
 }
+
+/* Paksa nama & role tetap tampil di SEMUA state (default, hover, focus,
+   dropdown terbuka). Template bawaan (Datta Able) punya perilaku default
+   yang mengecilkan/collapse tombol profil saat kursor mendekat/hover —
+   ini menimpa perilaku itu supaya nama user tidak pernah hilang. */
+.pc-header .header-user-profile .pc-head-link,
+.pc-header .header-user-profile .pc-head-link:hover,
+.pc-header .header-user-profile .pc-head-link:focus,
+.pc-header .header-user-profile .pc-head-link:active,
+.pc-header .header-user-profile .pc-head-link.show {
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+.pc-header .header-user-profile .pc-head-link .d-flex.flex-column,
+.pc-header .header-user-profile .pc-head-link:hover .d-flex.flex-column {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  width: auto !important;
+  max-width: none !important;
+}
+
+.pc-header .header-user-profile .navbar-username,
+.pc-header .header-user-profile .navbar-user-role,
+.pc-header .header-user-profile .pc-head-link:hover .navbar-username,
+.pc-header .header-user-profile .pc-head-link:hover .navbar-user-role {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* FIX: nama & role hilang saat dropdown dibuka (state .show /
+   [aria-expanded="true"]). Rule display/opacity/visibility di atas
+   TIDAK menimpa warna teks — CSS bawaan template (Bootstrap
+   .dropdown-toggle.show / [aria-expanded="true"]) mengubah color
+   tombol saat dropdown terbuka, sehingga teks jadi warna yang
+   menyatu dengan background (terlihat "hilang" padahal masih ada
+   di DOM). Paksa warna teks tetap sama di SEMUA state. */
+.pc-header .header-user-profile .pc-head-link.show .navbar-username,
+.pc-header .header-user-profile .pc-head-link:focus .navbar-username,
+.pc-header .header-user-profile .pc-head-link:active .navbar-username,
+.pc-header .header-user-profile .pc-head-link[aria-expanded="true"] .navbar-username {
+  color: #374151 !important;
+}
+
+.pc-header .header-user-profile .pc-head-link.show .navbar-user-role,
+.pc-header .header-user-profile .pc-head-link:focus .navbar-user-role,
+.pc-header .header-user-profile .pc-head-link:active .navbar-user-role,
+.pc-header .header-user-profile .pc-head-link[aria-expanded="true"] .navbar-user-role {
+  color: #6b7280 !important;
+}
+
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link.show .navbar-username,
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link:focus .navbar-username,
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link:active .navbar-username,
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link[aria-expanded="true"] .navbar-username {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link.show .navbar-user-role,
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link:focus .navbar-user-role,
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link:active .navbar-user-role,
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link[aria-expanded="true"] .navbar-user-role {
+  color: #94a3b8 !important;
+}
+
+/* FIX FINAL: nama & role tidak pernah muncul di kondisi diam (bukan
+   cuma saat dropdown dibuka). Template bawaan mengecilkan lebar &
+   opacity widget profil ke 0 secara default, lalu memakai
+   "transition" agar melebar/terlihat HANYA saat :hover — di layar
+   sentuh/klik tidak ada event hover, jadi teks permanen tersembunyi.
+   Di bawah ini: matikan total transisinya + paksa lebar & opacity
+   penuh di semua kondisi, dengan spesifisitas selector yang
+   digandakan supaya menang melawan rule bawaan template. */
+html body .pc-header.pc-header .header-user-profile.header-user-profile .pc-head-link.pc-head-link,
+html body .pc-header.pc-header .header-user-profile.header-user-profile .pc-head-link.pc-head-link .d-flex.flex-column,
+html body .pc-header.pc-header .header-user-profile.header-user-profile .navbar-username.navbar-username,
+html body .pc-header.pc-header .header-user-profile.header-user-profile .navbar-user-role.navbar-user-role {
+  transition: none !important;
+  animation: none !important;
+}
+
+html body .pc-header.pc-header .header-user-profile.header-user-profile .pc-head-link.pc-head-link .d-flex.flex-column {
+  display: flex !important;
+  flex-direction: column !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  width: auto !important;
+  max-width: none !important;
+  flex-shrink: 0 !important;
+  overflow: visible !important;
+}
+
+html body .pc-header.pc-header .header-user-profile.header-user-profile .navbar-username.navbar-username {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  width: auto !important;
+  max-width: 120px !important;
+  flex-shrink: 0 !important;
+}
+
+html body .pc-header.pc-header .header-user-profile.header-user-profile .navbar-user-role.navbar-user-role {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  width: auto !important;
+  flex-shrink: 0 !important;
+}
+
+/* Tombol pembungkus avatar (pc-head-link) bawaan template punya
+   background terang/putih di belakang foto — di mode gelap ini bikin
+   avatar kelihatan seperti "kotak putih". Dihapus & diganti warna yang
+   senada dgn tema gelap, sedikit lebih terang dari header supaya tetap
+   ada pemisahan visual (bukan hilang total ke background). */
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link {
+  background: rgba(255, 255, 255, .06) !important;
+  border-radius: 50%;
+}
+
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link:hover {
+  background: rgba(255, 255, 255, .12) !important;
+}
+
+[data-theme="dark"] .pc-header .header-user-profile .user-avatar {
+  background: var(--card-bg);
+  border-color: rgba(108, 62, 171, .5);
+}
+
 .pc-header .dropdown-user-profile .img-radius {
-    width: 35px;
-    height: 35px;
-    object-fit: cover;
-    object-position: center;
-    border-radius: 50%;
-    border: 2px solid rgba(255,255,255,.4);
-    flex-shrink: 0;
+  width: 35px;
+  height: 35px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .4);
+  flex-shrink: 0;
 }
+
 [data-theme="dark"] .pc-header .dropdown-user-profile {
-    background: #1e1e2e;
-    border-color: rgba(255,255,255,.08);
+  background: #1e1e2e;
+  border-color: rgba(255, 255, 255, .08);
 }
+
 [data-theme="dark"] .pc-header .dropdown-user-profile .dropdown-item {
-    color: #cbd5e1;
+  color: #cbd5e1;
 }
+
 [data-theme="dark"] .pc-header .dropdown-user-profile .dropdown-item:hover {
-    background: rgba(255,255,255,.06);
-    color: #f1f5f9;
+  background: rgba(255, 255, 255, .06);
+  color: #f1f5f9;
 }
+
 [data-theme="dark"] .pc-header .dropdown-user-profile .dropdown-divider {
-    border-color: rgba(255,255,255,.08);
+  border-color: rgba(255, 255, 255, .08);
 }
 
 /* ── Tombol Logout di Header Dropdown (sebelah foto) ─────────────────────── */
 .btn-logout-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    background: rgba(255,255,255,.15);
-    border: 1.5px solid rgba(255,255,255,.25);
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all .2s ease;
-    color: #fff;
-    font-size: 1rem;
-    padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: rgba(255, 255, 255, .15);
+  border: 1.5px solid rgba(255, 255, 255, .25);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all .2s ease;
+  color: #fff;
+  font-size: 1rem;
+  padding: 0;
 }
+
 .btn-logout-header:hover {
-    background: rgba(239,68,68,.85);
-    border-color: rgba(239,68,68,.6);
-    transform: rotate(15deg) scale(1.1);
-    box-shadow: 0 0 10px rgba(239,68,68,.5);
+  background: rgba(239, 68, 68, .85);
+  border-color: rgba(239, 68, 68, .6);
+  transform: rotate(15deg) scale(1.1);
+  box-shadow: 0 0 10px rgba(239, 68, 68, .5);
 }
+
 .btn-logout-header .bi {
-    line-height: 1;
-    transition: transform .2s ease;
+  line-height: 1;
+  transition: transform .2s ease;
 }
 
 /* ── Tombol Logout Navbar (lama — tidak dipakai, simpan untuk referensi) ──── */
 .btn-logout-navbar {
-    display: block;
-    width: 100%;
-    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-    border: 1.5px solid #fca5a5;
-    border-radius: 10px;
-    padding: 0;
-    cursor: pointer;
-    transition: all .22s ease;
-    overflow: hidden;
+  display: block;
+  width: 100%;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border: 1.5px solid #fca5a5;
+  border-radius: 10px;
+  padding: 0;
+  cursor: pointer;
+  transition: all .22s ease;
+  overflow: hidden;
 }
+
 .btn-logout-navbar:hover {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    border-color: #dc2626;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(239,68,68,.35);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, .35);
 }
+
 .btn-logout-inner {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
 }
+
 .btn-logout-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    background: rgba(239,68,68,.15);
-    border-radius: 8px;
-    flex-shrink: 0;
-    transition: background .22s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: rgba(239, 68, 68, .15);
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: background .22s ease;
 }
+
 .btn-logout-icon .bi {
-    font-size: 1rem;
-    color: #dc2626;
-    transition: color .22s ease, transform .22s ease;
+  font-size: 1rem;
+  color: #dc2626;
+  transition: color .22s ease, transform .22s ease;
 }
+
 .btn-logout-text {
-    flex: 1;
-    font-size: .85rem;
-    font-weight: 600;
-    color: #dc2626;
-    text-align: left;
-    transition: color .22s ease;
+  flex: 1;
+  font-size: .85rem;
+  font-weight: 600;
+  color: #dc2626;
+  text-align: left;
+  transition: color .22s ease;
 }
+
 .btn-logout-arrow {
-    font-size: .7rem;
-    color: #fca5a5;
-    transition: transform .22s ease, color .22s ease;
+  font-size: .7rem;
+  color: #fca5a5;
+  transition: transform .22s ease, color .22s ease;
 }
+
 .btn-logout-navbar:hover .btn-logout-icon {
-    background: rgba(255,255,255,.2);
+  background: rgba(255, 255, 255, .2);
 }
+
 .btn-logout-navbar:hover .btn-logout-icon .bi,
 .btn-logout-navbar:hover .btn-logout-text {
-    color: #fff;
+  color: #fff;
 }
+
 .btn-logout-navbar:hover .btn-logout-arrow {
-    color: rgba(255,255,255,.7);
-    transform: translateX(3px);
+  color: rgba(255, 255, 255, .7);
+  transform: translateX(3px);
 }
 
 /* Dark mode */
 [data-theme="dark"] .btn-logout-navbar {
-    background: linear-gradient(135deg, rgba(239,68,68,.12) 0%, rgba(220,38,38,.08) 100%);
-    border-color: rgba(239,68,68,.3);
+  background: linear-gradient(135deg, rgba(239, 68, 68, .12) 0%, rgba(220, 38, 38, .08) 100%);
+  border-color: rgba(239, 68, 68, .3);
 }
+
 [data-theme="dark"] .btn-logout-navbar:hover {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    border-color: #ef4444;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: #ef4444;
 }
+
 [data-theme="dark"] .btn-logout-icon {
-    background: rgba(239,68,68,.18);
+  background: rgba(239, 68, 68, .18);
 }
+
 [data-theme="dark"] .btn-logout-icon .bi,
 [data-theme="dark"] .btn-logout-text {
-    color: #f87171;
+  color: #f87171;
 }
+
 [data-theme="dark"] .btn-logout-arrow {
-    color: rgba(248,113,113,.5);
+  color: rgba(248, 113, 113, .5);
 }
+
 [data-theme="dark"] .btn-logout-navbar:hover .btn-logout-icon .bi,
 [data-theme="dark"] .btn-logout-navbar:hover .btn-logout-text {
-    color: #fff;
+  color: #fff;
 }
 
 /* =======================================================
    🏷️ PAGE HEADER ICON BADGE — ikon judul halaman (Dashboard, Surat, dll)
 ======================================================= */
 .header-icon-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    flex-shrink: 0;
-    border-radius: 10px;
-    background: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.12);
-    color: var(--bs-primary, #0d6efd);
-    font-size: 1.05rem;
-    line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.12);
+  color: var(--bs-primary, #0d6efd);
+  font-size: 1.05rem;
+  line-height: 1;
 }
 
 [data-theme="dark"] .header-icon-badge {
-    background: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.18);
-    color: var(--bs-primary, #0d6efd);
+  background: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.18);
+  color: var(--bs-primary, #0d6efd);
 }
 
 /* =======================================================
@@ -1548,14 +2199,15 @@ header.pc-header .toggle-thumb {
 ======================================================= */
 
 /* tbody rows & striped — samakan dengan card-bg */
-[data-theme="dark"] .table-striped > tbody > tr,
-[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) {
+[data-theme="dark"] .table-striped>tbody>tr,
+[data-theme="dark"] .table-striped>tbody>tr:nth-of-type(odd) {
   --bs-table-accent-bg: transparent;
   --bs-table-striped-bg: rgba(255, 255, 255, 0.025);
   background-color: transparent !important;
 }
-[data-theme="dark"] .table > tbody > tr > td,
-[data-theme="dark"] .table > tbody > tr > th {
+
+[data-theme="dark"] .table>tbody>tr>td,
+[data-theme="dark"] .table>tbody>tr>th {
   background-color: transparent !important;
 }
 
@@ -1563,7 +2215,8 @@ header.pc-header .toggle-thumb {
 [data-theme="dark"] .table-bordered {
   --bs-table-border-color: rgba(255, 255, 255, 0.12);
 }
-[data-theme="dark"] .table-bordered > :not(caption) > * > * {
+
+[data-theme="dark"] .table-bordered> :not(caption)>*>* {
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
@@ -1572,8 +2225,9 @@ header.pc-header .toggle-thumb {
 [data-theme="dark"] .user-card {
   background-color: #1f2937 !important;
   border-color: var(--border-color) !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
+
 [data-theme="dark"] .card-body,
 [data-theme="dark"] .card-footer,
 [data-theme="dark"] .card-footer.bg-white,
@@ -1604,28 +2258,43 @@ header.pc-header .toggle-thumb {
   border-color: var(--border-color);
   color: var(--table-td-color);
 }
+
 [data-theme="dark"] .pagination .page-item.active .page-link {
   background-color: var(--active-color);
   border-color: var(--active-color);
   color: #0f172a;
 }
+
 [data-theme="dark"] .pagination .page-item.disabled .page-link {
   background-color: transparent;
   color: #475569;
 }
+
 [data-theme="dark"] .pagination .page-link:hover {
   background-color: rgba(255, 255, 255, 0.06);
   color: var(--table-td-color);
 }
+
 /* =======================================================
    🧩 KOMPONEN — Pindahan dari inline style blade
 ======================================================= */
 
-/* --- Navbar: dropdown header gradient --- */
-.dropdown-user-header {
-  background: linear-gradient(135deg, #6C3EAB, #4F46E5);
+/* --- Navbar: dropdown header --- */
+/* Berbasis warna sidebar, tapi dibuat sedikit beda antara light & dark
+   mode supaya perubahan tema tetap terasa (bukan flat sama persis).
+   !important dipakai karena kemungkinan ada CSS tema/vendor lain yang
+   juga mendefinisikan elemen ini dan ter-load setelah file ini. */
+.pc-header .dropdown-user-profile .dropdown-user-header {
+  background: var(--sidebar-bg) !important;
   padding: 14px 16px;
+  transition: background 0.3s ease;
 }
+
+[data-theme="dark"] .pc-header .dropdown-user-profile .dropdown-user-header {
+  background: #11162a !important;
+  /* lebih gelap dari versi light, masih senada navy sidebar */
+}
+
 .dropdown-user-avatar {
   height: 35px;
   object-fit: cover;
@@ -1634,8 +2303,11 @@ header.pc-header .toggle-thumb {
 }
 
 /* --- Modal: loader body --- */
-.modal-loader-body  { min-height: 200px; }
-.modal-loader-flex  {
+.modal-loader-body {
+  min-height: 200px;
+}
+
+.modal-loader-flex {
   display: flex;
   min-height: 200px;
   justify-content: center;
@@ -1645,15 +2317,17 @@ header.pc-header .toggle-thumb {
 /* --- Sidebar Footer --- */
 .sidebar-footer {
   padding: 0.75rem 1rem;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   margin-top: auto;
 }
+
 .sf-brand {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
 }
+
 .sf-logo {
   width: 28px;
   height: 28px;
@@ -1661,7 +2335,11 @@ header.pc-header .toggle-thumb {
   border-radius: 6px;
   flex-shrink: 0;
 }
-.sf-brand-text { min-width: 0; }
+
+.sf-brand-text {
+  min-width: 0;
+}
+
 .sf-brand-name {
   font-size: 0.8rem;
   font-weight: 600;
@@ -1669,23 +2347,30 @@ header.pc-header .toggle-thumb {
   line-height: 1.2;
   white-space: nowrap;
 }
+
 .sf-brand-subtitle {
   font-size: 0.7rem;
   color: #7a8499;
   white-space: nowrap;
 }
+
 .sf-dev {
   font-size: 0.72rem;
   color: #7a8499;
   margin-bottom: 6px;
 }
-.sf-dev strong { color: #94a3b8; }
+
+.sf-dev strong {
+  color: #94a3b8;
+}
+
 .sf-contacts {
   display: flex;
   flex-direction: column;
   gap: 3px;
   margin-bottom: 8px;
 }
+
 .sf-contact-link {
   display: flex;
   align-items: center;
@@ -1695,19 +2380,32 @@ header.pc-header .toggle-thumb {
   text-decoration: none;
   transition: color 0.2s;
 }
-.sf-contact-link:hover          { color: #94a3b8; }
-.sf-contact-link.whatsapp:hover { color: #25d366; }
-.sf-contact-icon { font-size: 0.75rem; flex-shrink: 0; }
+
+.sf-contact-link:hover {
+  color: #94a3b8;
+}
+
+.sf-contact-link.whatsapp:hover {
+  color: #25d366;
+}
+
+.sf-contact-icon {
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
 .sf-contact-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .sf-divider {
   height: 1px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
   margin-bottom: 6px;
 }
+
 .sf-copyright {
   font-size: 0.68rem;
   color: #4b5563;
@@ -1715,4 +2413,150 @@ header.pc-header .toggle-thumb {
 }
 
 /* ── Alert toast container ──────────────────────────────────────────────── */
-#alert-container { z-index: 9999; }
+#alert-container {
+  z-index: 11000 !important;
+}
+
+/* ── Fix Bootstrap modal-dialog-centered on mobile devices to prevent headers from being cut off at the top ── */
+@media (max-width: 992px) {
+
+  /* Dialog memanfaatkan lebar layar, margin tipis simetris, dorong ke bawah navbar */
+  .modal-dialog {
+    margin: 70px auto 0.6rem !important;
+    max-width: calc(100% - 1.2rem) !important;
+  }
+
+  .modal-dialog.modal-dialog-centered {
+    display: flex !important;
+    align-items: flex-start !important;
+    min-height: calc(100% - 70px - 0.6rem) !important;
+  }
+
+  /* Header: judul & tombol close lebih proporsional */
+  .modal-header {
+    padding: 0.7rem 1rem !important;
+  }
+
+  .modal-title {
+    font-size: 1rem !important;
+  }
+
+  .modal .btn-close {
+    width: 0.8em !important;
+    height: 0.8em !important;
+    padding: 0.4em !important;
+  }
+
+  /* Body: padding lebih rapat, jarak antar field diperkecil */
+  .modal-body {
+    padding: 0.9rem 0.95rem !important;
+  }
+
+  .modal-body .row.g-3 {
+    --bs-gutter-y: 0.75rem !important;
+    --bs-gutter-x: 0.75rem !important;
+  }
+
+  .modal-body hr {
+    margin: 0.85rem 0 !important;
+  }
+
+  /* Footer: padding nyaman disentuh di mobile */
+  .modal-footer {
+    padding: 0.7rem 0.95rem !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   GLOBAL: Modal "scrollable" — batasi tinggi dialog, scroll
+   hanya di dalam .modal-body, header & footer tetap fixed.
+   ──────────────────────────────────────────────────────────
+   Berlaku otomatis untuk SEMUA modal di seluruh aplikasi yang
+   pakai class Bootstrap `.modal-dialog-scrollable` — tidak perlu
+   lagi duplikat CSS ini per halaman (surat.css, peserta-didik.css,
+   dst). Kalau ada modal baru dengan form panjang, cukup tambahkan
+   class `modal-dialog-scrollable` di elemen .modal-dialog-nya,
+   otomatis dapat perilaku yang sama.
+
+   Kenapa tidak cukup pakai class bawaan Bootstrap saja:
+   `.modal-dialog-scrollable` bawaan menghitung tinggi dialog pakai
+   variabel --bs-modal-margin miliknya sendiri, sedangkan project
+   ini override margin modal secara manual di atas (margin: 70px
+   auto 0.6rem di mobile, supaya header modal tidak ketutup navbar).
+   Karena itu tinggi dialog di-override eksplisit di sini, disamakan
+   dengan margin custom yang sebenarnya dipakai — supaya dialog
+   selalu pas berhenti di bawah navbar dan tidak pernah "tembus"
+   ke atas menutupinya.
+   ══════════════════════════════════════════════════════════ */
+
+/* Matikan scroll di level wrapper .modal (default Bootstrap: overflow-y:auto)
+   KHUSUS untuk modal yang berisi .modal-dialog-scrollable. Kalau wrapper ini
+   ikut bisa scroll, saat modal dibuka & browser auto-focus ke input pertama,
+   wrapper bisa ter-scroll dan menggeser seluruh dialog (termasuk header)
+   sampai menembus ke atas. */
+.modal:has(.modal-dialog-scrollable) {
+  overflow-y: hidden !important;
+}
+
+.modal-dialog-scrollable {
+  height: calc(100vh - 3.5rem) !important;
+}
+
+.modal-dialog-scrollable .modal-content {
+  max-height: 100%;
+}
+
+.modal-dialog-scrollable .modal-body {
+  overflow-y: auto;
+}
+
+@media (max-width: 992px) {
+
+  /* Samakan dengan margin custom modal mobile di atas:
+     margin-top 70px + margin-bottom 0.6rem */
+  .modal-dialog-scrollable {
+    height: calc(100vh - 70px - 0.6rem) !important;
+  }
+}
+
+/* Center desktop sidebar toggle button vertically */
+.pc-header #sidebar-hide {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 38px !important;
+  width: 38px !important;
+  margin: auto 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure modals and their backdrops are rendered on top of the fixed header/navbar and sidebar */
+.modal {
+  z-index: 10500 !important;
+}
+
+.modal-backdrop {
+  z-index: 10400 !important;
+}
+
+.modal-backdrop.show {
+  opacity: 0.55 !important;
+}
+
+/* Global compact typography overrides for modals */
+.modal .form-label {
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  color: var(--text-color) !important;
+  margin-bottom: 0.2rem !important;
+}
+
+.modal .form-control::placeholder {
+  font-size: 0.82rem !important;
+  opacity: 0.65;
+}
+
+.modal .form-control,
+.modal .form-select {
+  font-size: 0.88rem !important;
+}

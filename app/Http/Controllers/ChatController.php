@@ -9,8 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ChatController extends Controller
 {
@@ -34,25 +32,22 @@ class ChatController extends Controller
         $history = array_slice($request->input('history', []), -6);
 
         // ══════════════════════════════════════════════════════════
-        // AKSI TULIS DATA — dieksekusi LANGSUNG ke database, TANPA lewat AI.
-        // Ini penting: AI (LLM) tidak bisa benar-benar mengubah data, ia
-        // hanya menghasilkan teks. Kalau kita biarkan LLM "menjawab seolah
-        // sudah mengubah", itu HALUSINASI — tabel di halaman tidak pernah
-        // benar-benar berubah. Jadi untuk perintah yang jelas maksudnya
-        // mengubah data (mis. "ubah nama hasan jadi hasani"), kita proses
-        // manual di PHP dulu: cari datanya, validasi, baru update sungguhan.
+        // CATATAN: Arsy TIDAK mengubah data apapun secara langsung dari
+        // chat (fitur "ubah data langsung" sudah dihapus). Arsy murni
+        // bersifat read-only + navigasi + panduan — semua perubahan data
+        // (tambah/edit/hapus) tetap dilakukan lewat form di masing-masing
+        // menu (Peserta Didik, Surat, Kode, User), bukan lewat chat.
         // ══════════════════════════════════════════════════════════
-        try {
-            $writeResult = $this->tryHandlePesertaDidikRename($message);
-            if ($writeResult !== null) {
-                return response()->json(array_merge(
-                    ['success' => true, 'suggestions' => []],
-                    $writeResult
-                ));
-            }
-        } catch (\Throwable $e) {
-            Log::error('ChatController write-action error: ' . $e->getMessage());
-            // fallback: biarkan lanjut ke alur normal (AI) di bawah
+
+        // ══════════════════════════════════════════════════════════
+        // PINTASAN — "apa saja yang bisa kamu bantu?" / "kamu bisa apa?"
+        // Dijawab LANGSUNG (tanpa lewat AI) supaya daftar kemampuan Arsy
+        // selalu konsisten & lengkap, dan tidak makan kuota API Groq
+        // untuk pertanyaan yang sebenarnya sudah punya jawaban tetap.
+        // ══════════════════════════════════════════════════════════
+        $capabilitiesResult = $this->tryHandleCapabilitiesShortcut($message);
+        if ($capabilitiesResult !== null) {
+            return response()->json($capabilitiesResult);
         }
 
         try {
@@ -107,10 +102,16 @@ class ChatController extends Controller
      * ============================================================ */
     public function uploadFile(Request $request)
     {
+        // Hanya PDF & Word yang diterima — supaya isi teks yang diekstrak
+        // benar-benar bisa dibaca akurat (bukan ditebak dari nama file
+        // seperti gambar, dan bukan data tabel Excel yang gampang salah baca).
         $request->validate([
             'files'   => 'required|array|max:3',
-            'files.*' => 'file|max:10240',
+            'files.*' => 'file|mimes:pdf,doc,docx|max:10240',
             'message' => 'nullable|string|max:1000',
+        ], [
+            'files.*.mimes' => 'Hanya file PDF atau Word (.doc/.docx) yang bisa dianalisis Arsy.',
+            'files.*.max'   => 'Ukuran file maksimal 10 MB.',
         ]);
 
         $user    = Auth::user();
@@ -125,53 +126,20 @@ class ChatController extends Controller
                 $path     = $file->getRealPath();
 
                 if ($ext === 'pdf') {
-                    try {
-                        $parser = new \Smalot\PdfParser\Parser();
-                        $text   = trim($parser->parseFile($path)->getText());
-                    } catch (\Throwable $e) {
-                        $text = '';
-                    }
+                    $text = $this->extractPdfText($path);
 
                     if ($text === '') {
                         $text = '[PDF tidak berisi teks yang bisa dibaca — kemungkinan hasil scan/gambar, sistem belum mendukung OCR]';
                     }
 
-                    $textParts[] = "=== File: {$origName} ===\n" . mb_substr($text, 0, 10000);
+                    $textParts[] = "=== File: {$origName} ===\n" . mb_substr($text, 0, 15000);
                     continue;
                 }
 
-                if (in_array($ext, ['docx', 'doc'])) {
-                    $tmpDir = sys_get_temp_dir() . '/docx_' . uniqid();
-                    mkdir($tmpDir);
-                    shell_exec("unzip -q " . escapeshellarg($path) . " word/document.xml -d " . escapeshellarg($tmpDir) . " 2>/dev/null");
-                    $xmlFile = $tmpDir . '/word/document.xml';
-                    $text = '';
-                    if (file_exists($xmlFile)) {
-                        $xml  = file_get_contents($xmlFile);
-                        $text = mb_substr(trim(preg_replace('/\s+/', ' ', strip_tags(str_replace(['</w:p>', '</w:tr>'], "\n", $xml)))), 0, 4000);
-                    }
-                    shell_exec("rm -rf " . escapeshellarg($tmpDir));
-                    $textParts[] = "=== File: {$origName} ===\n" . ($text ?: '[Gagal membaca dokumen Word]');
-                    continue;
-                }
-
-                if (in_array($ext, ['xlsx', 'xls'])) {
-                    $tmpDir = sys_get_temp_dir() . '/xlsx_' . uniqid();
-                    mkdir($tmpDir);
-                    shell_exec("unzip -q " . escapeshellarg($path) . " xl/sharedStrings.xml -d " . escapeshellarg($tmpDir) . " 2>/dev/null");
-                    $ssFile = $tmpDir . '/xl/sharedStrings.xml';
-                    $text   = file_exists($ssFile) ? mb_substr(trim(preg_replace('/\s+/', ' ', strip_tags(file_get_contents($ssFile)))), 0, 3000) : '';
-                    shell_exec("rm -rf " . escapeshellarg($tmpDir));
-                    $textParts[] = "=== File: {$origName} ===\n" . ($text ?: '[Gagal membaca file Excel]');
-                    continue;
-                }
-
-                if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'])) {
-                    $textParts[] = "=== File: {$origName} ===\n[File gambar — tidak bisa dibaca sebagai teks]";
-                    continue;
-                }
-
-                $textParts[] = "=== File: {$origName} ===\n[Tipe file tidak didukung: .{$ext}]";
+                // docx / doc
+                $text = $this->extractDocxText($path);
+                $textParts[] = "=== File: {$origName} ===\n"
+                    . ($text !== '' ? mb_substr($text, 0, 15000) : '[Gagal membaca dokumen Word — file mungkin rusak, terkunci password, atau format .doc lama yang belum didukung]');
             }
 
             $name = $user->name ?? 'Pengguna';
@@ -185,9 +153,9 @@ class ChatController extends Controller
                 ->post($this->apiUrl, [
                     'model'       => $this->model,
                     'max_tokens'  => 1024,
-                    'temperature' => 0.4,
+                    'temperature' => 0.3,
                     'messages'    => [
-                        ['role' => 'system', 'content' => "Kamu adalah asisten AI bernama \"Arsy\" untuk sistem E-Arsip SMA Babussalam. Pengguna: {$name} (Role: {$role}). Analisis file yang dikirim dan berikan ringkasan informatif dalam Bahasa Indonesia. Gunakan format Markdown, JANGAN output HTML tag."],
+                        ['role' => 'system', 'content' => "Kamu adalah asisten AI bernama \"Arsy\" untuk sistem E-Arsip SMA Babussalam. Pengguna: {$name} (Role: {$role}). Di bawah ini adalah TEKS ASLI hasil ekstraksi dari file PDF/Word yang dikirim pengguna, diapit tanda === File: ... ===. ATURAN KETAT: (1) Jawab HANYA berdasarkan teks yang benar-benar ada di dalamnya — JANGAN menambahkan, menebak, atau mengarang informasi apapun yang tidak tertulis di sana. (2) Jika teks kosong/tidak terbaca, katakan terus terang bahwa isinya tidak bisa dibaca — jangan berpura-pura tahu isinya. (3) Kutip angka, nama, tanggal, dan istilah PERSIS seperti tertulis di dokumen, jangan diubah/dibulatkan. (4) Berikan ringkasan informatif dalam Bahasa Indonesia, format Markdown, JANGAN output tag HTML."],
                         ['role' => 'user',   'content' => $caption . "\n\n" . implode("\n\n", $textParts)],
                     ],
                 ]);
@@ -201,6 +169,82 @@ class ChatController extends Controller
         } catch (\Throwable $e) {
             Log::error('ChatController uploadFile Error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Gagal menganalisis file. Silakan coba lagi.'], 500);
+        }
+    }
+
+    /* ============================================================
+     * EKSTRAKSI TEKS PDF (akurat: pakai parser dedicated, bukan tebakan)
+     * ============================================================ */
+    private function extractPdfText(string $path): string
+    {
+        try {
+            $parser = new \Smalot\PdfParser\Parser();
+            $pdf    = $parser->parseFile($path);
+            $text   = trim($pdf->getText());
+            return $text;
+        } catch (\Throwable $e) {
+            Log::warning('extractPdfText gagal: ' . $e->getMessage());
+            return '';
+        }
+    }
+
+    /* ============================================================
+     * EKSTRAKSI TEKS DOCX — pakai ZipArchive + DOMDocument (bukan
+     * regex/strip_tags kasar) supaya struktur paragraf, tab, baris
+     * baru, dan isi tabel ikut terbaca dengan benar & akurat.
+     * ============================================================ */
+    private function extractDocxText(string $path): string
+    {
+        if (!class_exists(\ZipArchive::class)) return '';
+
+        $zip = new \ZipArchive();
+        if ($zip->open($path) !== true) return '';
+
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+
+        if ($xml === false || $xml === '') return '';
+
+        $dom = new \DOMDocument();
+        libxml_use_internal_errors(true);
+        $loaded = $dom->loadXML($xml, LIBXML_NOENT | LIBXML_NONET);
+        libxml_clear_errors();
+
+        if (!$loaded) return '';
+
+        $wNs = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+        $paragraphs = $dom->getElementsByTagNameNS($wNs, 'p');
+
+        $lines = [];
+        foreach ($paragraphs as $p) {
+            $line = '';
+            $this->collectDocxNodeText($p, $line);
+            $line = trim($line);
+            if ($line !== '') $lines[] = $line;
+        }
+
+        return trim(implode("\n", $lines));
+    }
+
+    /**
+     * Rekursif kumpulkan teks dari node docx: <w:t> = teks, <w:tab/> = tab,
+     * <w:br/>/<w:cr/> = baris baru, node lain diteruskan ke anaknya.
+     */
+    private function collectDocxNodeText(\DOMNode $node, string &$line): void
+    {
+        foreach ($node->childNodes as $child) {
+            if ($child->nodeType !== XML_ELEMENT_NODE) continue;
+
+            $local = $child->localName;
+            if ($local === 't') {
+                $line .= $child->textContent;
+            } elseif ($local === 'tab') {
+                $line .= "\t";
+            } elseif ($local === 'br' || $local === 'cr') {
+                $line .= "\n";
+            } else {
+                $this->collectDocxNodeText($child, $line);
+            }
         }
     }
 
@@ -230,7 +274,7 @@ class ChatController extends Controller
             'laporan' => [
                 ['label' => '📊 Rekap bulan ini', 'msg' => 'tampilkan rekap surat bulan ini'],
                 ['label' => '📅 Rekap tahunan', 'msg' => 'tampilkan rekap surat tahun ini'],
-                ['label' => '📥 Cara export laporan', 'msg' => 'bagaimana cara export laporan ke pdf dan excel'],
+                ['label' => '📥 Cara export laporan', 'msg' => 'bagaimana cara export laporan ke pdf dan word'],
             ],
             'user' => [
                 ['label' => '➕ Cara tambah user', 'msg' => 'bagaimana cara tambah user baru'],
@@ -239,15 +283,101 @@ class ChatController extends Controller
             ],
         ];
 
+        $routes = ['peserta_didik' => '/peserta-didik', 'surat' => '/surat', 'kode' => '/kode', 'laporan' => '/laporan', 'user' => '/user'];
+
         $suggestions = $khusus[$menu] ?? [];
 
-        // Tambahkan saran navigasi ke menu lain (selain menu yang sedang aktif)
+        // Tambahkan saran navigasi ke menu lain (selain menu yang sedang aktif).
+        // Diberi 'url' langsung supaya di frontend klik chip ini LANGSUNG pindah
+        // halaman (tanpa bolak-balik ke AI dulu) — sama seperti chip menu statis.
         foreach ($labels as $key => $label) {
             if ($key === $menu) continue;
-            $suggestions[] = ['label' => "🧭 Buka menu {$label}", 'msg' => "buka menu {$key}"];
+            $suggestions[] = ['label' => "🧭 Buka menu {$label}", 'msg' => "buka menu {$key}", 'url' => $routes[$key]];
         }
 
         return array_slice($suggestions, 0, 7);
+    }
+
+    /* ============================================================
+     * PINTASAN — "apa saja yang bisa kamu bantu?"
+     * Deteksi pertanyaan seputar kemampuan/fitur Arsy, lalu jawab
+     * dengan daftar tetap (bukan hasil generatif AI) supaya jawabannya
+     * selalu lengkap, akurat, dan sama setiap kali ditanyakan.
+     * ============================================================ */
+    private function tryHandleCapabilitiesShortcut(string $message): ?array
+    {
+        $msg = mb_strtolower(trim($message));
+        if ($msg === '') return null;
+
+        // Frasa umum yang biasa dipakai untuk menanyakan kemampuan/fitur
+        $frasa = [
+            'apa saja yang bisa kamu bantu',
+            'apa yang bisa kamu bantu',
+            'apa saja yang bisa arsy bantu',
+            'apa yang bisa arsy bantu',
+            'apa saja yang kamu bisa',
+            'bisa bantu apa',
+            'bisa membantu apa',
+            'kamu bisa apa',
+            'kamu bisa ngapain',
+            'kamu bisa bantu apa',
+            'arsy bisa apa',
+            'arsy bisa bantu apa',
+            'kemampuan kamu',
+            'kemampuan arsy',
+            'fitur apa saja',
+            'fitur apa aja',
+            'fitur arsy',
+            'menu bantuan',
+            'cara pakai arsy',
+            'kamu siapa',
+            'siapa kamu',
+            'apa itu arsy',
+        ];
+        $isMatch = false;
+        foreach ($frasa as $f) {
+            if (str_contains($msg, $f)) { $isMatch = true; break; }
+        }
+
+        // Pola fleksibel tambahan: kalimat pendek yg mengandung kata
+        // "bisa"/"kemampuan"/"fitur"/"bantu" DIGABUNG kata tanya "apa"
+        // (mis. "bisa bantu apa saja sih", "fitur apa aja yang ada")
+        if (!$isMatch
+            && mb_strlen($msg) <= 60
+            && preg_match('/\b(bisa|kemampuan|fitur|bantu)\b/u', $msg)
+            && preg_match('/\bapa\b/u', $msg)
+        ) {
+            $isMatch = true;
+        }
+
+        if (!$isMatch) return null;
+
+        $name = Auth::user()->name ?? 'Pengguna';
+
+        $reply = "Halo **{$name}**! 👋 Saya **Arsy**, asisten E-Arsip SMA Babussalam. Ini yang bisa saya bantu:\n\n"
+            . "🔍 **Cari surat** — cari surat masuk/keluar berdasarkan perihal, nomor, instansi, kode, atau periode. Contoh: \"carikan surat wisuda bulan ini\".\n\n"
+            . "🎓 **Cari data peserta didik** — cari berdasarkan nama, rombel, tahun angkatan, atau status kelengkapan dokumen. Contoh: \"cari peserta didik IPA angkatan 2024\".\n\n"
+            . "📊 **Statistik ringkas** — total surat masuk/keluar, jumlah peserta didik, dan kelengkapan dokumen. Contoh: \"berapa total surat masuk tahun ini?\".\n\n"
+            . "📋 **Rekap & export laporan** — rekap bulanan/tahunan surat, bisa diekspor ke PDF atau Word lewat tab Rekap Surat.\n\n"
+            . "🧭 **Navigasi cepat** — arahkan langsung ke menu Peserta Didik, Surat, Kode Surat, Laporan, atau User. Contoh: \"buka menu laporan\".\n\n"
+            . "📎 **Analisis file** — lampirkan PDF atau Word (.docx), saya baca isinya dan ringkas secara akurat.\n\n"
+            . "🎨 **Ganti tema tampilan** — minta saya ubah ke mode gelap/terang, langsung berubah tanpa reload halaman.\n\n"
+            . "❓ **Panduan cara pakai** — tanya langkah-langkah tiap menu, mis. \"bagaimana cara tambah surat\".\n\n"
+            . "Tinggal ketik pertanyaannya, atau pilih tombol di bawah ⬇️";
+
+        $suggestions = [
+            ['label' => '🔍 Cari surat bulan ini', 'msg' => 'carikan surat bulan ini'],
+            ['label' => '🎓 Menu Peserta Didik', 'msg' => 'menu peserta_didik', 'url' => '/peserta-didik'],
+            ['label' => '📊 Statistik arsip', 'msg' => 'tampilkan statistik arsip hari ini'],
+            ['label' => '📋 Menu Laporan', 'msg' => 'menu laporan', 'url' => '/laporan'],
+            ['label' => '✏️ Cara tambah surat', 'msg' => 'bagaimana cara tambah surat'],
+        ];
+
+        return [
+            'success'     => true,
+            'message'     => $reply,
+            'suggestions' => $suggestions,
+        ];
     }
 
     /* ============================================================
@@ -279,7 +409,7 @@ class ChatController extends Controller
             'laporan' => "Cara pakai Menu Laporan:\n"
                 . "1. Pilih periode (bulan & tahun) dan jenis surat (Masuk/Keluar/Semua) pada filter di atas.\n"
                 . "2. Klik \"Tampilkan\" untuk melihat rekap.\n"
-                . "3. Gunakan tombol Cetak, Export PDF, Export Excel, atau Export Word untuk mengunduh laporan.",
+                . "3. Gunakan tombol Cetak, Export PDF, atau Export Word untuk mengunduh laporan.",
             'user' => "Cara pakai Menu User:\n"
                 . "1. **Tambah user** — klik tombol \"Tambah User\", isi nama, email, password, dan role, lalu Simpan.\n"
                 . "2. **Edit user** — klik tombol Edit pada baris user untuk mengubah data atau foto profil.\n"
@@ -436,7 +566,7 @@ class ChatController extends Controller
                 'peserta_didik'   => 'Menu PesertaDidik digunakan untuk menyimpan data diri peserta_didik beserta dokumen pendukungnya (PPDB, KK, Akte, KTP Orang Tua, KTS, Foto, Ijazah SMP/SMA) dan memantau status kelengkapan dokumen tiap peserta_didik.',
                 'surat'   => 'Menu Surat digunakan untuk mencatat dan mengarsipkan surat masuk maupun surat keluar beserta lampirannya, termasuk nomor surat, kode klasifikasi, perihal, instansi, dan pengirim/penerima.',
                 'kode'    => 'Menu Kode Surat digunakan untuk mengelola daftar master kode klasifikasi surat, yang nantinya dipilih saat menambahkan surat keluar.',
-                'laporan' => 'Menu Laporan digunakan untuk melihat rekap jumlah surat masuk dan keluar per bulan/tahun, serta mengekspor laporan ke PDF, Excel, atau Word.',
+                'laporan' => 'Menu Laporan digunakan untuk melihat rekap jumlah surat masuk dan keluar per bulan/tahun, serta mengekspor laporan ke PDF atau Word.',
                 'user'    => 'Menu User digunakan untuk mengelola akun pengguna sistem E-Arsip, termasuk menambah, mengedit, dan menghapus user.',
             ];
             $deskripsi = $fungsi[$context['navigate']] ?? '';
@@ -503,7 +633,7 @@ Kamu adalah asisten AI bernama "Arsy" untuk sistem E-Arsip SMA Babussalam.
 - **Surat** → /surat — surat masuk & keluar, upload lampiran, edit, hapus
 - **PesertaDidik** → /peserta-didik — data & dokumen peserta_didik, status kelengkapan
 - **Kode Surat** → /kode — master kode klasifikasi
-- **Laporan** → /laporan — rekap & export PDF/Excel/Word
+- **Laporan** → /laporan — rekap & export PDF/Word
 - **User** → /user — kelola akun pengguna
 
 ## ATURAN OUTPUT
@@ -627,100 +757,6 @@ PROMPT;
             'perihal' => mb_substr($s->perihal, 0, 80),
             'dari/ke' => mb_substr($s->instansi, 0, 60),
         ])->toArray(), $meta, $urlSemua];
-    }
-
-    /* ============================================================
-     * AKSI: UBAH NAMA PESERTA_DIDIK LEWAT CHAT
-     * ──────────────────────────────────────────────────────────
-     * Mengenali perintah seperti:
-     *   "ubah nama hasan jadi hasani"
-     *   "ganti hasan menjadi hasani"
-     *   "hasan tolong diubah ke hasani"
-     * Jika cocok → cari datanya di DB, lalu UPDATE SUNGGUHAN
-     * (termasuk pindah folder dokumen karena path folder berbasis nama).
-     * Return null jika pesan bukan perintah ubah nama (biar lanjut ke AI).
-     * ============================================================ */
-    private function tryHandlePesertaDidikRename(string $message): ?array
-    {
-        $trimmed = trim($message);
-        $msg     = mb_strtolower($trimmed);
-
-        // Field lain (rombel, status, dll) belum didukung di sini — biarkan
-        // pesan seperti itu lanjut ke alur AI biasa (sekadar ngobrol/panduan).
-        foreach (['rombel', 'status', 'kelamin', 'angkatan', 'tahun ', 'alamat', 'tanggal lahir', 'tempat lahir'] as $f) {
-            if (str_contains($msg, $f)) return null;
-        }
-
-        $aksi = 'ubah|ganti|rubah|edit|update|perbarui';
-
-        // Kata sambung/preposisi yang menandai nama baru SUDAH SELESAI, sehingga
-        // sisa kalimat setelahnya (mis. "...jadi rani pada menu peserta didik")
-        // tidak ikut tertangkap sebagai bagian dari nama baru.
-        $stopwords = 'pada|di|ke|untuk|dari|dengan|oleh|karena|supaya|agar|dan|atau|yang|yg|sama|via|lewat|melalui|menu|halaman|tabel|kolom|data';
-
-        // Pola 1: "ubah nama hasan jadi hasani" (kata aksi di depan)
-        $pola1 = '/\b(?:' . $aksi . ')\b\s+(?:nama\s+)?(?:peserta\s*didik\s+)?(?:yang\s+)?(?:bernama\s+)?([a-zA-Z][a-zA-Z .]{1,39}?)\s+(?:jadi|menjadi|ke)\s+([a-zA-Z][a-zA-Z .]{0,38}?)(?=\s+(?:' . $stopwords . ')\b|[.!?]*$)/iu';
-        // Pola 2: "hasan tolong diubah jadi hasani" (nama lama di depan, kata aksi di tengah)
-        $pola2 = '/^([a-zA-Z][a-zA-Z .]{1,39}?)\s+(?:tolong\s+|mohon\s+)?(?:di)?(?:' . $aksi . ')\b\s+(?:jadi|menjadi|ke)\s+([a-zA-Z][a-zA-Z .]{0,38}?)(?=\s+(?:' . $stopwords . ')\b|[.!?]*$)/iu';
-
-        if (!preg_match($pola1, $trimmed, $m) && !preg_match($pola2, $trimmed, $m)) {
-            return null;
-        }
-
-        $namaLama = trim($m[1]);
-        $namaBaru = trim(preg_replace('/[.!?]+$/', '', $m[2]));
-
-        if ($namaLama === '' || $namaBaru === '' || mb_strtolower($namaLama) === mb_strtolower($namaBaru)) {
-            return null;
-        }
-
-        // Cari data — prioritaskan kecocokan PERSIS nama, baru fallback ke LIKE
-        $kandidat = PesertaDidik::whereRaw('LOWER(nama_peserta_didik) = ?', [mb_strtolower($namaLama)])->get();
-        if ($kandidat->isEmpty()) {
-            $kandidat = PesertaDidik::whereRaw('LOWER(nama_peserta_didik) LIKE ?', ['%' . mb_strtolower($namaLama) . '%'])->limit(6)->get();
-        }
-
-        if ($kandidat->isEmpty()) {
-            return ['message' => "Maaf, saya tidak menemukan peserta didik dengan nama **{$namaLama}** di database. Coba periksa lagi ejaannya ya. 🔍"];
-        }
-
-        if ($kandidat->count() > 1) {
-            $list = $kandidat->map(fn($p) => "- {$p->nama_peserta_didik} (Rombel {$p->rombel}, Angkatan {$p->tahun_angkatan})")->implode("\n");
-            return ['message' => "Ada beberapa peserta didik dengan nama mirip **{$namaLama}**:\n\n{$list}\n\nSebutkan nama lengkapnya atau tambahkan rombel/angkatan supaya saya bisa update yang tepat ya. 🙏"];
-        }
-
-        /** @var PesertaDidik $pd */
-        $pd          = $kandidat->first();
-        $namaSebelum = $pd->nama_peserta_didik;
-
-        // Path folder dokumen berbasis nama (lihat PesertaDidikController::pathFolder) —
-        // jadi kalau nama berubah, folder & isinya HARUS ikut dipindahkan supaya
-        // dokumen yang sudah diunggah tidak "hilang" (yatim di folder lama).
-        $oldFolder = 'peserta_didik/' . $pd->tahun_angkatan . '/' . $pd->rombel . '/' . Str::slug($pd->nama_peserta_didik);
-
-        $pd->update(['nama_peserta_didik' => $namaBaru]);
-
-        $newFolder = 'peserta_didik/' . $pd->tahun_angkatan . '/' . $pd->rombel . '/' . Str::slug($pd->nama_peserta_didik);
-
-        if ($oldFolder !== $newFolder) {
-            $disk = Storage::disk('public');
-            if ($disk->exists($oldFolder)) {
-                $disk->makeDirectory($newFolder);
-                foreach ($disk->allFiles($oldFolder) as $file) {
-                    $relative = Str::after($file, $oldFolder . '/');
-                    if (!$relative) $relative = basename($file);
-                    $disk->copy($file, $newFolder . '/' . $relative);
-                }
-                $disk->deleteDirectory($oldFolder);
-            }
-        }
-
-        Log::info("[Arsy] Nama peserta_didik diubah via chat: '{$namaSebelum}' -> '{$namaBaru}' (id: {$pd->id_peserta_didik})");
-
-        return [
-            'message' => "Siap! ✅ Nama peserta didik **{$namaSebelum}** sudah saya perbarui menjadi **{$namaBaru}** di database. Tabelnya akan otomatis ter-refresh sebentar lagi. Ada lagi yang bisa saya bantu? 😊",
-            'refresh' => ['menu' => 'peserta_didik'],
-        ];
     }
 
     /* ============================================================

@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @php
     $lockJenis = $lockJenis ?? null;
@@ -55,7 +55,9 @@
         </div>
 
         {{-- Modal --}}
-        @include('surat.partials.modal')
+        @push('modals')
+            @include('surat.partials.modal')
+        @endpush
 
     </div>
 @endsection

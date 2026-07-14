@@ -26,7 +26,8 @@
             transition: background-color .3s ease, color .3s ease;
             background: url("{{ asset('assets/img/login.jpg') }}") no-repeat center center / cover;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         /* Overlay latar — sekarang dengan gradient lembut + noise halus */
@@ -100,12 +101,9 @@
             padding: 2.8rem 2.4rem 2.4rem;
             width: 100%;
             background: rgba(255, 255, 255, 0.97);
-            box-shadow:
-                0 2px 0 rgba(255,255,255,0.9) inset,
-                0 20px 60px rgba(30, 60, 140, 0.14),
-                0 4px 16px rgba(0,0,0,.06);
+            box-shadow: none;
             border: 1px solid rgba(210, 220, 255, 0.6);
-            transition: background .3s ease, box-shadow .3s ease, border .3s ease, transform .3s ease;
+            transition: background .3s ease, border .3s ease, transform .3s ease;
             position: relative;
             overflow: hidden;
         }
@@ -127,24 +125,17 @@
         }
 
         .login-card:hover {
-            box-shadow:
-                0 2px 0 rgba(255,255,255,0.9) inset,
-                0 28px 70px rgba(30, 60, 140, 0.18),
-                0 6px 20px rgba(0,0,0,.08);
+            box-shadow: none;
         }
 
         [data-theme="dark"] .login-card {
             background: rgba(18, 24, 42, 0.96);
-            box-shadow:
-                0 1px 0 rgba(255,255,255,0.04) inset,
-                0 20px 60px rgba(0,0,0,.5);
+            box-shadow: none;
             border: 1px solid rgba(255,255,255,0.07);
         }
 
         [data-theme="dark"] .login-card:hover {
-            box-shadow:
-                0 1px 0 rgba(255,255,255,0.04) inset,
-                0 28px 80px rgba(0,0,0,.6);
+            box-shadow: none;
         }
 
         /* =========================================
@@ -418,7 +409,7 @@
 
         /* =========================================
            THEME SWITCH (pojok kanan atas)
-        ========================================= */
+         ========================================= */
         #theme-switch {
             position: fixed;
             top: 18px;
@@ -430,8 +421,7 @@
             background: #e8edf5;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 7px;
+            padding: 0;
             cursor: pointer;
             transition: background .4s ease, border .4s ease, box-shadow .3s ease;
             box-shadow: 0 2px 8px rgba(0,0,0,.1);
@@ -442,10 +432,6 @@
             box-shadow: 0 4px 14px rgba(0,0,0,.18);
         }
 
-        #theme-switch i { font-size: 1rem; transition: opacity .3s; }
-        #theme-switch .sun  { color: #f59e0b; }
-        #theme-switch .moon { color: #64748b; opacity: .35; }
-
         .toggle-thumb {
             position: absolute;
             top: 3px;
@@ -454,21 +440,50 @@
             height: 22px;
             background: #fff;
             border-radius: 50%;
-            transition: left .4s cubic-bezier(.4,0,.2,1);
+            z-index: 1;
+            transition: left .4s cubic-bezier(.4,0,.2,1), background .4s ease;
             box-shadow: 0 1px 5px rgba(0,0,0,.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
+        .toggle-thumb i {
+            position: absolute;
+            font-size: .68rem;
+            line-height: 1;
+            transition: opacity .3s ease, transform .3s ease;
+        }
+
+        .toggle-thumb .sun  { color: #f59e0b; opacity: 1; transform: scale(1) rotate(0deg); }
+        .toggle-thumb .moon { color: #64748b; opacity: 0; transform: scale(.4) rotate(-45deg); }
 
         [data-theme="dark"] #theme-switch {
             background: #1e293b;
             border-color: rgba(255,255,255,.08);
         }
 
-        [data-theme="dark"] #theme-switch .sun  { opacity: .3; }
-        [data-theme="dark"] #theme-switch .moon { opacity: 1; color: #93c5fd; }
-
         [data-theme="dark"] .toggle-thumb {
             left: calc(100% - 25px);
             background: #334155;
+        }
+
+        [data-theme="dark"] .toggle-thumb .sun  { opacity: 0; transform: scale(.4) rotate(45deg); }
+        [data-theme="dark"] .toggle-thumb .moon { opacity: 1; color: #93c5fd; transform: scale(1) rotate(0deg); }
+
+        /* Optimasi & Responsivitas Mobile */
+        @media (max-width: 576px) or (max-height: 640px) {
+            body {
+                align-items: flex-start;
+                padding: 70px 1.25rem 2.5rem;
+            }
+            .login-wrapper {
+                padding: 0;
+            }
+            #theme-switch {
+                top: 20px;
+                right: 20px;
+            }
         }
 
         /* =========================================
@@ -511,9 +526,10 @@
 
     <!-- SWITCH TEMA -->
     <button id="theme-switch" type="button" aria-label="Toggle Theme">
-        <i class="bi bi-sun-fill sun"></i>
-        <i class="bi bi-moon-fill moon"></i>
-        <span class="toggle-thumb"></span>
+        <span class="toggle-thumb">
+            <i class="bi bi-sun-fill sun"></i>
+            <i class="bi bi-moon-stars-fill moon"></i>
+        </span>
     </button>
 
     <!-- NOTIFIKASI -->

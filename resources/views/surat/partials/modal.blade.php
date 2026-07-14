@@ -5,7 +5,7 @@
 {{-- 1. MODAL TAMBAH SURAT --}}
 <div class="modal fade" id="addSuratModal" tabindex="-1" aria-hidden="true"
      data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
     <form id="addSuratForm" enctype="multipart/form-data" method="POST" class="modal-content" autocomplete="off">
       @csrf
 
@@ -214,7 +214,7 @@
 {{-- 2. MODAL EDIT SURAT --}}
 <div class="modal fade" id="editSuratModal" tabindex="-1" aria-hidden="true"
      data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
     <form id="editSuratForm" enctype="multipart/form-data" method="POST" class="modal-content" autocomplete="off">
       @csrf
       @method('PUT')
@@ -423,7 +423,7 @@
 
 {{-- 4. MODAL DETAIL SURAT --}}
 <div class="modal fade" id="viewSuratModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
 
             <div class="modal-header bg-info text-white">

@@ -541,6 +541,21 @@
   color: #052436 !important;
 }
 
+/* 🔤 Badge KODE (bg-primary & bg-secondary) — teks selalu putih di dark mode */
+[data-theme="dark"] .table-custom .badge.bg-primary,
+[data-theme="dark"] .table-custom .badge.bg-secondary {
+  color: #fff !important;
+}
+
+/* 🔤 Teks deskripsi kode (di bawah badge, mis. "Kode Baru") — putihkan di dark mode.
+   Selector ini lebih spesifik daripada [data-theme="dark"] .text-muted global,
+   jadi hanya berlaku khusus di kolom Kode pada tabel surat. */
+[data-theme="dark"] .table-custom td.surat-col-kode,
+[data-theme="dark"] .table-custom td.surat-col-kode .small,
+[data-theme="dark"] .table-custom td.surat-col-kode .text-muted {
+  color: #fff !important;
+}
+
 /* ── Lebar kolom tabel surat ────────────────────────────────────────────── */
 .surat-col-no      { width: 50px; }
 .surat-col-nomor   { min-width: 230px; }

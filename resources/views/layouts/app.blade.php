@@ -42,7 +42,7 @@
   <link rel="stylesheet" href="{{ asset('template/dist/fonts/tabler-icons.min.css') }}">
   <link rel="stylesheet" href="{{ asset('template/dist/fonts/phosphor/regular/style.css') }}">
   <link rel="stylesheet" href="{{ asset('template/dist/fonts/fontawesome.css') }}">
-  <link rel="stylesheet" href="{{ asset('template/dist/fonts/bi/font/bootstrap-icons.css') }}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
   {{-- Template CSS --}}
   <link rel="stylesheet" href="{{ asset('template/dist/css/plugins/jsvectormap.min.css') }}">
@@ -119,6 +119,9 @@
 
   {{-- ===== AI CHAT WIDGET ===== --}}
   @include('partials.chat-widget')
+
+  {{-- ===== MODALS STACK ===== --}}
+  @stack('modals')
 
 </body>
 </html>

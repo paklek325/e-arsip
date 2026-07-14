@@ -1,219 +1,225 @@
+{{-- ══════════════════════════════════════════════════════════
+     FIX MOBILE: modal Tambah/Edit terpotong atas-bawah & tidak
+     bisa discroll sama sekali di HP.
+     ──────────────────────────────────────────────────────────
+     Ditaruh INLINE di sini (bukan di file .css terpisah) supaya
+     PASTI ikut terkirim ke browser begitu Blade di-render — tidak
+     bergantung ke build Vite/Mix yang sepertinya belum ter-refresh
+     di server. Kalau nanti pipeline CSS terpisah sudah normal lagi,
+     blok ini boleh dipindah ke sana; untuk sekarang biarkan di sini
+     dulu supaya fix-nya pasti aktif.
+====================================================================== --}}
+
 {{-- ==========================
       MODAL TAMBAH PESERTA DIDIK (FINAL)
 =========================== --}}
 <div class="modal fade" id="modalTambahPesertaDidik" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <form id="formTambahPesertaDidik" enctype="multipart/form-data" autocomplete="off" novalidate class="modal-content">
+      @csrf
 
-     <div class="modal-header bg-primary text-white">
-  <h5 class="modal-title fw-bold">Tambah<span class="d-none d-sm-inline"> Peserta Didik</span></h5>
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold">
+          <i class="bi bi-plus-circle me-2"></i> Tambah Peserta Didik
+        </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
 
       {{-- ALERT (AJAX) --}}
       <div class="alert alert-danger d-none mx-3 mt-3" id="alertTambahPesertaDidik"></div>
 
-      <form id="formTambahPesertaDidik" enctype="multipart/form-data" autocomplete="off" novalidate>
-        @csrf
+      <div class="modal-body">
 
-        <div class="modal-body">
-
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Nama Peserta Didik</label>
-              <input type="text" name="nama_peserta_didik" id="add_nama_peserta_didik" class="form-control" required>
-            </div>
-
-            <div class="col-md-3 position-relative">
-              <label class="form-label fw-semibold">Jenis Kelamin</label>
-              <select name="jenis_kelamin" id="add_jenis_kelamin" class="form-select" required>
-                <option value="">-- Pilih --</option>
-                <option value="L">Laki-laki</option>
-                <option value="P">Perempuan</option>
-              </select>
-            </div>
-
-            <div class="col-md-3">
-              <label class="form-label fw-semibold">Tahun Angkatan</label>
-              <input type="text" name="tahun_angkatan" class="form-control" placeholder="Contoh: 2026 atau 2025/2026" required>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Tempat Lahir</label>
-              <input type="text" name="tempat_lahir" class="form-control" required>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Tanggal Lahir</label>
-              <input type="date" name="tanggal_lahir" id="add_tanggal_lahir" class="form-control" required>
-            </div>
-
-            <div class="col-md-6 position-relative">
-              <label class="form-label fw-semibold">Rombel</label>
-              <select name="rombel" id="add_rombel" class="form-select" required>
-                <option value="">-- Pilih Rombel --</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-              </select>
-            </div>
-
-            <div class="col-md-12">
-              <label class="form-label fw-semibold">Alamat</label>
-              <textarea name="alamat" id="add_alamat" class="form-control" rows="2"></textarea>
-            </div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Nama Peserta Didik</label>
+            <input type="text" name="nama_peserta_didik" id="add_nama_peserta_didik" class="form-control" required>
           </div>
 
-          <hr>
+          <div class="col-md-3 position-relative">
+            <label class="form-label fw-semibold">Jenis Kelamin</label>
+            <select name="jenis_kelamin" id="add_jenis_kelamin" class="form-select" required>
+              <option value="">-- Pilih --</option>
+              <option value="L">Laki-laki</option>
+              <option value="P">Perempuan</option>
+            </select>
+          </div>
 
-          {{-- FIELDS UPLOAD --}}
-          @php
-            $fields = [
-              'file_ppdb' => 'Formulir PPDB',
-              'file_kk' => 'Kartu Keluarga',
-              'file_akte' => 'Akte Kelahiran',
-              'file_ktp' => 'KTP Orang Tua',
-              'file_kts' => '<span class="d-none d-sm-inline">Kartu Peserta Didik</span><span class="d-inline d-sm-none">KTS</span>',
-              'file_foto' => 'Foto 3x4',
-              'file_ijazah_smp' => 'Ijazah SMP',
-              'file_ijazah_sma' => 'Ijazah SMA <span class="badge bg-secondary fw-normal ms-1">Opsional</span>',
-            ];
-          @endphp
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Tahun Angkatan</label>
+            <input type="text" name="tahun_angkatan" class="form-control" placeholder="Contoh: 2026 atau 2025/2026" required>
+          </div>
 
-          <div class="row g-3">
-            @foreach ($fields as $key => $label)
-              <div class="col-md-6">
-                <div class="file-item">
-                  <div class="form-check">
-                    <input class="form-check-input file-check"
-                          type="checkbox"
-                          id="add_check_{{ $key }}"
-                          data-target="#add_{{ $key }}">
-                    <label class="form-check-label fw-semibold" for="add_check_{{ $key }}">{!! $label !!}</label>
-                  </div>
-                  <input type="file" name="{{ $key }}" id="add_{{ $key }}"
-                         class="form-control mt-2 d-none file-input" disabled
-                         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Tempat Lahir</label>
+            <input type="text" name="tempat_lahir" class="form-control" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Tanggal Lahir</label>
+            <input type="date" name="tanggal_lahir" id="add_tanggal_lahir" class="form-control" required>
+          </div>
+
+          <div class="col-md-6 position-relative">
+            <label class="form-label fw-semibold">Rombel</label>
+            <select name="rombel" id="add_rombel" class="form-select" required>
+              <option value="">-- Pilih Rombel --</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+            </select>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label fw-semibold">Alamat</label>
+            <textarea name="alamat" id="add_alamat" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+
+        <hr>
+
+        {{-- FIELDS UPLOAD --}}
+        @php
+          $fields = [
+            'file_ppdb' => 'Formulir PPDB',
+            'file_kk' => 'Kartu Keluarga',
+            'file_akte' => 'Akte Kelahiran',
+            'file_ktp' => 'KTP Orang Tua',
+            'file_kts' => '<span class="d-none d-sm-inline">Kartu Peserta Didik</span><span class="d-inline d-sm-none">KTS</span>',
+            'file_foto' => 'Foto 3x4',
+            'file_ijazah_smp' => 'Ijazah SMP',
+            'file_ijazah_sma' => 'Ijazah SMA <span class="badge bg-secondary fw-normal ms-1">Opsional</span>',
+          ];
+        @endphp
+
+        <div class="row g-3">
+          @foreach ($fields as $key => $label)
+            <div class="col-md-6">
+              <div class="file-item">
+                <div class="form-check">
+                  <input class="form-check-input file-check"
+                        type="checkbox"
+                        id="add_check_{{ $key }}"
+                        data-target="#add_{{ $key }}">
+                  <label class="form-check-label fw-semibold" for="add_check_{{ $key }}">{!! $label !!}</label>
                 </div>
+                <input type="file" name="{{ $key }}" id="add_{{ $key }}"
+                       class="form-control mt-2 d-none file-input" disabled
+                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
               </div>
-            @endforeach
-          </div>
-
+            </div>
+          @endforeach
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
-        </div>
+      </div>
 
-      </form>
-    </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+
+    </form>
   </div>
 </div>
-
-
-
 
 {{-- ==========================
       MODAL EDIT PESERTA DIDIK (FINAL)
 =========================== --}}
 <div class="modal fade" id="modalEditPesertaDidik" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <form id="formEditPesertaDidik" enctype="multipart/form-data" autocomplete="off" class="modal-content">
+      @csrf
+      <input type="hidden" id="edit_id" name="id">
 
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title fw-bold">Edit Peserta Didik</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title fw-bold">
+          <i class="bi bi-pencil-square me-2"></i> Edit Peserta Didik
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
       {{-- ALERT --}}
       <div class="alert alert-danger d-none mx-3 mt-3" id="alertEditPesertaDidik"></div>
 
-      <form id="formEditPesertaDidik" enctype="multipart/form-data" autocomplete="off">
-        @csrf
-        <input type="hidden" id="edit_id" name="id">
+      <div class="modal-body">
 
-        <div class="modal-body">
-
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Nama Peserta Didik</label>
-              <input type="text" name="nama_peserta_didik" id="edit_nama_peserta_didik" class="form-control">
-            </div>
-
-            <div class="col-md-3 position-relative">
-              <label class="form-label fw-semibold">Jenis Kelamin</label>
-              <select name="jenis_kelamin" id="edit_jenis_kelamin" class="form-select">
-                <option value="">-- Pilih --</option>
-                <option value="L">Laki-laki</option>
-                <option value="P">Perempuan</option>
-              </select>
-            </div>
-
-            <div class="col-md-3">
-              <label class="form-label fw-semibold">Tahun Angkatan</label>
-              <input type="text" name="tahun_angkatan" id="edit_tahun_angkatan" class="form-control" placeholder="Contoh: 2026 atau 2025/2026">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Tempat Lahir</label>
-              <input type="text" name="tempat_lahir" id="edit_tempat_lahir" class="form-control">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Tanggal Lahir</label>
-              <input type="date" name="tanggal_lahir" id="edit_tanggal_lahir" class="form-control">
-            </div>
-
-            <div class="col-md-6 position-relative">
-              <label class="form-label fw-semibold">Rombel</label>
-              <select name="rombel" id="edit_rombel" class="form-select">
-                <option value="">-- Pilih Rombel --</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-              </select>
-            </div>
-
-            <div class="col-md-12">
-              <label class="form-label fw-semibold">Alamat</label>
-              <textarea name="alamat" id="edit_alamat" rows="2" class="form-control"></textarea>
-            </div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Nama Peserta Didik</label>
+            <input type="text" name="nama_peserta_didik" id="edit_nama_peserta_didik" class="form-control">
           </div>
 
-          <hr>
+          <div class="col-md-3 position-relative">
+            <label class="form-label fw-semibold">Jenis Kelamin</label>
+            <select name="jenis_kelamin" id="edit_jenis_kelamin" class="form-select">
+              <option value="">-- Pilih --</option>
+              <option value="L">Laki-laki</option>
+              <option value="P">Perempuan</option>
+            </select>
+          </div>
 
-          {{-- DOWNLOAD ALL --}}
-          <div id="edit-download-all-container" class="mb-3 p-3 bg-white rounded shadow-sm"></div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Tahun Angkatan</label>
+            <input type="text" name="tahun_angkatan" id="edit_tahun_angkatan" class="form-control" placeholder="Contoh: 2026 atau 2025/2026">
+          </div>
 
-          {{-- FILE FIELDS --}}
-          <div class="row g-3">
-            @foreach ($fields as $key => $label)
-              <div class="col-md-6">
-                <div class="file-item">
-                  <div class="form-check">
-                    <input type="checkbox" class="form-check-input file-check"
-                           id="edit_check_{{ $key }}" data-target="#edit_{{ $key }}">
-                    <label class="form-check-label fw-semibold" for="edit_check_{{ $key }}">{!! $label !!}</label>
-                  </div>
-                  <input type="file" name="{{ $key }}"
-                         id="edit_{{ $key }}"
-                         class="form-control mt-2 d-none file-input"
-                         data-server-file="0"
-                         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Tempat Lahir</label>
+            <input type="text" name="tempat_lahir" id="edit_tempat_lahir" class="form-control">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Tanggal Lahir</label>
+            <input type="date" name="tanggal_lahir" id="edit_tanggal_lahir" class="form-control">
+          </div>
+
+          <div class="col-md-6 position-relative">
+            <label class="form-label fw-semibold">Rombel</label>
+            <select name="rombel" id="edit_rombel" class="form-select">
+              <option value="">-- Pilih Rombel --</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+            </select>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label fw-semibold">Alamat</label>
+            <textarea name="alamat" id="edit_alamat" rows="2" class="form-control"></textarea>
+          </div>
+        </div>
+
+        <hr>
+
+        {{-- DOWNLOAD ALL --}}
+        <div id="edit-download-all-container" class="mb-3 p-3 bg-white rounded shadow-sm"></div>
+
+        {{-- FILE FIELDS --}}
+        <div class="row g-3">
+          @foreach ($fields as $key => $label)
+            <div class="col-md-6">
+              <div class="file-item">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input file-check"
+                         id="edit_check_{{ $key }}" data-target="#edit_{{ $key }}">
+                  <label class="form-check-label fw-semibold" for="edit_check_{{ $key }}">{!! $label !!}</label>
                 </div>
+                <input type="file" name="{{ $key }}"
+                       id="edit_{{ $key }}"
+                       class="form-control mt-2 d-none file-input"
+                       data-server-file="0"
+                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
               </div>
-            @endforeach
-          </div>
-
+            </div>
+          @endforeach
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary">Perbarui</button>
-        </div>
+      </div>
 
-      </form>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+        <button type="submit" class="btn btn-primary">Perbarui</button>
+      </div>
 
-    </div>
+    </form>
   </div>
 </div>
 
@@ -262,8 +268,8 @@
       MODAL DETAIL PESERTA DIDIK (FINAL)
 =========================== --}}
 <div class="modal fade" id="modalDetailPesertaDidik" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
 
       <div class="modal-header bg-info text-white">
         <h5 class="modal-title fw-bold">Detail Peserta Didik</h5>

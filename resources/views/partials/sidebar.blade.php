@@ -9,14 +9,26 @@
 
         <a href="https://sekolah.data.kemendikdasmen.go.id/profil-sekolah/76CF0A52-C2E3-4834-A4AD-E5ED87898CE3"
            target="_blank"
-           rel="noopener noreferrer">
-            <img src="{{ asset('template/dist/images/logo-1.png') }}"
+           rel="noopener noreferrer"
+           class="logo logo-lg">
+            {{-- Logo terang (default) — identik dengan logo mode terang di halaman login --}}
+            <img src="{{ asset('template/dist/images/logo.png') }}"
                  alt="Logo SMA Babussalam"
-                 class="logo logo-lg"
+                 class="sidebar-logo-light"
                  width="40" height="40"
                  loading="eager"
                  fetchpriority="high"
-                 decoding="sync">
+                 decoding="sync"
+                 onerror="this.src='{{ asset('template/dist/images/logo-1.png') }}'">
+            {{-- Logo mode gelap — identik dengan logo mode gelap di halaman login --}}
+            <img src="{{ asset('template/dist/images/logo-1.png') }}"
+                 alt="Logo SMA Babussalam"
+                 class="sidebar-logo-dark"
+                 width="40" height="40"
+                 loading="eager"
+                 fetchpriority="high"
+                 decoding="sync"
+                 onerror="this.src='{{ asset('template/dist/images/logo.png') }}'">
         </a>
 
         <a href="{{ route('dashboard.index') }}" class="b-brand">

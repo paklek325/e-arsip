@@ -1,7 +1,6 @@
 <header class="pc-header">
     <div class="header-wrapper">
 
-        {{-- ── Kiri: Toggle Sidebar ─────────────────────────────────────── --}}
         <div class="me-auto pc-mob-drp">
             <ul class="list-unstyled">
 
@@ -29,9 +28,10 @@
                 {{-- Dark / Light Mode Toggle --}}
                 <li class="pc-h-item px-2">
                     <button id="theme-switch" type="button" aria-label="Ganti tema" title="Ganti tema">
-                        <i class="bi bi-sun-fill sun"></i>
-                        <i class="bi bi-moon-fill moon"></i>
-                        <span class="toggle-thumb"></span>
+                        <span class="toggle-thumb">
+                            <i class="bi bi-sun-fill sun"></i>
+                            <i class="bi bi-moon-stars-fill moon"></i>
+                        </span>
                     </button>
                 </li>
 
@@ -46,15 +46,21 @@
 
                     {{-- User Profile Dropdown --}}
                     <li class="dropdown pc-h-item header-user-profile">
-                        <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#"
-                            role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false">
+                        <a class="pc-head-link dropdown-toggle arrow-none me-0 d-flex align-items-center gap-2" data-bs-toggle="dropdown" href="#"
+                            role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false" style="height:auto; width:auto; padding: 4px 8px; border-radius: 10px;">
                             <img src="{{ $fotoUrl }}" onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
                                 alt="Foto {{ $authUser->name }}" class="user-avatar"
                                 width="35" height="35"
                                 loading="eager" fetchpriority="high" decoding="sync">
+                            {{-- Nama & role — selalu tampil, termasuk di mobile --}}
+                            <div class="d-flex flex-column" style="line-height:1; min-width:0;">
+                                <span class="navbar-username">{{ $authUser->name }}</span>
+                                <span class="navbar-user-role">{{ $roleName }}</span>
+                            </div>
+                            <i class="bi bi-chevron-down" style="font-size:.6rem; color:#9ca3af; margin-left:2px;"></i>
                         </a>
 
-                        <div
+                        <div id="userProfileDropdown"
                             class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown p-0 overflow-hidden">
 
                             {{-- Header dropdown: foto + nama + role + tombol logout --}}
@@ -87,7 +93,7 @@
                                 <a href="#" class="dropdown-item" data-bs-toggle="modal"
                                     data-bs-target="#navProfilModal">
                                     <span class="d-flex align-items-center gap-2">
-                                        <i class="bi bi-person-gear fs-6 text-primary"></i>
+                                        <i class="bi bi-pencil-square fs-6 text-primary"></i>
                                         <span>Profil Saya</span>
                                     </span>
                                     <i class="bi bi-chevron-right text-muted small"></i>
@@ -103,6 +109,7 @@
 
     </div>
 </header>
+
 
 @auth
 

@@ -47,7 +47,7 @@ $nomorLengkap = implode('/', $parts);
     </td>
 
     {{-- KODE SURAT --}}
-    <td class="text-center">
+    <td class="text-center surat-col-kode">
         @if($item->jenis_surat === 'Keluar')
             @if($item->kode)
                 <span class="badge bg-primary">{{ $item->kode->kode }}</span>

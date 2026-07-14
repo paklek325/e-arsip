@@ -307,5 +307,10 @@
         // ── Init ──────────────────────────────────────────────────────────
         loadTable();
         bindDuplicateChecker();
+
+        // Diekspos supaya widget chat (Arsy) bisa memuat ulang tabel ini
+        // setelah berhasil mengubah data Kode Surat lewat perintah chat,
+        // tanpa perlu reload halaman manual.
+        window.EArsipReloadTable = () => loadTable();
     });
 })();

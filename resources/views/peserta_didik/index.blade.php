@@ -37,7 +37,9 @@
         @include('peserta_didik.partials.table')
     </div>
     {{-- Modal --}}
-    @include('peserta_didik.partials.modal')
+    @push('modals')
+        @include('peserta_didik.partials.modal')
+    @endpush
 </div>{{-- /py-2 --}}
 @endsection
 @push('page-css')
