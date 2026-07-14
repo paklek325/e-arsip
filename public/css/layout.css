@@ -1249,6 +1249,68 @@ body[data-theme-transition] * {
 }
 
 /* =======================================================
+   📱 FIX: Filter "Tahun" (Statistik Surat & Peserta Didik)
+   di mobile — badge (Jumlah/M/K atau Total/L/P) + input Tahun
+   harus tetap SATU BARIS (sejajar), tidak boleh turun ke baris
+   baru. Supaya muat, semua elemen dipadatkan: gap & padding
+   badge diperkecil, input Tahun dipersempit. Kalau ruang masih
+   kurang di layar sangat sempit, baris ini boleh discroll
+   horizontal (bukan wrap) supaya layout tetap rapi sejajar.
+======================================================= */
+@media (max-width: 768px) {
+  .chart-card .card-header .chart-header-controls {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+    padding-bottom: 2px !important;
+  }
+
+  .chart-card .card-header .chart-header-controls::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .chart-card .card-header .chart-header-controls > .ms-auto {
+    margin-left: auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  .chart-card .card-header .chart-header-controls .badge {
+    padding: 0.28rem 0.5rem !important;
+    font-size: 0.72rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .chart-card .card-header .chart-header-controls label[for="filterTahunSurat"],
+  .chart-card .card-header .chart-header-controls label[for="filterTahunPesertaDidik"] {
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  .chart-card .card-header .chart-header-controls input[type="number"] {
+    width: 72px !important;
+    max-width: 72px !important;
+    min-width: 72px !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    font-size: 0.78rem !important;
+    padding-right: 4px !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .chart-card .card-header .chart-header-controls input[type="number"] {
+    width: 64px !important;
+    max-width: 64px !important;
+    min-width: 64px !important;
+    font-size: 0.74rem !important;
+  }
+}
+
+
+/* =======================================================
    🔍 FILTER BAR — Global (dipakai di user, surat, laporan, peserta-didik)
 ======================================================= */
 .filter-bar {
