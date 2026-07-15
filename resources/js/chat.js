@@ -578,11 +578,14 @@
     const MONTHS = ['','Januari','Februari','Maret','April','Mei','Juni',
                     'Juli','Agustus','September','Oktober','November','Desember'];
 
-    const DEFAULT_BULAN = String(new Date().getMonth() + 1);
+    const DEFAULT_BULAN = ''; // kosong = "Semua Bulan" (tampilan awal & reset)
     const DEFAULT_TAHUN = String(new Date().getFullYear());
     const REKAP_EMPTY_HTML = '<div class="eac-empty">📋 Pilih periode di atas — rekap otomatis tampil</div>';
 
-    /* ── Reset filter & tabel rekap ke kondisi awal ── */
+    /* ── Reset filter & tabel rekap ke kondisi awal ──
+       Setelah filter dikembalikan ke default (Semua Bulan), langsung
+       eacLoadRekap lagi via AJAX supaya rekap tahunan "Semua Bulan"
+       tampil seketika — bukan menampilkan placeholder kosong. */
     window.eacResetRekap = function () {
         const bulanSel = document.getElementById('eac-r-bulan');
         const tahunSel = document.getElementById('eac-r-tahun');
@@ -592,12 +595,7 @@
         if (tahunSel) tahunSel.value = DEFAULT_TAHUN;
         if (jenisSel) jenisSel.value = '';
 
-        lastFilter = {};
-        currentPage = 1;
-
-        const body = document.getElementById('eac-rekap-body');
-        if (body) body.innerHTML = REKAP_EMPTY_HTML;
-        exportBtns.classList.remove('show');
+        window.eacLoadRekap(1);
     };
 
     window.eacLoadRekap = function(page) {

@@ -62,7 +62,7 @@
     #earsipchat-panel{
         position:fixed; right:22px; bottom:22px; z-index:2147483000;
         width:400px; max-width:calc(100vw - 24px);
-        height:auto !important; max-height:calc(100vh - 80px) !important;
+        height:min(600px, calc(100vh - 80px)); max-height:calc(100vh - 80px);
         background:var(--eac-bg); color:var(--eac-text);
         border-radius:var(--eac-radius); box-shadow:var(--eac-shadow);
         display:flex; flex-direction:column; overflow:hidden;
@@ -244,10 +244,16 @@
     }
     .eac-dropdown-menu button:hover{ background:var(--eac-bg-soft); color:var(--eac-primary); }
 
-    /* ── Rekap body ── */
-    .eac-rekap-body{ flex:1; overflow-y:auto; padding:12px; background:var(--eac-bg); }
-    .eac-empty{ text-align:center; color:var(--eac-text-muted); font-size:12px; padding:30px 10px; }
-    .eac-loading{ display:flex; align-items:center; justify-content:center; padding:40px 0; }
+    /* ── Rekap body ──
+       display:flex + min-height:0 supaya konten pendek (mis. state
+       kosong) tetap mengisi seluruh area dan bentuk widget tidak
+       ciut mengikuti isi. */
+    .eac-rekap-body{ flex:1; min-height:0; overflow-y:auto; padding:12px; background:var(--eac-bg); display:flex; flex-direction:column; }
+    .eac-empty{
+        margin:auto; text-align:center; color:var(--eac-text-muted); font-size:12px;
+        padding:30px 10px; display:flex; flex-direction:column; align-items:center; gap:6px;
+    }
+    .eac-loading{ flex:1; display:flex; align-items:center; justify-content:center; padding:40px 0; margin:auto; }
     .eac-loading-dots{ display:flex; gap:6px; }
     .eac-loading-dots span{ width:8px; height:8px; border-radius:50%; background:var(--eac-primary); animation:eac-blink 1.1s infinite ease-in-out; }
     .eac-loading-dots span:nth-child(2){ animation-delay:.15s; }
@@ -282,7 +288,7 @@
     @media (max-width:480px){
         #earsipchat-panel{
             right:12px; left:12px; bottom:12px; top:auto; width:auto; max-width:360px; margin-left:auto;
-            height:auto; max-height:min(64vh, 480px);
+            height:min(64vh, 480px); max-height:min(64vh, 480px);
             font-size:11px;
         }
         .eac-avatar{ width:28px; height:28px; font-size:14px; }
@@ -389,9 +395,9 @@
         <div class="eac-rekap-toolbar">
             <div class="eac-rekap-row1">
                 <select id="eac-r-bulan" onchange="eacLoadRekap(1)">
-                    <option value="">— Semua Bulan —</option>
+                    <option value="" selected>— Semua Bulan —</option>
                     @foreach(['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'] as $i => $b)
-                        <option value="{{ $i+1 }}" {{ (date('n') == $i+1) ? 'selected' : '' }}>{{ $b }}</option>
+                        <option value="{{ $i+1 }}">{{ $b }}</option>
                     @endforeach
                 </select>
                 <select id="eac-r-tahun" onchange="eacLoadRekap(1)">

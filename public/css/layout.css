@@ -1298,6 +1298,14 @@ body[data-theme-transition] * {
     font-size: 0.78rem !important;
     padding-right: 4px !important;
   }
+
+  /* Badge "Jumlah: 4 (2024)" — suffix tahun " (2024)" (#textSuratTahunSuffix)
+     tidak dibungkus d-none/d-md-inline di markup, jadi selalu tampil dan
+     bikin badge kepanjangan/kepotong "...(2..." di mobile. Sembunyikan
+     suffix ini khusus mobile — cukup tampilkan "Jumlah: 4" saja. */
+  #textSuratTahunSuffix {
+    display: none !important;
+  }
 }
 
 @media (max-width: 400px) {
@@ -2060,7 +2068,7 @@ html body .pc-header.pc-header .header-user-profile.header-user-profile .navbar-
    ada pemisahan visual (bukan hilang total ke background). */
 [data-theme="dark"] .pc-header .header-user-profile .pc-head-link {
   background: rgba(255, 255, 255, .06) !important;
-  border-radius: 50%;
+  border-radius: 10px !important;
 }
 
 [data-theme="dark"] .pc-header .header-user-profile .pc-head-link:hover {
