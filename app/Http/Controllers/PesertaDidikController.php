@@ -21,14 +21,11 @@ class PesertaDidikController extends Controller
     private function fileFields(): array
     {
         return [
-            'file_ppdb',
             'file_kk',
             'file_akte',
             'file_ktp',
-            'file_kts',
-            'file_foto',
             'file_ijazah_smp',
-            'file_ijazah_sma',
+            'file_kip',
         ];
     }
 

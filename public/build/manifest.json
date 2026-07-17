@@ -12,7 +12,7 @@
     "isEntry": true
   },
   "resources/js/chat.js": {
-    "file": "assets/chat-CFpVu7ZZ.js",
+    "file": "assets/chat-DJgSa6Ww.js",
     "name": "chat",
     "src": "resources/js/chat.js",
     "isEntry": true
@@ -36,13 +36,13 @@
     "isEntry": true
   },
   "resources/js/peserta-didik.js": {
-    "file": "assets/peserta-didik-DDrPPTy3.js",
+    "file": "assets/peserta-didik-oaexzjsJ.js",
     "name": "peserta-didik",
     "src": "resources/js/peserta-didik.js",
     "isEntry": true
   },
   "resources/js/surat.js": {
-    "file": "assets/surat-hmGbBVGq.js",
+    "file": "assets/surat-D5UCjwLE.js",
     "name": "surat",
     "src": "resources/js/surat.js",
     "isEntry": true

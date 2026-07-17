@@ -44,6 +44,11 @@ if (window.PesertaDidikApp) {
 
         const token = $('meta[name="csrf-token"]')?.getAttribute("content");
 
+        // Baca param ?detail=ID dari URL (navigasi dari chat Arsy) — ditangkap
+        // SINKRON di sini (sebelum initPesertaDidikPage membersihkan query
+        // string) supaya modal detail bisa langsung dibuka otomatis.
+        const _initDetailId = new URLSearchParams(window.location.search).get("detail");
+
         // ============================================================
         // HELPER: Format tanggal ke format Indonesia (contoh: 12 Juli 2026)
         // Menerima string tanggal dari server, format "YYYY-MM-DD" atau
@@ -707,14 +712,11 @@ if (window.PesertaDidikApp) {
         function refreshEditDownloadAll() {
             const id = $("#edit_id")?.value || "";
             const fileFields = [
-                "file_ppdb",
                 "file_kk",
                 "file_akte",
                 "file_ktp",
-                "file_kts",
-                "file_foto",
                 "file_ijazah_smp",
-                "file_ijazah_sma",
+                "file_kip",
             ];
 
             let total = 0;
@@ -835,14 +837,11 @@ if (window.PesertaDidikApp) {
 
                 const s = j.data;
                 const fileFields = [
-                    "file_ppdb",
                     "file_kk",
                     "file_akte",
                     "file_ktp",
-                    "file_kts",
-                    "file_foto",
                     "file_ijazah_smp",
-                    "file_ijazah_sma",
+                    "file_kip",
                 ];
 
                 const pesertaDidikId = s.id_peserta_didik || id;
@@ -994,14 +993,11 @@ if (window.PesertaDidikApp) {
                 }
 
                 const fileFields = [
-                    "file_ppdb",
                     "file_kk",
                     "file_akte",
                     "file_ktp",
-                    "file_kts",
-                    "file_foto",
                     "file_ijazah_smp",
-                    "file_ijazah_sma",
+                    "file_kip",
                 ];
 
                 fileFields.forEach((field) => {
@@ -1136,14 +1132,11 @@ if (window.PesertaDidikApp) {
                 hideFormAlert("#alertTambahPesertaDidik");
 
                 const fieldLabels = {
-                    file_ppdb: "Formulir PPDB",
                     file_kk: "Kartu Keluarga",
-                    file_akte: "Akte Kelahiran",
                     file_ktp: "KTP Orang Tua",
-                    file_kts: "Kartu Peserta Didik",
-                    file_foto: "Foto 3x4",
-                    file_ijazah_smp: "Ijazah SMP",
-                    file_ijazah_sma: "Ijazah SMA",
+                    file_akte: "Akte Kelahiran",
+                    file_ijazah_smp: "Ijazah SMP/MTs",
+                    file_kip: "Kartu Indonesia Pintar (KIP)",
                 };
                 let firstInvalid = null;
                 for (const [field] of Object.entries(fieldLabels)) {
@@ -1229,14 +1222,11 @@ if (window.PesertaDidikApp) {
                     return toast("ID peserta_didik tidak ditemukan.", "error");
 
                 const fieldLabels = {
-                    file_ppdb: "Formulir PPDB",
                     file_kk: "Kartu Keluarga",
-                    file_akte: "Akte Kelahiran",
                     file_ktp: "KTP Orang Tua",
-                    file_kts: "Kartu Peserta Didik",
-                    file_foto: "Foto 3x4",
-                    file_ijazah_smp: "Ijazah SMP",
-                    file_ijazah_sma: "Ijazah SMA",
+                    file_akte: "Akte Kelahiran",
+                    file_ijazah_smp: "Ijazah SMP/MTs",
+                    file_kip: "Kartu Indonesia Pintar (KIP)",
                 };
                 let firstInvalidEdit = null;
                 for (const [field] of Object.entries(fieldLabels)) {
@@ -1281,14 +1271,11 @@ if (window.PesertaDidikApp) {
                 formData.append("_method", "PUT");
 
                 [
-                    "file_ppdb",
                     "file_kk",
                     "file_akte",
                     "file_ktp",
-                    "file_kts",
-                    "file_foto",
                     "file_ijazah_smp",
-                    "file_ijazah_sma",
+                    "file_kip",
                 ].forEach((field) => {
                     const input = $(`#edit_${field}`);
                     if (input?.dataset.markDelete === "1")
@@ -1564,6 +1551,12 @@ if (window.PesertaDidikApp) {
 
             // Tabel sudah ada dari server — cukup pasang event handler baris
             bindRowActions();
+
+            // Kalau dibuka lewat link chat Arsy (?detail=ID), langsung buka
+            // modal detail peserta_didik yang dimaksud.
+            if (_initDetailId) {
+                detailPesertaDidik(_initDetailId);
+            }
         }
 
         if (document.readyState === "loading") {

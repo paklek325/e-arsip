@@ -164,8 +164,36 @@
     /* ── Navigasi dari dalam chat (link "Buka Menu ..." / link surat) ──
        Chat langsung DITUTUP dulu, baru pindah halaman ke menu tujuan —
        supaya terasa seperti "membuka menu langsung", bukan sekadar
-       link biasa yang membiarkan panel chat tetap menggantung terbuka. */
+       link biasa yang membiarkan panel chat tetap menggantung terbuka.
+
+       KHUSUS link "?detail=ID" (mis. dari [🔍 Lihat Detail Lengkap ...]):
+       kalau pengguna KEBETULAN SUDAH ada di halaman Peserta Didik / Surat
+       yang sama, tidak perlu reload halaman sama sekali — cukup panggil
+       langsung fungsi pembuka modal yang sudah di-expose halaman itu
+       (window.PesertaDidikApp / window.SuratApp), jadi modal detail
+       langsung pop-up seketika. Kalau bukan halaman yang sama (atau API-nya
+       belum ter-expose), tetap fallback ke navigasi penuh seperti biasa. */
     window.eacNavigate = function (url) {
+        try {
+            const target = new URL(url, window.location.origin);
+            const detailId = target.searchParams.get('detail');
+            const normalize = p => p.replace(/\/+$/, '') || '/';
+            const samePage = normalize(target.pathname) === normalize(window.location.pathname);
+
+            if (detailId && samePage) {
+                if (normalize(target.pathname) === '/peserta-didik' && window.PesertaDidikApp?.detailPesertaDidik) {
+                    closePanel();
+                    window.PesertaDidikApp.detailPesertaDidik(detailId);
+                    return;
+                }
+                if (normalize(target.pathname) === '/surat' && window.SuratApp?.viewSurat) {
+                    closePanel();
+                    window.SuratApp.viewSurat(detailId);
+                    return;
+                }
+            }
+        } catch (_) { /* abaikan, lanjut fallback navigasi normal di bawah */ }
+
         try { closePanel(); } catch (_) {}
         window.location.href = url;
     };
@@ -176,7 +204,7 @@
         persistHistory();
         try { sessionStorage.removeItem(MKEY); } catch (_) {}
         msgs.innerHTML = WELCOME_HTML;
-        sugsEl.style.display = 'flex';
+        sugsEl.style.display = 'grid';
     });
 
     /* ══════════════════════════════════════
@@ -668,7 +696,7 @@
             const tgl = s.tanggal_surat ? new Date(s.tanggal_surat).toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'}) : '-';
             html += `<tr>
                 <td>${offset + i + 1}</td>
-                <td><a class="eac-tbl-link" href="/surat/${s.id}" onclick="window.eacNavigate('/surat/${s.id}');return false;">${esc(s.no_surat||'-')}</a></td>
+                <td><a class="eac-tbl-link" href="/surat?detail=${s.id}" onclick="window.eacNavigate('/surat?detail=${s.id}');return false;">${esc(s.no_surat||'-')}</a></td>
                 <td>${esc(s.perihal||'-')}</td>
                 <td style="white-space:nowrap;font-size:11px">${tgl}</td>
                 <td>${badge}</td>
@@ -844,7 +872,7 @@
             } else {
                 // Tidak ada riwayat chat dari user — bersihkan & tampilkan tanya cepat
                 sessionStorage.removeItem(MKEY);
-                sugsEl.style.display = 'flex';
+                sugsEl.style.display = 'grid';
             }
         } catch (_) {}
 

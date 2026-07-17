@@ -2066,13 +2066,26 @@ html body .pc-header.pc-header .header-user-profile.header-user-profile .navbar-
    avatar kelihatan seperti "kotak putih". Dihapus & diganti warna yang
    senada dgn tema gelap, sedikit lebih terang dari header supaya tetap
    ada pemisahan visual (bukan hilang total ke background). */
-[data-theme="dark"] .pc-header .header-user-profile .pc-head-link {
-  background: rgba(255, 255, 255, .06) !important;
+.pc-header .header-user-profile .pc-head-link,
+.pc-header .header-user-profile .pc-head-link:hover,
+.pc-header .header-user-profile .pc-head-link:focus,
+.pc-header .header-user-profile .pc-head-link:active,
+.pc-header .header-user-profile .pc-head-link.show {
+  background: transparent !important;
   border-radius: 10px !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
 }
 
-[data-theme="dark"] .pc-header .header-user-profile .pc-head-link:hover {
-  background: rgba(255, 255, 255, .12) !important;
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link,
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link:hover,
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link:focus,
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link:active,
+[data-theme="dark"] .pc-header .header-user-profile .pc-head-link.show {
+  background: transparent !important;
+  border-radius: 10px !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
 }
 
 [data-theme="dark"] .pc-header .header-user-profile .user-avatar {
@@ -2318,9 +2331,32 @@ html body .pc-header.pc-header .header-user-profile.header-user-profile .navbar-
 
 /* .bg-light umum di dark mode */
 [data-theme="dark"] .bg-light {
-  background-color: var(--card-bg) !important;
+  background-color: #172033 !important;
   color: var(--text-color) !important;
 }
+
+[data-theme="dark"] .modal-body .card {
+  background-color: #172033 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .modal-body .card-header {
+  background-color: #1a2438 !important;
+  color: #f1f5f9 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .modal-body .card-body {
+  background-color: #172033 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .modal-body .list-group-item {
+  background-color: #172033 !important;
+  color: #cbd5e1 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
 
 /* Pagination Laravel default (page-link) */
 [data-theme="dark"] .pagination .page-link {

@@ -22,7 +22,9 @@
 @endsection
 
 @section('content')
-    <div id="page-surat">
+    <div id="page-surat"
+        data-lock-jenis="{{ $lockJenis ?? '' }}"
+        data-base-url="{{ $lockJenis === 'Masuk' ? route('surat.masuk') : ($lockJenis === 'Keluar' ? route('surat.keluar') : route('surat.index')) }}">
 
         {{-- Header --}}
         <div class="pt-2 d-flex justify-content-between align-items-center mb-3">

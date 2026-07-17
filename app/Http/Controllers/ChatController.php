@@ -51,7 +51,7 @@ class ChatController extends Controller
         }
 
         try {
-            $contextData = $this->gatherContext($message);
+            $contextData = $this->gatherContext($message, $history);
             $systemPrompt = $this->buildSystemPrompt($user, $page, $contextData);
 
             $messages = [['role' => 'system', 'content' => $systemPrompt]];
@@ -253,7 +253,11 @@ class ChatController extends Controller
      * ============================================================ */
     private function buildQuickSuggestions(string $menu): array
     {
-        $labels = ['peserta_didik' => 'PesertaDidik', 'surat' => 'Surat', 'kode' => 'Kode Surat', 'laporan' => 'Laporan', 'user' => 'User'];
+        // Daftar menu yang dipakai untuk saran "🧭 Buka menu ..." ke menu LAIN.
+        // 'surat' generik SENGAJA tidak dimasukkan di sini — digantikan oleh
+        // 'surat_masuk' & 'surat_keluar' supaya pengguna langsung diarahkan
+        // ke halaman surat yang sudah terfilter sesuai jenisnya.
+        $labels = ['peserta_didik' => 'PesertaDidik', 'surat_masuk' => 'Surat Masuk', 'surat_keluar' => 'Surat Keluar', 'kode' => 'Kode Surat', 'laporan' => 'Laporan', 'user' => 'User'];
 
         $khusus = [
             'peserta_didik' => [
@@ -261,10 +265,21 @@ class ChatController extends Controller
                 ['label' => '📂 Dokumen belum lengkap', 'msg' => 'tampilkan peserta_didik yang belum lengkap dokumen'],
                 ['label' => '✏️ Cara edit/upload dokumen', 'msg' => 'bagaimana cara edit dan upload ulang dokumen peserta_didik'],
             ],
+            // Fallback generik (masih dipakai jika navigate = 'surat' tanpa jenis spesifik)
             'surat' => [
                 ['label' => '➕ Cara tambah surat', 'msg' => 'bagaimana cara tambah surat'],
                 ['label' => '🔢 Aturan kode surat', 'msg' => 'apa aturan kode surat untuk surat masuk dan keluar'],
                 ['label' => '📎 Cara upload lampiran', 'msg' => 'bagaimana cara upload lampiran surat'],
+            ],
+            'surat_masuk' => [
+                ['label' => '➕ Cara tambah surat masuk', 'msg' => 'bagaimana cara tambah surat masuk'],
+                ['label' => '📎 Cara upload lampiran surat masuk', 'msg' => 'bagaimana cara upload lampiran surat masuk'],
+                ['label' => '🔍 Cari surat masuk bulan ini', 'msg' => 'carikan surat masuk bulan ini'],
+            ],
+            'surat_keluar' => [
+                ['label' => '➕ Cara tambah surat keluar', 'msg' => 'bagaimana cara tambah surat keluar'],
+                ['label' => '🔢 Aturan kode surat keluar', 'msg' => 'apa aturan kode surat untuk surat keluar'],
+                ['label' => '🔍 Cari surat keluar bulan ini', 'msg' => 'carikan surat keluar bulan ini'],
             ],
             'kode' => [
                 ['label' => '➕ Cara tambah kode', 'msg' => 'bagaimana cara tambah kode surat baru'],
@@ -283,7 +298,7 @@ class ChatController extends Controller
             ],
         ];
 
-        $routes = ['peserta_didik' => '/peserta-didik', 'surat' => '/surat', 'kode' => '/kode', 'laporan' => '/laporan', 'user' => '/user'];
+        $routes = ['peserta_didik' => '/peserta-didik', 'surat' => '/surat', 'surat_masuk' => '/surat/filter/masuk', 'surat_keluar' => '/surat/filter/keluar', 'kode' => '/kode', 'laporan' => '/laporan', 'user' => '/user'];
 
         $suggestions = $khusus[$menu] ?? [];
 
@@ -368,6 +383,7 @@ class ChatController extends Controller
         $suggestions = [
             ['label' => '🔍 Cari surat bulan ini', 'msg' => 'carikan surat bulan ini'],
             ['label' => '🎓 Menu Peserta Didik', 'msg' => 'menu peserta_didik', 'url' => '/peserta-didik'],
+            ['label' => '🔢 Menu Kode Surat', 'msg' => 'menu kode', 'url' => '/kode'],
             ['label' => '📊 Statistik arsip', 'msg' => 'tampilkan statistik arsip hari ini'],
             ['label' => '📋 Menu Laporan', 'msg' => 'menu laporan', 'url' => '/laporan'],
             ['label' => '✏️ Cara tambah surat', 'msg' => 'bagaimana cara tambah surat'],
@@ -420,16 +436,115 @@ class ChatController extends Controller
     }
 
     /* ============================================================
+     * DETEKSI PERMINTAAN DETAIL SATU PESERTA_DIDIK / SURAT SPESIFIK
+     * (mis. "selengkapnya", "lihat detail", "info lengkap dong")
+     * ============================================================ */
+    private function tryBuildDetailLink(string $message, string $msg, array $history): ?array
+    {
+        $detailKeywords = [
+            'selengkapnya', 'lengkapnya', 'detail lengkap', 'info lengkap',
+            'lihat detail', 'lihat detailnya', 'detailnya', 'buka detail',
+            'liat detail', 'liat detailnya', 'tampilkan detail',
+        ];
+        $wantsDetail = false;
+        foreach ($detailKeywords as $kw) {
+            if (str_contains($msg, $kw)) { $wantsDetail = true; break; }
+        }
+        if (!$wantsDetail) return null;
+
+        // Kumpulkan teks yang relevan untuk dicari nama/nomor suratnya:
+        // pesan sekarang DULU, baru fallback ke riwayat (pesan user &
+        // balasan Arsy sebelumnya) — supaya "selengkapnya dong" tanpa
+        // menyebut nama tetap bisa nemuin siapa/surat apa yang dimaksud
+        // dari konteks obrolan sebelumnya.
+        $recent = array_slice($history, -4);
+        $searchTexts = [$message];
+        foreach (array_reverse($recent) as $h) {
+            if (!empty($h['content'])) $searchTexts[] = (string) $h['content'];
+        }
+
+        $wantsSurat = str_contains($msg, 'surat');
+
+        // ── Coba cocokkan ke SURAT dulu kalau pesan/riwayat menyebut "surat" ──
+        if ($wantsSurat) {
+            foreach ($searchTexts as $t) {
+                if (preg_match('/(?:nomor|no\.?|nomer)\s+(?:surat\s+)?([A-Z0-9\/\-\.]+)/i', $t, $m)) {
+                    $surat = Surat::where('no_surat', 'LIKE', '%' . trim($m[1]) . '%')->first();
+                    if ($surat) {
+                        return [
+                            'detail_link' => [
+                                'type'  => 'surat',
+                                'url'   => '/surat?detail=' . $surat->id,
+                                'label' => $surat->no_surat . ' — ' . $surat->perihal,
+                            ],
+                        ];
+                    }
+                }
+            }
+        }
+
+        // ── Coba cocokkan ke PESERTA_DIDIK: cari nama dari pesan/riwayat ──
+        $namaCandidates = [];
+        foreach ($searchTexts as $t) {
+            if (preg_match('/\b(?:tentang|soal|siswa|peserta_didik|peserta didik)\s+([A-Za-z][A-Za-z\s]{1,39})/iu', $t, $m)) {
+                $namaCandidates[] = trim(preg_replace('/\b(selengkapnya|lengkapnya|dong|donk|ya|nya)\b/iu', '', $m[1]));
+            }
+            // Nama yang ditulis tebal oleh Arsy sendiri di balasan sebelumnya, mis. "**Cika**"
+            if (preg_match_all('/\*\*([A-Za-z][A-Za-z\s]{1,39})\*\*/u', $t, $mm)) {
+                foreach ($mm[1] as $cand) $namaCandidates[] = trim($cand);
+            }
+            // Format "Nama: Cika" yang biasa dipakai Arsy saat menjawab
+            if (preg_match('/Nama\s*:\s*([A-Za-z][A-Za-z\s]{1,39})/iu', $t, $m)) {
+                $namaCandidates[] = trim($m[1]);
+            }
+        }
+        $namaCandidates = array_filter(array_unique($namaCandidates), fn($n) => mb_strlen($n) >= 2);
+
+        foreach ($namaCandidates as $nama) {
+            $pd = PesertaDidik::whereRaw('LOWER(nama_peserta_didik) LIKE ?', ['%' . mb_strtolower($nama) . '%'])->first();
+            if ($pd) {
+                return [
+                    'detail_link' => [
+                        'type'  => 'peserta_didik',
+                        'url'   => '/peserta-didik?detail=' . $pd->id_peserta_didik,
+                        'label' => $pd->nama_peserta_didik,
+                    ],
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    /* ============================================================
      * GATHER CONTEXT — ambil data DB yang relevan
      * ============================================================ */
-    private function gatherContext(string $message): array
+    private function gatherContext(string $message, array $history = []): array
     {
         $msg     = mb_strtolower($message);
         $context = [];
 
+        // ══════════════════════════════════════════════════════════
+        // PERMINTAAN "SELENGKAPNYA" / "DETAIL" UNTUK SATU PESERTA_DIDIK
+        // ATAU SURAT SPESIFIK — arahkan LANGSUNG ke modal detail asli
+        // (bukan minta AI menuliskan ulang field-nya), supaya data yang
+        // tampil PASTI akurat & lengkap (foto, dokumen, dsb yang tidak
+        // mungkin ditampilkan sebagai teks chat), dan supaya AI tidak
+        // berisiko mengarang field yang tidak pernah diberikan ke dia
+        // (mis. tanggal lahir / alamat yang tidak ada di context).
+        // ══════════════════════════════════════════════════════════
+        $detailResult = $this->tryBuildDetailLink($message, $msg, $history);
+        if ($detailResult !== null) {
+            return $detailResult;
+        }
+
         // Navigasi menu
         $menuMap = [
             'peserta_didik'   => ['menu peserta_didik', 'halaman peserta_didik', 'buka peserta_didik', 'menuju peserta_didik', 'ke peserta_didik', 'pergi peserta_didik', 'buka menu peserta_didik'],
+            // Dicek LEBIH DULU daripada 'surat' generik, karena frasa seperti
+            // "menu surat masuk" juga mengandung substring "menu surat".
+            'surat_masuk'  => ['menu surat masuk', 'halaman surat masuk', 'buka surat masuk', 'menuju surat masuk', 'ke surat masuk', 'buka menu surat masuk', 'pergi surat masuk'],
+            'surat_keluar' => ['menu surat keluar', 'halaman surat keluar', 'buka surat keluar', 'menuju surat keluar', 'ke surat keluar', 'buka menu surat keluar', 'pergi surat keluar'],
             'surat'   => ['menu surat', 'halaman surat', 'buka surat', 'menuju surat', 'ke surat'],
             'kode'    => ['menu kode', 'halaman kode', 'buka kode', 'menuju kode'],
             'laporan' => ['menu laporan', 'halaman laporan', 'buka laporan', 'menuju laporan'],
@@ -557,14 +672,32 @@ class ChatController extends Controller
 
         $contextSection = '';
 
+        if (!empty($context['detail_link'])) {
+            $dl = $context['detail_link'];
+            $labelJenis = $dl['type'] === 'surat' ? 'surat' : 'peserta didik';
+            $contextSection = "\n\n## AKSI: BUKA DETAIL LENGKAP\nPengguna minta detail lengkap {$labelJenis} **{$dl['label']}**. JANGAN menuliskan ulang field apapun (nama, tanggal lahir, alamat, status, dsb) karena kamu TIDAK diberi data itu di sini dan BERISIKO SALAH/MENGARANG. Cukup balas SINGKAT (1-2 kalimat ramah) lalu sertakan link Markdown berikut supaya pengguna langsung melihat detail lengkap & akuratnya di aplikasi: [🔍 Lihat Detail Lengkap {$dl['label']}]({$dl['url']})";
+
+            return <<<PROMPT
+Kamu adalah asisten AI bernama "Arsy" untuk sistem E-Arsip SMA Babussalam.
+Pengguna: {$name} (Role: {$role})
+
+## ATURAN OUTPUT
+1. Output HANYA Markdown — JANGAN output tag HTML, onclick, style attribute
+2. JANGAN mengarang/menebak data apapun yang tidak diberikan di bawah ini{$contextSection}
+PROMPT;
+        }
+
         if (!empty($context['navigate'])) {
-            $routes = ['peserta_didik' => '/peserta-didik', 'surat' => '/surat', 'kode' => '/kode', 'laporan' => '/laporan', 'user' => '/user'];
+            $routes = ['peserta_didik' => '/peserta-didik', 'surat' => '/surat', 'surat_masuk' => '/surat/filter/masuk', 'surat_keluar' => '/surat/filter/keluar', 'kode' => '/kode', 'laporan' => '/laporan', 'user' => '/user'];
             $url    = $routes[$context['navigate']] ?? '/' . $context['navigate'];
-            $label  = ucfirst($context['navigate']);
+            $labelMap = ['peserta_didik' => 'PesertaDidik', 'surat' => 'Surat', 'surat_masuk' => 'Surat Masuk', 'surat_keluar' => 'Surat Keluar', 'kode' => 'Kode', 'laporan' => 'Laporan', 'user' => 'User'];
+            $label  = $labelMap[$context['navigate']] ?? ucfirst($context['navigate']);
 
             $fungsi = [
                 'peserta_didik'   => 'Menu PesertaDidik digunakan untuk menyimpan data diri peserta_didik beserta dokumen pendukungnya (PPDB, KK, Akte, KTP Orang Tua, KTS, Foto, Ijazah SMP/SMA) dan memantau status kelengkapan dokumen tiap peserta_didik.',
                 'surat'   => 'Menu Surat digunakan untuk mencatat dan mengarsipkan surat masuk maupun surat keluar beserta lampirannya, termasuk nomor surat, kode klasifikasi, perihal, instansi, dan pengirim/penerima.',
+                'surat_masuk' => 'Menu Surat Masuk digunakan untuk mencatat dan mengarsipkan surat yang diterima dari instansi/pihak luar, termasuk nomor surat, tanggal, perihal, instansi pengirim, dan lampirannya. Halaman ini otomatis terfilter hanya menampilkan surat berjenis Masuk.',
+                'surat_keluar' => 'Menu Surat Keluar digunakan untuk mencatat dan mengarsipkan surat yang dikirim oleh sekolah ke pihak luar, termasuk nomor surat, tanggal, kode klasifikasi (dipilih dari master Kode Surat), perihal, instansi/penerima, dan lampirannya. Halaman ini otomatis terfilter hanya menampilkan surat berjenis Keluar.',
                 'kode'    => 'Menu Kode Surat digunakan untuk mengelola daftar master kode klasifikasi surat, yang nantinya dipilih saat menambahkan surat keluar.',
                 'laporan' => 'Menu Laporan digunakan untuk melihat rekap jumlah surat masuk dan keluar per bulan/tahun, serta mengekspor laporan ke PDF atau Word.',
                 'user'    => 'Menu User digunakan untuk mengelola akun pengguna sistem E-Arsip, termasuk menambah, mengedit, dan menghapus user.',
@@ -641,7 +774,7 @@ Kamu adalah asisten AI bernama "Arsy" untuk sistem E-Arsip SMA Babussalam.
 2. Link navigasi pakai format Markdown: [Nama Menu](url)
 3. Output HANYA Markdown — JANGAN output tag HTML, onclick, style attribute
 4. Jika ada data DB di bawah, GUNAKAN data itu — jangan bilang "saya tidak punya akses data"
-5. **KRITIS — JANGAN MENGARANG DATA SURAT**: Jika ada section "DATA SURAT" di bawah, tampilkan HANYA surat yang ada di sana. Jika datanya kosong (0 hasil), sampaikan bahwa tidak ada surat yang cocok dengan filter tersebut — JANGAN menyebutkan contoh surat fiktif apapun.
+5. **KRITIS — JANGAN MENGARANG DATA SURAT ATAU PESERTA_DIDIK**: Jika ada section "DATA SURAT" atau "DATA PESERTA_DIDIK" di bawah, tampilkan HANYA field yang benar-benar ada di data tersebut. Jika datanya kosong (0 hasil), sampaikan bahwa tidak ada yang cocok dengan filter tersebut — JANGAN menyebutkan contoh data fiktif apapun. JANGAN PERNAH menambahkan field yang tidak ada di data (mis. tanggal lahir, alamat, NIK, dsb jika field itu tidak diberikan) — kalau pengguna ingin data selengkapnya di luar field yang tersedia, arahkan mereka ke detail lengkap di aplikasi, jangan menebak isinya.
 6. **PENTING — TANGGAL SURAT vs TANGGAL INPUT**: Filter "bulan ini", "bulan lalu", dll mengacu pada **tanggal surat** (tanggal tertulis di surat), BUKAN tanggal surat diinput ke sistem. Jika hasil pencarian kosong, jelaskan hal ini kepada pengguna — surat mungkin sudah diinput tapi tanggal suratnya berbeda dari bulan yang dicari.
 7. **FORMAT TAMPILAN DATA SURAT**: Jika ada data surat dan ada URL_SEMUA di meta, tampilkan link "[📋 Lihat Semua Surat di Halaman Surat](URL_SEMUA)" di PALING ATAS sebelum daftar surat. Setiap item surat cukup tampilkan: nomor, jenis, tanggal, perihal, instansi — TANPA link per item.
 8. Aturan Kode Surat (PENTING, jangan sampai salah jawab): saat menambah/mengedit surat, jika Jenis Surat = **Masuk**, kolom Kode Surat berupa isian teks bebas (diketik manual, opsional). Jika Jenis Surat = **Keluar**, kolom Kode Surat berubah jadi dropdown dan WAJIB dipilih dari daftar master Kode Surat — tidak bisa diketik manual.
@@ -751,6 +884,7 @@ PROMPT;
         }
 
         return [$results->map(fn($s) => [
+            'id'      => $s->id,
             'no'      => $s->no_surat,
             'jenis'   => $s->jenis_surat,
             'tgl'     => optional($s->tanggal_surat)->format('d/m/Y'),
@@ -785,6 +919,7 @@ PROMPT;
         elseif (str_contains($msg, 'lengkap') && !str_contains($msg, 'belum')) $query->where('status', 'lengkap');
 
         return $query->orderBy('tahun_angkatan', 'desc')->limit(8)->get()->map(fn($s) => [
+            'id'      => $s->id_peserta_didik,
             'nama'    => $s->nama_peserta_didik,
             'jk'      => $s->jenis_kelamin === 'L' ? 'L' : 'P',
             'rombel'  => $s->rombel,

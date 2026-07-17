@@ -148,12 +148,13 @@
     .eac-typing-label{ font-size:10.5px; color:var(--eac-text-muted); margin-top:2px; }
 
     /* ── Saran cepat ── */
-    .eac-suggestions{ display:flex; flex-wrap:wrap; row-gap:4px; column-gap:5px; padding:6px 10px 7px; border-top:1px solid var(--eac-border); background:var(--eac-bg-soft); flex-shrink:0; }
-    .eac-suggestions > span{ width:100%; font-size:10px; color:var(--eac-text-muted); font-weight:600; margin-bottom:0; line-height:1.2; }
+    .eac-suggestions{ display:grid; grid-template-columns:repeat(3, 1fr); row-gap:5px; column-gap:5px; padding:6px 10px 7px; border-top:1px solid var(--eac-border); background:var(--eac-bg-soft); flex-shrink:0; }
+    .eac-suggestions > span{ grid-column:1 / -1; font-size:10px; color:var(--eac-text-muted); font-weight:600; margin-bottom:0; line-height:1.2; }
     .eac-sug-btn, .eac-quick-chip{
         border:1px solid var(--eac-border); background:var(--eac-bg); color:var(--eac-primary);
-        border-radius:999px; padding:4px 9px; font-size:10.5px; font-weight:600; cursor:pointer;
+        border-radius:999px; padding:4px 6px; font-size:10.5px; font-weight:600; cursor:pointer;
         transition:background .15s ease, transform .15s ease, box-shadow .15s ease;
+        width:100%; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
     .eac-sug-btn:hover, .eac-quick-chip:hover{ background:var(--eac-primary); color:#fff; transform:translateY(-1px); box-shadow:0 4px 10px -3px rgba(76,40,140,.4); }
 
@@ -297,7 +298,7 @@
         .eac-header-actions button{ width:24px; height:24px; font-size:11px; }
         .eac-bubble-avatar{ width:20px; height:20px; font-size:10px; }
         .eac-bubble-text{ font-size:11px; padding:7px 9px; line-height:1.4; }
-        .eac-sug-btn, .eac-quick-chip{ font-size:9.5px; padding:3px 8px; }
+        .eac-sug-btn, .eac-quick-chip{ font-size:9.5px; padding:3px 4px; }
         #eac-input{ font-size:11px; }
         #earsipchat-btn{ right:16px; bottom:16px; }
     }
@@ -368,8 +369,10 @@
         <div class="eac-suggestions" id="eac-suggestions">
             <span>Tanya cepat:</span>
             <button class="eac-sug-btn" data-url="/dashboard">🏠 Menu Dashboard</button>
-            <button class="eac-sug-btn" data-url="/surat">📁 Menu Surat</button>
+            <button class="eac-sug-btn" data-url="/surat/filter/masuk">📥 Menu Surat Masuk</button>
+            <button class="eac-sug-btn" data-url="/surat/filter/keluar">📤 Menu Surat Keluar</button>
             <button class="eac-sug-btn" data-url="/peserta-didik">🎓 Menu Peserta Didik</button>
+            <button class="eac-sug-btn" data-url="/kode">🔢 Menu Kode Surat</button>
             <button class="eac-sug-btn" data-url="/laporan">📊 Laporan</button>
             <button class="eac-sug-btn" data-msg="tampilkan statistik arsip hari ini">📈 Statistik</button>
             <button class="eac-sug-btn" data-msg="carikan surat bulan ini">🔍 Surat Bulan Ini</button>
@@ -441,6 +444,8 @@
      Semua logika widget ini ada di resources/js/chat.js (bukan inline
      lagi) — supaya file komponen ini bersih dari JS dan JS-nya bisa
      di-cache/minify seperti file resources/js lain (dashboard.js, dst).
-     Sesuaikan pemanggilan asset di bawah ini dengan setup build kamu
-     (Vite/Mix/plain asset()). --}}
-<script src="{{ asset('js/chat.js') }}" defer></script>
+     File ini SUDAH dimuat lewat @vite(['resources/js/chat.js', ...]) di
+     resources/views/layouts/app.blade.php, jadi TIDAK perlu <script src>
+     tambahan di sini — kalau ditambahkan lagi, browser akan mencoba GET
+     ke public/js/chat.js yang tidak pernah ada (404) karena Vite
+     mem-build filenya ke public/build/assets/..., bukan ke public/js/. --}}

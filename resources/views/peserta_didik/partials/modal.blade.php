@@ -80,14 +80,11 @@
         {{-- FIELDS UPLOAD --}}
         @php
           $fields = [
-            'file_ppdb' => 'Formulir PPDB',
             'file_kk' => 'Kartu Keluarga',
-            'file_akte' => 'Akte Kelahiran',
             'file_ktp' => 'KTP Orang Tua',
-            'file_kts' => '<span class="d-none d-sm-inline">Kartu Peserta Didik</span><span class="d-inline d-sm-none">KTS</span>',
-            'file_foto' => 'Foto 3x4',
-            'file_ijazah_smp' => 'Ijazah SMP',
-            'file_ijazah_sma' => 'Ijazah SMA <span class="badge bg-secondary fw-normal ms-1">Opsional</span>',
+            'file_akte' => 'Akte Kelahiran',
+            'file_ijazah_smp' => 'Ijazah SMP/MTs',
+            'file_kip' => 'Kartu Indonesia Pintar (KIP) <span class="badge bg-secondary fw-normal ms-1">Opsional</span>',
           ];
         @endphp
 

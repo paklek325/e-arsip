@@ -40,7 +40,7 @@
               @if(($lockJenis ?? null) === 'Masuk')
                 Isi nomor surat secara manual.
               @else
-                Nomor otomatis untuk Surat Keluar. Nomor duplikat ditolak.
+                Nomor otomatis untuk Surat Keluar (melanjutkan nomor terakhir), tapi tetap bisa diketik/diubah manual. Nomor duplikat ditolak.
               @endif
             </small>
           </div>
@@ -113,7 +113,7 @@
           <div class="col-md-6">
             <label for="add_instansi" class="form-label">Instansi <span class="text-danger">*</span></label>
             <input type="text" name="instansi" id="add_instansi"
-                   class="form-control" value="SMABA" required>
+                   class="form-control" placeholder="Tujuan/dari surat" required>
           </div>
 
           {{-- Bulan --}}
@@ -240,11 +240,11 @@
               <input type="text" id="edit_no_surat" name="no_surat"
                      class="form-control" required>
               <button type="button" class="btn btn-outline-secondary" id="btnGenerateNoSuratEdit"
-                      title="Generate nomor otomatis berdasarkan kode, instansi, dan tanggal surat">
+                      title="Generate nomor otomatis berdasarkan kode dan tanggal surat">
                 <i class="bi bi-magic me-1"></i>Generate
               </button>
             </div>
-            <small class="text-muted">Generate menggunakan kode, instansi, dan tanggal surat saat ini.</small>
+            <small class="text-muted">Bisa diketik/diubah manual, atau klik Generate untuk mengisi otomatis (melanjutkan nomor terakhir) menggunakan kode dan tanggal surat saat ini.</small>
           </div>
 
           {{-- Jenis Surat --}}
@@ -474,11 +474,6 @@
                             <div class="col-12">
                                 <small class="text-muted">Perihal</small>
                                 <div id="view_perihal"></div>
-                            </div>
-                            <div class="col-12">
-                                <small class="text-muted">Keterangan</small>
-                                <div id="view_keterangan"></div>
-                            </div>
                         </div>
                     </div>
                 </div>

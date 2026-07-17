@@ -42,8 +42,10 @@ class StoreSuratRequest extends FormRequest
             ],
             'jenis_surat'   => 'required|in:Masuk,Keluar',
             'tanggal_surat' => 'required|date',
-            // Field teks: hanya huruf, angka, dan spasi (tanpa simbol)
-            'perihal'       => ['required', 'string', 'max:255', 'regex:/^[A-Za-z0-9 ]+$/'],
+            // Field teks: huruf, angka, dan spasi (tanpa simbol)
+            // Perihal boleh tambahan tanda ( ) ' . , : / \ untuk keterangan/penulisan umum,
+            // mis. "Undangan Rapat (Wajib Hadir)" atau "Surat No: 001/2026"
+            'perihal'       => ['required', 'string', 'max:255', 'regex:/^[A-Za-z0-9 ()\'.,:\/\\\\]+$/'],
             'instansi'      => ['required', 'string', 'max:255', 'regex:/^[A-Za-z0-9 ]+$/'],
             'pengirim'      => ['nullable', 'string', 'max:255', 'regex:/^[A-Za-z0-9 ]+$/'],
             'penerima'      => ['nullable', 'string', 'max:255', 'regex:/^[A-Za-z0-9 ]+$/'],
@@ -61,7 +63,19 @@ class StoreSuratRequest extends FormRequest
             ],
 
             'file_surat'   => 'required|array|min:1',
-            'file_surat.*' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
+            'file_surat.*' => [
+                'required',
+                'file',
+                'max:10240',
+                function ($attribute, $value, $fail) {
+                    $allowed = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
+                    $ext = strtolower($value->getClientOriginalExtension());
+
+                    if (!in_array($ext, $allowed, true)) {
+                        $fail('File hanya boleh berupa PDF, Word (doc/docx), atau gambar (jpg/jpeg/png).');
+                    }
+                },
+            ],
         ];
     }
 
@@ -75,11 +89,10 @@ class StoreSuratRequest extends FormRequest
 
             'no_surat.regex'    => 'Nomor surat hanya boleh berisi huruf, angka, spasi, dan tanda / - .',
             'kode_surat.regex'  => 'Kode surat hanya boleh berisi huruf, angka, spasi, dan tanda / - .',
-            'perihal.regex'     => 'Perihal hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
+            'perihal.regex'     => 'Perihal hanya boleh berisi huruf, angka, spasi, dan tanda ( ) \' . , : / \\',
             'instansi.regex'    => 'Instansi hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
             'pengirim.regex'    => 'Pengirim hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
             'penerima.regex'    => 'Penerima hanya boleh berisi huruf, angka, dan spasi (tanpa simbol).',
-            'file_surat.*.mimes' => 'File hanya boleh berupa PDF, Word (doc/docx), atau gambar (jpg/jpeg/png).',
             'file_surat.*.max'   => 'Ukuran file maksimal 10 MB.',
         ];
     }

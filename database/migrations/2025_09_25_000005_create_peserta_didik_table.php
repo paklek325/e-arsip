@@ -16,14 +16,11 @@ return new class extends Migration {
             $table->text('alamat')->nullable();
             $table->enum('rombel', ['A', 'B']);
             $table->string('tahun_angkatan', 10);
-            $table->string('file_ppdb')->nullable();
             $table->string('file_kk')->nullable();
             $table->string('file_akte')->nullable();
             $table->string('file_ktp')->nullable();
-            $table->string('file_kts')->nullable();
-            $table->string('file_foto')->nullable();
             $table->string('file_ijazah_smp')->nullable();
-            $table->string('file_ijazah_sma')->nullable();
+            $table->string('file_kip')->nullable();
             $table->enum('status', ['lengkap', 'belum lengkap'])->default('belum lengkap');
             $table->unsignedBigInteger('id_user')->nullable();
             $table->foreign('id_user')

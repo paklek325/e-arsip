@@ -32,6 +32,15 @@ if (window.SuratApp) {
         const tableContainer = document.querySelector("#tableContainer");
         if (!tableContainer) return;
 
+        // Baca kunci jenis (Masuk/Keluar) dan URL dasar dari atribut
+        // data-lock-jenis / data-base-url yang di-render oleh Blade.
+        // Ini memastikan AJAX sort/filter Surat Masuk SELALU fetch ke
+        // /surat/filter/masuk dan Surat Keluar ke /surat/filter/keluar,
+        // sehingga data tidak pernah bercampur antara kedua menu.
+        const pageSuratEl = document.querySelector("#page-surat");
+        const lockJenis   = pageSuratEl?.dataset?.lockJenis || "";
+        const baseUrl     = pageSuratEl?.dataset?.baseUrl   || "/surat";
+
         /* ========================
          * GLOBAL UTILITIES
          * ======================== */
@@ -87,6 +96,15 @@ if (window.SuratApp) {
             document.addEventListener("DOMContentLoaded", () => {
                 const tanggalEl = document.getElementById("tanggal");
                 if (tanggalEl) tanggalEl.value = _initTanggal;
+            });
+        }
+
+        // Baca param ?detail=ID dari URL (navigasi dari chat Arsy) — langsung
+        // buka modal detail surat yang dimaksud begitu halaman termuat.
+        let _initDetailId = _initUrl.get("detail") || null;
+        if (_initDetailId) {
+            document.addEventListener("DOMContentLoaded", () => {
+                viewSurat(_initDetailId);
             });
         }
 
@@ -200,7 +218,15 @@ if (window.SuratApp) {
             function tanggalKeBulanTahun() {
                 if (!tanggalEl.value) return;
                 const d = new Date(tanggalEl.value + "T00:00:00");
-                if (bulanEl) bulanEl.value = String(d.getMonth() + 1);
+                if (bulanEl) {
+                    bulanEl.value = String(d.getMonth() + 1);
+                    // Custom dropdown Bulan punya tampilan label terpisah dari
+                    // <select> aslinya — kalau value diubah lewat JS (bukan
+                    // klik user), label itu tidak ikut ter-update kecuali
+                    // di-sync manual. Makanya Bulan kelihatan tidak berubah
+                    // padahal Tanggal Surat sudah diganti.
+                    syncModalSelect(bulanEl);
+                }
                 if (tahunEl) tahunEl.value = String(d.getFullYear());
             }
 
@@ -239,13 +265,22 @@ if (window.SuratApp) {
         }
 
         // ===== GENERATE NOMOR SURAT OTOMATIS =====
+        // Mengirim kode/instansi/bulan/tahun (jika sudah diisi) supaya nomor
+        // yang dihasilkan sesuai format resmi: 001/KODE/INSTANSI/ROMAWI/TAHUN,
+        // bukan cuma angka urut polos.
         async function generateNoSurat({
             jenis = "Keluar",
             exclude_id = "",
+            kode = "",
+            bulan = "",
+            tahun = "",
         } = {}) {
             try {
                 const params = new URLSearchParams({ jenis });
                 if (exclude_id) params.append("exclude_id", exclude_id);
+                if (kode) params.append("kode", kode);
+                if (bulan) params.append("bulan", bulan);
+                if (tahun) params.append("tahun", tahun);
                 const res = await safeFetch(`/surat/generate-nomor?${params}`, {
                     headers: { Accept: "application/json" },
                 });
@@ -256,6 +291,87 @@ if (window.SuratApp) {
                 toast("Gagal generate nomor surat.", "error");
                 return null;
             }
+        }
+
+        // Kumpulkan kode/instansi/bulan/tahun yang sedang terisi di modal
+        // Tambah/Edit surat untuk dikirim ke generateNoSurat().
+        function collectNomorContext(prefix) {
+            const kodeEl =
+                prefix === "add"
+                    ? $("#kode_surat_select_add")
+                    : $("#kode_input_edit");
+            const bulanEl = $(`#${prefix}_bulan`);
+            const tahunEl = $(`#${prefix}_tahun`);
+
+            return {
+                kode: kodeEl?.value?.trim() || "",
+                bulan: bulanEl?.value || "",
+                tahun: tahunEl?.value || "",
+            };
+        }
+
+        // ===== AUTO REGENERATE NOMOR SURAT saat Bulan/Tahun/Tanggal berubah =====
+        // Nomor Surat (khusus Surat Keluar) ikut menyesuaikan setiap kali user
+        // mengganti Bulan, Tahun, atau Tanggal Surat (Instansi TIDAK lagi jadi
+        // pemicu, karena tidak ikut menentukan nomor induk surat) — TAPI HANYA kalau
+        // user belum mengetik nomor secara manual. Begitu user mengetik sendiri
+        // di kolom Nomor Surat, field ini dianggap "manual" dan tidak akan
+        // ditimpa lagi oleh perubahan field lain (sampai user klik Generate lagi
+        // atau modal dibuka ulang dari awal).
+        function attachNomorAutoRegen(prefix) {
+            const jenisEl =
+                prefix === "add" ? $("#jenis_surat_add") : $("#edit_jenis");
+            const noEl = document.getElementById(`${prefix}_no_surat`);
+            const bulanEl = document.getElementById(`${prefix}_bulan`);
+            const tahunEl = document.getElementById(`${prefix}_tahun`);
+            const tanggalEl = document.getElementById(`${prefix}_tanggal`);
+            if (!noEl) return;
+
+            // Tandai manual begitu user mengetik langsung di kolom Nomor Surat
+            noEl.removeEventListener("input", noEl._manualFlagHandler);
+            noEl._manualFlagHandler = () => {
+                noEl.dataset.manualEdit = "1";
+            };
+            noEl.addEventListener("input", noEl._manualFlagHandler);
+
+            async function regen() {
+                const jenisVal = (jenisEl?.value || "").trim().toLowerCase();
+                // Hanya berlaku untuk Surat Keluar (Surat Masuk nomornya manual)
+                if (jenisVal !== "keluar") return;
+                // Nomor sudah diketik/ditentukan manual → jangan ditimpa
+                if (noEl.dataset.manualEdit === "1") return;
+
+                const ctx = collectNomorContext(prefix);
+                const exclude_id =
+                    prefix === "edit"
+                        ? document.getElementById("edit_id")?.value || ""
+                        : "";
+                const nomor = await generateNoSurat({
+                    jenis: "Keluar",
+                    exclude_id,
+                    ...ctx,
+                });
+                if (nomor) noEl.value = nomor;
+            }
+
+            [bulanEl, tahunEl, tanggalEl].forEach((el) => {
+                if (!el) return;
+                el.removeEventListener("change", el._nomorRegenHandler);
+                el._nomorRegenHandler = regen;
+                el.addEventListener("change", el._nomorRegenHandler);
+            });
+        }
+
+        // Tanggal hari ini dalam format YYYY-MM-DD berdasarkan zona waktu
+        // LOKAL (bukan UTC). Memakai `Date#toISOString()` akan salah untuk
+        // wilayah dengan offset positif (mis. WIB, UTC+7): dini hari sampai
+        // sekitar jam 07.00 pagi bisa menghasilkan tanggal KEMARIN.
+        function todayLocalISO() {
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, "0");
+            const dd = String(now.getDate()).padStart(2, "0");
+            return `${yyyy}-${mm}-${dd}`;
         }
 
         async function fetchKodeList() {
@@ -362,7 +478,6 @@ if (window.SuratApp) {
         function buildFilterParams() {
             const params = new URLSearchParams();
             const searchVal = $("#searchInput")?.value?.trim() || "";
-            const jenisVal = $("#jenis")?.value || "";
             const tanggalVal = $("#tanggal")?.value || _initTanggal || "";
             const sortVal = $("#sort")?.value || "";
 
@@ -372,18 +487,21 @@ if (window.SuratApp) {
                 }
             }
             if (searchVal) params.append("search", searchVal);
-            if (jenisVal) params.append("jenis", jenisVal);
-            if (sortVal) params.append("sort", sortVal);
+            if (sortVal)   params.append("sort", sortVal);
 
-            // Baca bulan, tahun, jenis_surat dari lapParams (ditangkap saat modul dimuat, dari navigasi Laporan)
-            if (lapParams.bulan && !params.has("bulan")) {
-                params.append("bulan", lapParams.bulan);
-            }
-            if (lapParams.tahun && !params.has("tahun")) {
-                params.append("tahun", lapParams.tahun);
-            }
-            if (lapParams.jenis_surat && !params.has("jenis") && !jenisVal) {
-                params.append("jenis", lapParams.jenis_surat);
+            // Jika halaman terkunci (Surat Masuk / Keluar), selalu kirim
+            // parameter jenis agar backend tidak salah filter.
+            // Untuk navigasi dari Laporan (lapParams), parameter jenis_surat
+            // tetap dikirim jika lockJenis tidak ada.
+            if (lockJenis) {
+                params.append("jenis", lockJenis);
+            } else {
+                if (lapParams.bulan && !params.has("bulan"))
+                    params.append("bulan", lapParams.bulan);
+                if (lapParams.tahun && !params.has("tahun"))
+                    params.append("tahun", lapParams.tahun);
+                if (lapParams.jenis_surat)
+                    params.append("jenis", lapParams.jenis_surat);
             }
 
             return params.toString();
@@ -529,10 +647,15 @@ if (window.SuratApp) {
             });
         }
 
-        async function loadTable(url = "/surat") {
+        async function loadTable(url) {
+            // Gunakan baseUrl (dibaca dari data-base-url #page-surat) sebagai
+            // default — ini memastikan Surat Masuk selalu fetch ke
+            // /surat/filter/masuk dan Surat Keluar ke /surat/filter/keluar,
+            // bukan ke /surat umum yang menampilkan semua jenis.
+            const fetchBase = url || baseUrl;
             try {
                 const q = buildFilterParams();
-                const fetchUrl = url.split("?")[0] + (q ? `?${q}` : "");
+                const fetchUrl = fetchBase.split("?")[0] + (q ? `?${q}` : "");
 
                 const res = await safeFetch(fetchUrl, {
                     headers: { Accept: "text/html" },
@@ -633,7 +756,7 @@ if (window.SuratApp) {
                 }
             });
 
-            ["#jenis", "#tanggal", "#sort"].forEach((s) =>
+            ["#tanggal", "#sort"].forEach((s) =>
                 $(s)?.addEventListener("change", () => loadTable())
             );
 
@@ -646,14 +769,13 @@ if (window.SuratApp) {
                     const defaultSort =
                         sortEl?.dataset.default || "tanggal_terbaru";
 
-                    ["#searchInput", "#jenis", "#tanggal", "#sort"].forEach(
+                    ["#searchInput", "#tanggal", "#sort"].forEach(
                         (sel) => {
                             const el = $(sel);
                             if (!el) return;
                             el.value = el.id === "sort" ? defaultSort : "";
                         }
                     );
-                    syncCustomSelect($("#jenis"));
                     syncCustomSelect($("#sort"));
 
                     lapParams = { bulan: null, tahun: null, jenis_surat: null };
@@ -662,10 +784,8 @@ if (window.SuratApp) {
                 });
             }
 
-            // Show/hide tombol reset jenis & sort
-            const jenisEl = $("#jenis");
+            // Show/hide tombol reset sort
             const sortEl = $("#sort");
-            const resetJenisEl = $("#resetJenis");
             const resetSortEl = $("#resetSort");
 
             // ============================================================
@@ -677,11 +797,8 @@ if (window.SuratApp) {
             // ikut lebar/posisi native browser. Semua logic filter yang
             // sudah ada (buildFilterParams, updateResetButtons, dst)
             // tidak berubah — mereka tetap baca/tulis select.value biasa.
-            // Select yang di-lock (disabled, mis. halaman Surat Masuk/
-            // Keluar) sengaja TIDAK diubah ke custom dropdown karena
-            // memang tidak bisa diklik.
             // ============================================================
-            const FILTER_SELECTS = [jenisEl, sortEl].filter(
+            const FILTER_SELECTS = [sortEl].filter(
                 (el) => el && !el.disabled
             );
             const customSelectMap = new Map(); // select -> { trigger, panel }
@@ -773,19 +890,6 @@ if (window.SuratApp) {
             document.addEventListener("click", closeAllCustomSelects);
             FILTER_SELECTS.forEach(buildCustomSelect);
 
-            // Sync jenis dropdown dari URL param (mis. link dari dashboard)
-            // — dilakukan SETELAH custom dropdown dibangun supaya label
-            // trigger ikut ter-update.
-            const urlJenis = new URLSearchParams(window.location.search).get(
-                "jenis_surat"
-            );
-            if (urlJenis && jenisEl) {
-                jenisEl.value =
-                    urlJenis.charAt(0).toUpperCase() +
-                    urlJenis.slice(1).toLowerCase();
-                syncCustomSelect(jenisEl);
-            }
-
             // Paksa tampil lewat inline style (bukan cuma toggle class),
             // supaya visibilitas tombol reset TIDAK bergantung sama sekali
             // pada CSS eksternal (yang bisa saja ter-cache versi lama di
@@ -796,19 +900,8 @@ if (window.SuratApp) {
                 el.classList.remove("d-none");
             }
 
-            // Tombol reset Jenis & Sort SELALU tampil (sama seperti
-            // peserta-didik.js) — tidak perlu filter aktif dulu supaya
-            // muncul. Cukup dipanggil sekali di sini, tidak perlu
-            // show/hide dinamis lagi tiap kali dropdown berubah.
-            showResetBtn(resetJenisEl);
+            // Tombol reset Sort SELALU tampil
             showResetBtn(resetSortEl);
-
-            resetJenisEl?.addEventListener("click", () => {
-                if (jenisEl) jenisEl.value = "";
-                syncCustomSelect(jenisEl);
-                lapParams = { bulan: null, tahun: null, jenis_surat: null };
-                jenisEl?.dispatchEvent(new Event("change"));
-            });
 
             resetSortEl?.addEventListener("click", () => {
                 if (sortEl) sortEl.selectedIndex = 0;
@@ -898,6 +991,29 @@ if (window.SuratApp) {
                     if (initialValue) kodeSelect.value = initialValue;
                     if (reqSpan) reqSpan.style.display = "";
                     buildModalCustomSelect(kodeSelect);
+
+                    // Begitu kode surat dipilih, regenerate nomor supaya
+                    // formatnya langsung lengkap (NNN/KODE/INSTANSI/ROMAWI/TAHUN)
+                    kodeSelect.removeEventListener(
+                        "change",
+                        kodeSelect._regenHandler
+                    );
+                    kodeSelect._regenHandler = async () => {
+                        const noEl = document.getElementById("add_no_surat");
+                        if (!noEl) return;
+                        // Nomor sudah diketik manual → jangan ditimpa
+                        if (noEl.dataset.manualEdit === "1") return;
+                        const ctx = collectNomorContext("add");
+                        const nomor = await generateNoSurat({
+                            jenis: "Keluar",
+                            ...ctx,
+                        });
+                        if (nomor) noEl.value = nomor;
+                    };
+                    kodeSelect.addEventListener(
+                        "change",
+                        kodeSelect._regenHandler
+                    );
                 } else if (val === "masuk") {
                     kodeInput.style.display = "";
                     kodeInput.disabled = false;
@@ -923,17 +1039,31 @@ if (window.SuratApp) {
                 const val = (jenisAdd.value || "").trim().toLowerCase();
 
                 if (val === "keluar") {
-                    // Nomor auto, field readonly
-                    noEl.readOnly = true;
-                    noEl.classList.add("bg-light");
-                    noEl.placeholder = "";
+                    // Nomor auto-generate, TAPI tetap boleh diedit manual (flexibel).
+                    // Sebelumnya field ini readonly — sekarang dibuka supaya user
+                    // bisa mengetik/ubah nomor sendiri kalau perlu, sambil tetap
+                    // menyediakan nilai otomatis + tombol Generate untuk regenerate.
+                    noEl.readOnly = false;
+                    noEl.classList.remove("bg-light");
+                    noEl.placeholder = "Ketik manual atau klik Generate";
                     if (btnGen) btnGen.style.display = "";
-                    // Instansi default SMABA
-                    if (instansiEl && !instansiEl.value)
-                        instansiEl.value = "SMABA";
-                    // Generate nomor urut Keluar
-                    const nomor = await generateNoSurat({ jenis: "Keluar" });
-                    if (nomor) noEl.value = nomor;
+                    // Instansi TIDAK di-auto-isi lagi — field ini untuk
+                    // tujuan/dari surat, bukan nama lembaga pengirim, jadi
+                    // tidak boleh ikut menentukan nomor induk surat.
+                    // Generate nomor urut Keluar (sertakan kode/bulan/tahun
+                    // yang sudah terisi agar formatnya langsung lengkap).
+                    // Nomor melanjutkan otomatis dari nomor tertinggi yang sudah
+                    // ada (mis. sudah ada 007 → generate berikutnya jadi 008),
+                    // tapi hanya diisi otomatis kalau field masih kosong supaya
+                    // tidak menimpa nomor yang sudah diketik manual oleh user.
+                    if (!noEl.value.trim()) {
+                        const ctx = collectNomorContext("add");
+                        const nomor = await generateNoSurat({
+                            jenis: "Keluar",
+                            ...ctx,
+                        });
+                        if (nomor) noEl.value = nomor;
+                    }
                 } else if (val === "masuk") {
                     // Nomor manual
                     noEl.readOnly = false;
@@ -1064,6 +1194,12 @@ if (window.SuratApp) {
                     }
                     hideFormAlert("#addSuratAlert");
 
+                    // Form baru → nomor surat mulai dalam mode "auto" (belum
+                    // diketik manual oleh user), supaya auto-generate & auto
+                    // regenerate saat Bulan/Tahun berubah tetap jalan seperti biasa.
+                    const addNoSuratEl = $("#add_no_surat");
+                    if (addNoSuratEl) addNoSuratEl.dataset.manualEdit = "0";
+
                     try {
                         await setupAddKodeSurat(); // termasuk kode + auto-generate nomor
                     } catch (err) {
@@ -1078,14 +1214,14 @@ if (window.SuratApp) {
                     if (addBulan) addBulan.value = String(now.getMonth() + 1);
                     if (addTahun) addTahun.value = String(now.getFullYear());
                     syncDateFields(addTanggal, addBulan, addTahun);
+                    attachNomorAutoRegen("add");
 
                     // Tombol Hari Ini
                     const btnHariIni = $("#btnHariIniAdd");
                     if (btnHariIni) {
                         btnHariIni.onclick = () => {
-                            const today = now.toISOString().split("T")[0];
                             if (addTanggal) {
-                                addTanggal.value = today;
+                                addTanggal.value = todayLocalISO();
                                 addTanggal.dispatchEvent(new Event("change"));
                             }
                         };
@@ -1096,6 +1232,7 @@ if (window.SuratApp) {
                         btnBulanIni.onclick = () => {
                             if (addBulan) {
                                 addBulan.value = String(now.getMonth() + 1);
+                                syncModalSelect(addBulan);
                                 addBulan.dispatchEvent(new Event("change"));
                             }
                         };
@@ -1118,12 +1255,21 @@ if (window.SuratApp) {
                             const jenis = (
                                 $("#jenis_surat_add")?.value || "Keluar"
                             ).trim();
-                            const nomor = await generateNoSurat({ jenis });
+                            const ctx = collectNomorContext("add");
+                            const nomor = await generateNoSurat({
+                                jenis,
+                                ...ctx,
+                            });
                             if (nomor) {
                                 const el = $("#add_no_surat");
                                 if (el) {
                                     el.value = nomor;
                                     el.dispatchEvent(new Event("input"));
+                                    // Klik Generate = permintaan eksplisit untuk
+                                    // auto-generate lagi, jadi field kembali ke
+                                    // mode "auto" (boleh ikut berubah kalau nanti
+                                    // Bulan/Tahun/Kode diganti lagi).
+                                    el.dataset.manualEdit = "0";
                                 }
                             }
                         };
@@ -1171,6 +1317,16 @@ if (window.SuratApp) {
             const btnGenEdit = $("#btnGenerateNoSuratEdit");
             if (btnGenEdit) {
                 btnGenEdit.style.display = jenis === "keluar" ? "" : "none";
+            }
+
+            // Placeholder Nomor Surat disamakan dengan form Tambah Surat:
+            // ikut berubah sesuai jenis surat yang sedang dipilih.
+            const noEditEl = document.getElementById("edit_no_surat");
+            if (noEditEl) {
+                noEditEl.placeholder =
+                    jenis === "keluar"
+                        ? "Ketik manual atau klik Generate"
+                        : "Masukkan nomor surat";
             }
 
             // Nomor surat tidak diubah otomatis saat jenis berubah di mode edit
@@ -1223,6 +1379,26 @@ if (window.SuratApp) {
 
                 sel.disabled = false;
                 buildModalCustomSelect(sel);
+
+                // Begitu kode surat dipilih ulang, regenerate nomor supaya
+                // formatnya langsung lengkap (NNN/KODE/INSTANSI/ROMAWI/TAHUN)
+                sel.removeEventListener("change", sel._regenHandler);
+                sel._regenHandler = async () => {
+                    const noEl = document.getElementById("edit_no_surat");
+                    if (!noEl) return;
+                    // Nomor sudah diketik manual → jangan ditimpa
+                    if (noEl.dataset.manualEdit === "1") return;
+                    const ctx = collectNomorContext("edit");
+                    const exclude_id =
+                        document.getElementById("edit_id")?.value || "";
+                    const nomor = await generateNoSurat({
+                        jenis: "Keluar",
+                        exclude_id,
+                        ...ctx,
+                    });
+                    if (nomor) noEl.value = nomor;
+                };
+                sel.addEventListener("change", sel._regenHandler);
             } else {
                 // Untuk surat MASUK:
                 // - Jika data asli dari server memang Masuk → tampilkan kode_surat lama
@@ -1308,6 +1484,11 @@ if (window.SuratApp) {
 
                 $("#edit_id").value = s.id ?? "";
                 $("#edit_no_surat").value = s.no_surat || "";
+                // Nomor surat yang sudah tersimpan dianggap "manual" secara
+                // default — tidak boleh ditimpa otomatis hanya karena user
+                // mengubah Bulan/Tahun/Instansi. Kalau user memang mau nomor
+                // baru, harus klik tombol Generate secara eksplisit.
+                $("#edit_no_surat").dataset.manualEdit = "1";
                 $("#edit_jenis").value = s.jenis_surat || "";
                 // Pakai tanggal_surat_raw (format Y-m-d) karena input type="date"
                 // hanya menerima format ISO, bukan format tampilan "d F Y".
@@ -1370,14 +1551,14 @@ if (window.SuratApp) {
                     if (editTahun) editTahun.value = String(d.getFullYear());
                 }
                 syncDateFields(editTanggal, editBulan, editTahun);
+                attachNomorAutoRegen("edit");
 
                 // Tombol Hari Ini
                 const btnHariIniEdit = $("#btnHariIniEdit");
                 if (btnHariIniEdit) {
                     btnHariIniEdit.onclick = () => {
-                        const today = new Date().toISOString().split("T")[0];
                         if (editTanggal) {
-                            editTanggal.value = today;
+                            editTanggal.value = todayLocalISO();
                             editTanggal.dispatchEvent(new Event("change"));
                         }
                     };
@@ -1388,6 +1569,7 @@ if (window.SuratApp) {
                     btnBulanIniEdit.onclick = () => {
                         if (editBulan) {
                             editBulan.value = String(new Date().getMonth() + 1);
+                            syncModalSelect(editBulan);
                             editBulan.dispatchEvent(new Event("change"));
                         }
                     };
@@ -1415,15 +1597,21 @@ if (window.SuratApp) {
                             $("#edit_jenis")?.value || "Keluar"
                         ).trim();
                         const exclude_id = $("#edit_id")?.value || "";
+                        const ctx = collectNomorContext("edit");
                         const nomor = await generateNoSurat({
                             jenis,
                             exclude_id,
+                            ...ctx,
                         });
                         if (nomor) {
                             const el = $("#edit_no_surat");
                             if (el) {
                                 el.value = nomor;
                                 el.dispatchEvent(new Event("input"));
+                                // Klik Generate = permintaan eksplisit untuk
+                                // auto-generate lagi, jadi field kembali ke
+                                // mode "auto".
+                                el.dataset.manualEdit = "0";
                             }
                         }
                     };
@@ -1756,11 +1944,11 @@ if (window.SuratApp) {
                 if (jenisEl) {
                     jenisEl.innerHTML =
                         s.jenis_surat === "Masuk"
-                            ? `<span class="badge bg-info">
+                            ? `<span class="badge bg-info text-white">
                     <i class="bi bi-box-arrow-in-down me-1"></i>
                     Masuk
                </span>`
-                            : `<span class="badge bg-success">
+                            : `<span class="badge bg-success text-white">
                     <i class="bi bi-box-arrow-up-right me-1"></i>
                     Keluar
                </span>`;
@@ -1776,7 +1964,6 @@ if (window.SuratApp) {
 
                 $("#view_perihal").textContent = s.perihal || "-";
 
-                $("#view_keterangan").textContent = s.keterangan || "-";
                 const fileContainer = $("#view_file");
 
                 /* ===============================
@@ -2083,19 +2270,21 @@ if (window.SuratApp) {
 
         /* =========================================================
          * SANITASI INPUT (alphanumeric)
-         * Field teks (perihal, instansi, pengirim, penerima) hanya boleh
-         * huruf/angka/spasi. Nomor & Kode Surat boleh tambahan / - .
+         * Field teks (instansi, pengirim, penerima) hanya boleh
+         * huruf/angka/spasi. Perihal boleh tambahan tanda kurung ().
+         * Nomor & Kode Surat boleh tambahan / - .
          * Guard ini realtime; validasi sebenarnya tetap di backend
          * (StoreSuratRequest/UpdateSuratRequest).
          * ========================================================= */
 
         // Karakter yang TIDAK diizinkan (untuk dibuang saat mengetik).
         const RE_TEXT_STRIP = /[^A-Za-z0-9 ]+/g; // huruf, angka, spasi
+        const RE_PERIHAL_STRIP = /[^A-Za-z0-9 ()'.,:/\\&]+/g; // huruf, angka, spasi, ( ) ' . , : / \ &
         const RE_IDENT_STRIP = /[^A-Za-z0-9 .\/-]+/g; // + / - .
 
         const IDENT_FIELDS = new Set(["no_surat", "kode_surat"]);
+        const PERIHAL_FIELDS = new Set(["perihal"]);
         const TEXT_FIELDS = new Set([
-            "perihal",
             "instansi",
             "pengirim",
             "penerima",
@@ -2109,6 +2298,7 @@ if (window.SuratApp) {
             const name = el.name;
             let re = null;
             if (IDENT_FIELDS.has(name)) re = RE_IDENT_STRIP;
+            else if (PERIHAL_FIELDS.has(name)) re = RE_PERIHAL_STRIP;
             else if (TEXT_FIELDS.has(name)) re = RE_TEXT_STRIP;
             if (!re) return;
 

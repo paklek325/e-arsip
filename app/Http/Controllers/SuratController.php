@@ -516,20 +516,10 @@ class SuratController extends Controller
 
                 $ext = $file->getClientOriginalExtension();
 
-                $base = Str::slug(
-
-                    $validated['no_surat']
-                        . '-'
-                        . ($validated['kode_surat'] ?? 'tanpa-kode')
-                        . '-'
-                        . $validated['perihal']
-
-                );
-
-                $base = Str::limit(
-                    $base,
-                    100,
-                    ''
+                $base = $this->buildFileBaseName(
+                    $validated['no_surat'],
+                    $validated['kode_surat'] ?? null,
+                    $validated['perihal']
                 );
 
                 $name =
@@ -750,24 +740,10 @@ class SuratController extends Controller
         |--------------------------------------------------------------------------
         */
 
-            $base = Str::slug(
-
-                $validated['no_surat']
-
-                    . '-'
-
-                    . ($validated['kode_surat'] ?? 'tanpa-kode')
-
-                    . '-'
-
-                    . $validated['perihal']
-
-            );
-
-            $base = Str::limit(
-                $base,
-                100,
-                ''
+            $base = $this->buildFileBaseName(
+                $validated['no_surat'],
+                $validated['kode_surat'] ?? null,
+                $validated['perihal']
             );
 
             /*
@@ -980,40 +956,140 @@ class SuratController extends Controller
         return response()->json($kode);
     }
 
+    /**
+     * Bangun nama dasar (base name) file lampiran surat, rapi dan mudah
+     * dibaca saat di-download: NOMOR_SURAT-KODE_SURAT-PERIHAL (semua di-slug).
+     *
+     * Str::slug() dari Laravel akan MENGHAPUS karakter '/' sepenuhnya (bukan
+     * menggantinya dengan strip), jadi kalau dibiarkan apa adanya, nomor
+     * surat semacam "0154/S-U/SMABA/IV/2026" akan berubah jadi
+     * "0154s-usmabaiv2026" yang berantakan. Makanya '/' diganti '-' dulu
+     * SEBELUM di-slug supaya tiap bagian (nomor, kode, instansi, bulan
+     * romawi, tahun) tetap terpisah rapi jadi "0154-s-u-smaba-iv-2026".
+     */
+    private function buildFileBaseName(string $noSurat, ?string $kodeSurat, string $perihal): string
+    {
+        $noSuratRapi = str_replace('/', '-', trim($noSurat));
+
+        $kode = trim((string) $kodeSurat);
+        // Kalau kode surat sudah otomatis ikut ada di dalam nomor surat
+        // (format Surat Keluar: NNN/KODE/SMABA/ROMAWI/TAHUN), tidak perlu
+        // diulang lagi supaya nama file tidak jadi dobel-dobel.
+        $sudahAdaDiNomor = $kode !== '' && Str::contains(strtolower($noSuratRapi), strtolower($kode));
+
+        $parts = [$noSuratRapi];
+        if ($kode !== '' && !$sudahAdaDiNomor) {
+            $parts[] = $kode;
+        } elseif ($kode === '') {
+            $parts[] = 'tanpa-kode';
+        }
+        $parts[] = $perihal;
+
+        $base = Str::slug(implode('-', $parts));
+
+        return Str::limit($base, 100, '');
+    }
+
+
     /* ======================================================
  | 6. GENERATE NOMOR SURAT OTOMATIS
- | Format: 001/KODE/INSTANSI/BULAN_ROMAWI/TAHUN
+ | Format: 001/KODE/SMABA/BULAN_ROMAWI/TAHUN
  | Contoh: 001/S-K/SMABA/VII/2026
+ |
+ | Catatan: "SMABA" di sini adalah kode lembaga PENGIRIM surat, jadi
+ | nilainya TETAP/konstan — bukan diambil dari field "instansi" pada
+ | form (field itu isinya tujuan/dari surat, beda hal, dan tidak boleh
+ | ikut menentukan nomor induk surat).
  ====================================================== */
+    private const NOMOR_SURAT_INSTANSI = 'SMABA';
+
     public function generateNomor(Request $request)
     {
         $request->validate([
             'jenis'      => 'nullable|in:Masuk,Keluar',
             'exclude_id' => 'nullable|integer',
+            'kode'       => 'nullable|string|max:50',
+            'bulan'      => 'nullable|integer|min:1|max:12',
+            'tahun'      => 'nullable|integer|min:2000|max:2099',
         ]);
 
         $jenis     = $request->input('jenis', 'Keluar');
         $excludeId = $request->filled('exclude_id') ? (int) $request->exclude_id : null;
+        $kode      = trim((string) $request->input('kode', ''));
+        $instansi  = self::NOMOR_SURAT_INSTANSI;
+        $bulan     = $request->filled('bulan') ? (int) $request->input('bulan') : null;
+        $tahun     = $request->filled('tahun') ? (int) $request->input('tahun') : null;
 
         // Kumpulkan semua nomor surat — ambil angka di bagian depan (sebelum '/' jika ada)
-        // Sehingga "042", "042/SK/2025", maupun "042/VII/2026" semua terhitung
+        // Sehingga "042", "042/SK/2025", maupun "042/VII/2026" semua terhitung.
+        // Nomor urut direset setiap tahun (praktik umum penomoran surat resmi)
+        // jika parameter tahun dikirim dari form.
         $query = Surat::where('jenis_surat', $jenis);
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
         }
+        if ($tahun) {
+            $query->whereYear('tanggal_surat', $tahun);
+        }
 
-        $existingNomors = $query->pluck('no_surat')
-            ->map(fn($n) => (int) explode('/', trim((string) $n))[0])
-            ->filter(fn($n) => $n > 0)
-            ->sort()
-            ->values();
+        // Cari nomor tertinggi sekaligus lebar digit aslinya (termasuk leading
+        // zero) dari nomor surat tersebut, supaya nomor berikutnya mengikuti
+        // format yang sama. Misal nomor terakhir "0152" (lebar 4 digit),
+        // maka nomor berikutnya "0153", bukan "153".
+        $maxNum   = 0;
+        $maxWidth = 3; // lebar default kalau belum ada nomor surat sama sekali
 
-        $maxNum  = $existingNomors->max() ?? 0;
-        $nextNum = $maxNum + 1;
+        $query->pluck('no_surat')->each(function ($n) use (&$maxNum, &$maxWidth) {
+            $prefix = explode('/', trim((string) $n))[0];
+            if (preg_match('/^\d+/', $prefix, $m)) {
+                $digits = $m[0];
+                $value  = (int) $digits;
+                if ($value > $maxNum) {
+                    $maxNum   = $value;
+                    $maxWidth = strlen($digits);
+                }
+            }
+        });
+
+        $nextNum  = $maxNum + 1;
+        $digitLen = strlen((string) $nextNum);
+
+        // Kalau angka polos nomor berikutnya sudah menyamai atau melebihi
+        // lebar digit yang dipakai selama ini (mis. dari "0999" ke 1000, atau
+        // "1999" ke 2000), otomatis tambah satu digit dengan leading zero
+        // supaya format tetap konsisten (mis. jadi "01000" / "02000").
+        $width = $digitLen >= $maxWidth ? $digitLen + 1 : $maxWidth;
+
+        $urut = str_pad((string) $nextNum, $width, '0', STR_PAD_LEFT);
+
+        // Kalau kode, bulan, dan tahun sudah lengkap (khas Surat Keluar),
+        // susun nomor lengkap sesuai format resmi:
+        // 001/KODE/SMABA/BULAN_ROMAWI/TAHUN — bukan cuma angka urut.
+        // SMABA selalu dipakai sebagai kode lembaga pengirim, terlepas dari
+        // apa pun yang diisi user di field "instansi" (tujuan/dari surat).
+        if ($jenis === 'Keluar' && $kode !== '' && $bulan && $tahun) {
+            $nomor = "{$urut}/{$kode}/{$instansi}/" . $this->bulanRomawi($bulan) . "/{$tahun}";
+        } else {
+            $nomor = $urut;
+        }
 
         return response()->json([
-            'nomor' => sprintf('%03d', $nextNum),
+            'nomor' => $nomor,
         ]);
+    }
+
+    /**
+     * Konversi angka bulan (1-12) menjadi angka romawi untuk format nomor surat.
+     */
+    private function bulanRomawi(int $bulan): string
+    {
+        $map = [
+            1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV',
+            5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII',
+            9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII',
+        ];
+
+        return $map[$bulan] ?? '';
     }
 
     /* ======================================================

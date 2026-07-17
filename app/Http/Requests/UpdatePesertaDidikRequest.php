@@ -26,14 +26,11 @@ class UpdatePesertaDidikRequest extends FormRequest
             'alamat'        => ['nullable', 'string', 'regex:/^[A-Za-z0-9 .,\/-]+$/'],
 
             // File: hanya PDF, Word, dan gambar
-            'file_ppdb'       => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
             'file_kk'         => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
             'file_akte'       => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
             'file_ktp'        => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
-            'file_kts'        => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
-            'file_foto'       => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
             'file_ijazah_smp' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
-            'file_ijazah_sma' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
+            'file_kip'        => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
         ];
     }
 

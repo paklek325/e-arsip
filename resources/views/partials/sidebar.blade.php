@@ -56,7 +56,6 @@
                 @php
                     $isDashboard    = request()->routeIs('dashboard.*');
                     $isPeserta      = request()->routeIs('peserta-didik.*');
-                    $isSurat        = request()->routeIs('surat.index');
                     $isMasuk        = request()->routeIs('surat.masuk');
                     $isKeluar       = request()->routeIs('surat.keluar');
                     $isLaporan      = request()->is('laporan*');
@@ -87,14 +86,6 @@
                     </a>
                 </li>
 
-                <li @class(['pc-item', 'active' => $isSurat])>
-                    <a href="{{ route('surat.index') }}"
-                       @class(['pc-link d-flex align-items-center gap-2', 'active' => $isSurat])
-                       @if($isSurat) aria-current="page" @endif>
-                        <i class="bi bi-envelope" aria-hidden="true"></i>
-                        <span>Surat</span>
-                    </a>
-                </li>
 
                 <li @class(['pc-item', 'active' => $isMasuk])>
                     <a href="{{ route('surat.masuk') }}"

@@ -23,14 +23,11 @@ class PesertaDidik extends Model
         'alamat',
         'rombel',
         'tahun_angkatan',
-        'file_ppdb',
         'file_kk',
         'file_akte',
         'file_ktp',
-        'file_kts',
-        'file_foto',
         'file_ijazah_smp',
-        'file_ijazah_sma',
+        'file_kip',
         'status',
         'id_user',
     ];
@@ -50,14 +47,11 @@ class PesertaDidik extends Model
      */
     public function computeStatus(): string
     {
-        // file_ijazah_sma tidak wajib karena peserta belum tentu lulus SMA
+        // file_kip tidak wajib (boleh dikosongi, status tetap lengkap)
         $files = [
-            $this->file_ppdb,
             $this->file_kk,
             $this->file_akte,
             $this->file_ktp,
-            $this->file_kts,
-            $this->file_foto,
             $this->file_ijazah_smp,
         ];
 

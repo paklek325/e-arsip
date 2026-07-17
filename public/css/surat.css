@@ -531,12 +531,14 @@
   color: #fff !important;
 }
 
-[data-theme="dark"] .table-custom .badge.bg-success {
+[data-theme="dark"] .table-custom .badge.bg-success,
+[data-theme="dark"] .badge.bg-success {
   background-color: #10b981 !important;
   color: #062e21 !important;
 }
 
-[data-theme="dark"] .table-custom .badge.bg-info {
+[data-theme="dark"] .table-custom .badge.bg-info,
+[data-theme="dark"] .badge.bg-info {
   background-color: #38bdf8 !important;
   color: #052436 !important;
 }

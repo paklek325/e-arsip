@@ -35,32 +35,7 @@
 
         $cards = [];
 
-        if ($isKepala) {
-            $cards[] = [
-                'label'  => 'Users',
-                'type'   => 'stat',
-                'count'  => $totalUser ?? 0,
-                'color'  => 'primary',
-                'icon'   => 'bi bi-people-fill',
-                'route'  => route('user.index'),
-                'kepala' => $totalKepala ?? 0,
-                'staf'   => $totalStaf ?? 0,
-            ];
-        }
-
-        $cards[] = [
-            'label'        => 'Surat',
-            'type'         => 'stat',
-            'count'        => $totalSurat ?? 0,
-            'color'        => 'success',
-            'icon'         => 'bi bi-envelope-fill',
-            'route'        => route('surat.index'),
-            'route_masuk'  => route('surat.masuk'),
-            'route_keluar' => route('surat.keluar'),
-            'masuk'        => $totalSuratMasukAll ?? 0,
-            'keluar'       => $totalSuratKeluarAll ?? 0,
-        ];
-
+        // 1. Peserta Didik
         $cards[] = [
             'label'         => 'Peserta Didik',
             'type'          => 'stat',
@@ -74,8 +49,29 @@
             'perempuan'     => $peserta_didikPerempuanAll ?? 0,
         ];
 
+        // 2. Surat Masuk
         $cards[] = [
-            'label' => 'Kode',
+            'label'        => 'Surat Masuk',
+            'type'         => 'stat',
+            'count'        => $totalSuratMasukAll ?? 0,
+            'color'        => 'success',
+            'icon'         => 'bi bi-envelope-arrow-down-fill',
+            'route'        => route('surat.masuk'),
+        ];
+
+        // 3. Surat Keluar
+        $cards[] = [
+            'label'        => 'Surat Keluar',
+            'type'         => 'stat',
+            'count'        => $totalSuratKeluarAll ?? 0,
+            'color'        => 'info',
+            'icon'         => 'bi bi-envelope-arrow-up-fill',
+            'route'        => route('surat.keluar'),
+        ];
+
+        // 4. Kode
+        $cards[] = [
+            'label' => 'Kode<br>Surat',
             'type'  => 'stat',
             'count' => $totalKode ?? 0,
             'color' => 'danger',
@@ -83,6 +79,7 @@
             'route' => route('kode.index'),
         ];
 
+        // 5. Rekap
         $cards[] = [
             'label' => 'Rekap',
             'type'  => 'menu',
@@ -91,11 +88,25 @@
             'route' => route('laporan.filter'),
         ];
 
+        // 6. User (Khusus Kepala Staf)
+        if ($isKepala) {
+            $cards[] = [
+                'label'  => 'Users',
+                'type'   => 'stat',
+                'count'  => $totalUser ?? 0,
+                'color'  => 'primary',
+                'icon'   => 'bi bi-people-fill',
+                'route'  => route('user.index'),
+                'kepala' => $totalKepala ?? 0,
+                'staf'   => $totalStaf ?? 0,
+            ];
+        }
+
         $maxCount = collect($cards)->where('type', 'stat')->max('count');
         $maxCount = $maxCount > 0 ? $maxCount : 1;
     @endphp
 
-    <div class="row g-2 mb-4 {{ $isKepala ? 'row-cols-xl-5' : 'row-cols-xl-4' }} row-cols-md-3 row-cols-2">
+    <div class="row g-2 mb-4 row-cols-xxl-6 row-cols-xl-6 row-cols-lg-3 row-cols-md-2 row-cols-1">
 
         @foreach ($cards as $card)
             @php
@@ -114,7 +125,7 @@
                             <i class="{{ $card['icon'] }} icon-animated text-{{ $card['color'] }}"></i>
                         </div>
 
-                        <h6 class="dashboard-label">{{ $card['label'] }}</h6>
+                        <h6 class="dashboard-label">{!! $card['label'] !!}</h6>
 
                         {{-- CARD STATISTIK --}}
                         @if($card['type'] === 'stat')
@@ -127,20 +138,14 @@
                                         <i class="bi bi-person-badge me-1"></i>Kepala Staf &amp; Staf
                                     </div>
 
-                                @elseif($card['label'] === 'Surat')
-                                    <div class="d-flex flex-wrap justify-content-center gap-1 mt-1">
-                                        <a href="{{ $card['route_masuk'] }}"
-                                           class="badge-surat-masuk-sm"
-                                           onclick="event.stopPropagation()">
-                                            <i class="bi bi-envelope-arrow-down-fill me-1"></i>
-                                            Masuk {{ $card['masuk'] }}
-                                        </a>
-                                        <a href="{{ $card['route_keluar'] }}"
-                                           class="badge-surat-keluar-sm"
-                                           onclick="event.stopPropagation()">
-                                            <i class="bi bi-envelope-arrow-up-fill me-1"></i>
-                                            Keluar {{ $card['keluar'] }}
-                                        </a>
+                                @elseif($card['label'] === 'Surat Masuk')
+                                    <div class="small text-muted dashboard-card-sub-text">
+                                        <i class="bi bi-envelope-arrow-down me-1"></i>Arsip Surat Masuk
+                                    </div>
+
+                                @elseif($card['label'] === 'Surat Keluar')
+                                    <div class="small text-muted dashboard-card-sub-text">
+                                        <i class="bi bi-envelope-arrow-up me-1"></i>Arsip Surat Keluar
                                     </div>
 
                                 @elseif($card['label'] === 'Peserta Didik')
@@ -158,9 +163,9 @@
                                         @endforelse
                                     </div>
 
-                                @elseif($card['label'] === 'Kode')
+                                @elseif($card['label'] === 'Kode<br>Surat')
                                     <div class="small text-muted dashboard-card-sub-text">
-                                        <i class="bi bi-archive me-1"></i>Kode Arsip <br> Surat Masuk &amp; Surat Keluar
+                                        <i class="bi bi-archive me-1"></i>Kode Surat Keluar
                                     </div>
 
                                 @else
