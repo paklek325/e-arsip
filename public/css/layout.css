@@ -327,6 +327,43 @@ body.sidebar-collapsed .pc-container {
 }
 
 /* =======================================================
+   🚫 ANTI-FLICKER — SIDEBAR & LOGO
+   -------------------------------------------------------
+   Karena aplikasi ini melakukan full page load di setiap
+   perpindahan menu (bukan SPA), status "sidebar collapsed"
+   HARUS sudah benar sejak baris CSS pertama dibaca browser,
+   bukan menunggu JS jalan setelah DOMContentLoaded (itulah
+   yang menyebabkan sidebar "kedip"/melompat tiap ganti menu
+   atau reload). Class `pc-sidebar-collapsed` dipasang ke
+   <html> lewat inline script di <head> (lihat layouts/app.
+   blade.php) SEBELUM CSS ini sempat di-parse untuk elemen.
+======================================================= */
+@media (min-width: 993px) {
+  html.pc-sidebar-collapsed .pc-sidebar {
+    transform: translateX(-100%);
+  }
+
+  html.pc-sidebar-collapsed .pc-header {
+    left: 0;
+  }
+
+  html.pc-sidebar-collapsed .pc-container {
+    margin-left: 0;
+  }
+}
+
+/* Selama frame pertama render (data-ui-changing dilepas via
+   requestAnimationFrame di tampilan.js), matikan transisi
+   sidebar/header/container & logo supaya tidak ada animasi
+   "slide"/"pop" yang terlihat tiap kali halaman baru dimuat. */
+html[data-ui-changing] .pc-sidebar,
+html[data-ui-changing] .pc-header,
+html[data-ui-changing] .pc-container,
+html[data-ui-changing] .m-header .logo img {
+  transition: none !important;
+}
+
+/* =======================================================
    📄 CARD + TABLE
 ======================================================= */
 .card {
@@ -1798,7 +1835,8 @@ header.pc-header .toggle-thumb {
   background: #fff !important;
   border-radius: 50% !important;
   z-index: 1;
-  margin-left: 2px;          /* posisi dasar kiri */
+  margin-left: 2px;
+  /* posisi dasar kiri */
   /* margin-left pada elemen absolute tidak memicu reflow layout, selalu mulus */
   transition: margin-left .18s cubic-bezier(0.4, 0, 0.2, 1), background-color .18s ease;
   box-shadow: 0 1px 5px rgba(0, 0, 0, .2) !important;
@@ -1833,7 +1871,8 @@ header.pc-header .toggle-thumb .moon {
 }
 
 [data-theme="dark"] header.pc-header .toggle-thumb {
-  margin-left: 24px !important;   /* geser ke kanan: 48px - 20px - 4px = 24px */
+  margin-left: 24px !important;
+  /* geser ke kanan: 48px - 20px - 4px = 24px */
   background: #334155 !important;
 }
 

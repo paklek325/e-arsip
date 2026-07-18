@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
             document.documentElement.removeAttribute("data-theme-changing");
+            document.documentElement.removeAttribute("data-ui-changing");
         });
     });
 
@@ -130,6 +131,10 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             const isCollapsed = body.classList.toggle("sidebar-collapsed");
             sidebar.classList.toggle("collapsed", isCollapsed);
+            document.documentElement.classList.toggle(
+                "pc-sidebar-collapsed",
+                isCollapsed
+            );
 
             sidebar.style.transform = isCollapsed
                 ? "translateX(-100%)"
@@ -172,6 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (window.innerWidth <= 992) {
             // Mode Mobile
             body.classList.remove("sidebar-collapsed");
+            document.documentElement.classList.remove("pc-sidebar-collapsed");
             sidebar.classList.remove("collapsed", "show");
             sidebarOverlay?.classList.remove("active");
             sidebar.style.removeProperty("transform");
@@ -184,6 +190,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const isCollapsed =
                 localStorage.getItem(SIDEBAR_KEY) === "collapsed";
+            body.classList.toggle("sidebar-collapsed", isCollapsed);
+            document.documentElement.classList.toggle(
+                "pc-sidebar-collapsed",
+                isCollapsed
+            );
             sidebar.style.transform = isCollapsed
                 ? "translateX(-100%)"
                 : "translateX(0)";
@@ -198,13 +209,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // 🧩 RESTORE SIDEBAR STATE (Saat Halaman Dibuka)
     // =======================================================
     if (sidebar) {
-        sidebar.style.visibility = "hidden";
         const savedSidebar = localStorage.getItem(SIDEBAR_KEY);
 
         if (window.innerWidth > 992) {
             const isCollapsed = savedSidebar === "collapsed";
             body.classList.toggle("sidebar-collapsed", isCollapsed);
             sidebar.classList.toggle("collapsed", isCollapsed);
+            document.documentElement.classList.toggle(
+                "pc-sidebar-collapsed",
+                isCollapsed
+            );
 
             sidebar.style.transform = isCollapsed
                 ? "translateX(-100%)"
@@ -214,13 +228,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (container)
                 container.style.marginLeft = isCollapsed ? "0" : "260px";
         } else {
+            // Mode mobile tidak pernah collapsed lewat class ini
+            document.documentElement.classList.remove("pc-sidebar-collapsed");
             if (header) header.style.left = "0";
             if (container) container.style.marginLeft = "0";
         }
-
-        setTimeout(() => {
-            sidebar.style.visibility = "visible";
-        }, 30);
     }
 
     handleResize();

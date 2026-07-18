@@ -130,6 +130,52 @@ flatpickr.localize(Indonesian);
     };
 
     /**
+     * window.createFetchGuard
+     * ─────────────────────────────────────────────────────────
+     * FUNGSI: cegah race condition saat fetch dipanggil berkali-kali dengan
+     *         cepat (mis. user ketik di search box atau ganti filter cepat-
+     *         cepat sebelum request sebelumnya selesai). Tanpa ini, response
+     *         yang datang belakangan bisa "menang" duluan kalau kebetulan
+     *         request yang lebih baru selesai lebih dulu — hasil yang
+     *         tampil jadi tidak sesuai filter/pencarian terakhir.
+     *
+     * PAKAI :
+     *   const guard = window.createFetchGuard();
+     *   async function loadTable(url) {
+     *       const { signal, isStale } = guard.start();
+     *       try {
+     *           const res = await fetch(url, { signal, ... });
+     *           if (isStale()) return;           // ada request lebih baru
+     *           const html = await res.text();
+     *           if (isStale()) return;           // cek ulang setelah await
+     *           container.innerHTML = html;
+     *       } catch (err) {
+     *           if (err.name === "AbortError") return; // dibatalkan sengaja
+     *           if (isStale()) return;
+     *           // ...render error seperti biasa
+     *       }
+     *   }
+     *
+     * DIPAKAI DI: laporan.js, surat.js, kode.js, user.js, peserta-didik.js
+     */
+    window.createFetchGuard = function () {
+        let token = 0;
+        let controller = null;
+        return {
+            start() {
+                if (controller) controller.abort();
+                controller = new AbortController();
+                const myToken = ++token;
+                return {
+                    signal: controller.signal,
+                    isStale: () => myToken !== token,
+                };
+            },
+        };
+    };
+
+
+    /**
      * window.renderLoading
      * ─────────────────────────────────────────────────────────
      * DIPAKAI DI : laporan.js → #laporan_hasil_container (area hasil laporan)

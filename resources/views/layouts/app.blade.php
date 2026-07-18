@@ -7,12 +7,22 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>@yield('title', 'E-Arsip')</title>
 
-  {{-- Terapkan tema dari localStorage sebelum CSS dimuat agar tidak ada flash --}}
+  {{-- Terapkan tema + status sidebar dari localStorage SEBELUM CSS dimuat,
+       agar tidak ada flash tema maupun "kedipan" posisi sidebar/logo saat
+       pindah menu (setiap klik menu = full page load baru di MPA ini,
+       jadi state ini harus disiapkan sebelum elemen sempat ke-render). --}}
   <script>
     (function () {
+      var html = document.documentElement;
+      html.setAttribute('data-ui-changing', '');
+
       var t = localStorage.getItem('earsip-theme') || 'light';
-      document.documentElement.setAttribute('data-theme-changing', '');
-      document.documentElement.setAttribute('data-theme', t);
+      html.setAttribute('data-theme-changing', '');
+      html.setAttribute('data-theme', t);
+
+      if (localStorage.getItem('earsip-sidebar') === 'collapsed') {
+        html.classList.add('pc-sidebar-collapsed');
+      }
     })();
   </script>
 

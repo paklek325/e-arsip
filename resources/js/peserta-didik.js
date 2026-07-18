@@ -29,7 +29,7 @@ if (window.PesertaDidikApp) {
         if (!rawBase) {
             console.error(
                 "[peserta-didik.js] data-base-url tidak ditemukan pada wrapper. " +
-                    "Pastikan ada: <div id='wrapper-table-peserta_didik' data-base-url='{{ route('peserta-didik.index') }}'>"
+                "Pastikan ada: <div id='wrapper-table-peserta_didik' data-base-url='{{ route('peserta-didik.index') }}'>"
             );
             return;
         }
@@ -101,7 +101,7 @@ if (window.PesertaDidikApp) {
             el.style.display = "block";
             try {
                 el.scrollIntoView({ behavior: "smooth", block: "center" });
-            } catch {}
+            } catch { }
         }
 
         function hideFormAlert(selector) {
@@ -160,6 +160,7 @@ if (window.PesertaDidikApp) {
         }
 
         const debounce = window.debounce;
+        const tableGuard = window.createFetchGuard(); // cegah race condition search/filter tabel peserta didik
 
         // ============================================================
         // FILTER BAR — elemen
@@ -226,6 +227,7 @@ if (window.PesertaDidikApp) {
         // ============================================================
         async function loadTablePesertaDidik(params = {}) {
             const query = new URLSearchParams(params).toString();
+            const { signal, isStale } = tableGuard.start();
             try {
                 wrapper.innerHTML = `<div class="text-center p-4">
                 <div class="spinner-border" role="status">
@@ -235,11 +237,18 @@ if (window.PesertaDidikApp) {
                 const res = await fetch(url, {
                     headers: { "X-Requested-With": "XMLHttpRequest" },
                     credentials: "same-origin",
+                    signal,
                 });
+                if (isStale()) return; // ada pencarian/filter lebih baru menyusul
+
                 if (!res.ok) throw new Error("Gagal memuat tabel");
-                wrapper.innerHTML = await res.text();
+                const html = await res.text();
+                if (isStale()) return;
+
+                wrapper.innerHTML = html;
                 bindRowActions();
             } catch (err) {
+                if (err.name === "AbortError" || isStale()) return;
                 console.error(err);
                 wrapper.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat tabel peserta_didik.</div>`;
             }
@@ -884,7 +893,7 @@ if (window.PesertaDidikApp) {
                     input.dataset.replace = "0";
                     try {
                         input.value = "";
-                    } catch {}
+                    } catch { }
                     input.classList.add("d-none");
                     input.disabled = true;
                     check.checked = !!url;
@@ -910,7 +919,7 @@ if (window.PesertaDidikApp) {
                             input.classList.add("d-none");
                             try {
                                 input.value = "";
-                            } catch {}
+                            } catch { }
                             input.disabled = true;
                         }
                         refreshEditDownloadAll();
@@ -1185,7 +1194,7 @@ if (window.PesertaDidikApp) {
                     });
 
                     let j = {};
-                    try { j = await res.json(); } catch (_) {}
+                    try { j = await res.json(); } catch (_) { }
 
                     if (j.success) {
                         toast(j.message || "✅ Peserta didik berhasil ditambahkan", "success");
@@ -1293,7 +1302,7 @@ if (window.PesertaDidikApp) {
                     });
 
                     let j = {};
-                    try { j = await res.json(); } catch (_) {}
+                    try { j = await res.json(); } catch (_) { }
 
                     if (j.success) {
                         toast(j.message || "✅ Data diperbarui", "success");
@@ -1334,7 +1343,7 @@ if (window.PesertaDidikApp) {
                     },
                 });
                 let j = {};
-                try { j = await res.json(); } catch (_) {}
+                try { j = await res.json(); } catch (_) { }
 
                 if (j.success) {
                     toast(j.message || "✅ Data dihapus", "success");
@@ -1498,7 +1507,7 @@ if (window.PesertaDidikApp) {
             const pos = Math.max(0, start - removed);
             try {
                 el.setSelectionRange(pos, pos);
-            } catch (_) {}
+            } catch (_) { }
         }
 
         function setupPesertaAlphanumericGuards() {

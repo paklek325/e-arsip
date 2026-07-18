@@ -8,7 +8,7 @@
 (() => {
     "use strict";
 
-    const toast    = (msg, type = "info") => window.AppToast(msg, type);
+    const toast = (msg, type = "info") => window.AppToast(msg, type);
     const debounce = window.debounce;
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -26,9 +26,9 @@
         const $ = (s) => document.querySelector(s);
         const $$ = (s) => Array.from(document.querySelectorAll(s));
 
-        const filterForm     = $("#filter-form");
-        const searchInput    = $("#search");
-        const btnReset       = $("#btnReset");
+        const filterForm = $("#filter-form");
+        const searchInput = $("#search");
+        const btnReset = $("#btnReset");
         const tableContainer = $("#tableContainer");
 
         if (!tableContainer) return;
@@ -58,19 +58,25 @@
         $("#editKodeModal")?.addEventListener("hidden.bs.modal", clearValidationErrors);
 
         // ── Loader tabel (AJAX) ───────────────────────────────────────────
+        const tableGuard = window.createFetchGuard(); // cegah race condition search/filter tabel kode
+
         async function loadTable(url = `${baseUrl}/kode/list`) {
             const params = filterForm
                 ? new URLSearchParams(new FormData(filterForm)).toString()
                 : "";
             const fetchUrl = params ? `${url}?${params}` : url;
+            const { signal, isStale } = tableGuard.start();
 
             try {
                 const res = await window.safeFetch(fetchUrl, {
                     headers: { Accept: "text/html,application/xhtml+xml" },
+                    signal,
                 });
+                if (isStale()) return; // ada pencarian/filter lebih baru menyusul
 
                 const ctype = res.headers.get("content-type") || "";
-                const text  = await res.text();
+                const text = await res.text();
+                if (isStale()) return;
 
                 if (ctype.includes("application/json")) {
                     tableContainer.innerHTML = `<div class="alert alert-warning">Response server berbentuk JSON — periksa endpoint.</div>`;
@@ -84,6 +90,7 @@
                 tableContainer.innerHTML = text;
                 bindTableEvents();
             } catch (err) {
+                if (err.name === "AbortError" || isStale()) return;
                 console.error("Gagal memuat data:", err);
                 tableContainer.innerHTML = `<div class="alert alert-danger">Gagal memuat tabel.</div>`;
                 toast("Gagal memuat data tabel", "error");
@@ -121,10 +128,10 @@
 
         // ── Cek duplikat kode (real-time) ─────────────────────────────────
         async function checkDuplicateKode(value, mode = "add") {
-            const id  = mode === "edit" ? $("#edit_id")?.value : "";
+            const id = mode === "edit" ? $("#edit_id")?.value : "";
             const url = `${baseUrl}/kode/check-duplicate?kode=${encodeURIComponent(value)}${id ? `&id=${id}` : ""}`;
             try {
-                const res  = await window.safeFetch(url);
+                const res = await window.safeFetch(url);
                 const data = await res.json();
                 return data.exists;
             } catch (err) {
@@ -134,7 +141,7 @@
         }
 
         function bindDuplicateChecker() {
-            const addInput  = $("#add_kode");
+            const addInput = $("#add_kode");
             const editInput = $("#edit_kode");
 
             const checkAndMark = (input, mode) =>
@@ -166,7 +173,7 @@
             clearValidationErrors();
 
             const kodeInput = $("#add_kode");
-            const kodeVal   = kodeInput?.value.trim() ?? "";
+            const kodeVal = kodeInput?.value.trim() ?? "";
 
             if (kodeVal && await checkDuplicateKode(kodeVal, "add")) {
                 kodeInput.classList.add("is-invalid");
@@ -206,10 +213,10 @@
         async function openEditModal(id) {
             clearValidationErrors();
             try {
-                const res  = await window.safeFetch(`${baseUrl}/kode/${id}`);
+                const res = await window.safeFetch(`${baseUrl}/kode/${id}`);
                 const data = await res.json();
-                $("#edit_id").value          = data.id_kode;
-                $("#edit_kode").value        = data.kode;
+                $("#edit_id").value = data.id_kode;
+                $("#edit_kode").value = data.kode;
                 $("#edit_description").value = data.description || "";
                 new bootstrap.Modal($("#editKodeModal")).show();
             } catch (err) {
@@ -222,9 +229,9 @@
             e.preventDefault();
             clearValidationErrors();
 
-            const id        = $("#edit_id").value;
+            const id = $("#edit_id").value;
             const kodeInput = $("#edit_kode");
-            const kodeVal   = kodeInput?.value.trim() ?? "";
+            const kodeVal = kodeInput?.value.trim() ?? "";
 
             if (kodeVal && await checkDuplicateKode(kodeVal, "edit")) {
                 kodeInput.classList.add("is-invalid");
@@ -264,7 +271,7 @@
 
         // ── Hapus Kode ────────────────────────────────────────────────────
         function openDeleteModal(id, kode) {
-            $("#delete_id").value              = id;
+            $("#delete_id").value = id;
             $("#delete_kode_label").textContent = kode;
             new bootstrap.Modal($("#deleteKodeModal")).show();
         }
@@ -293,9 +300,9 @@
         // ── Detail Kode ───────────────────────────────────────────────────
         async function openDetailModal(id) {
             try {
-                const res  = await window.safeFetch(`${baseUrl}/kode/${id}`);
+                const res = await window.safeFetch(`${baseUrl}/kode/${id}`);
                 const data = await res.json();
-                $("#detail_kode").textContent        = data.kode;
+                $("#detail_kode").textContent = data.kode;
                 $("#detail_description").textContent = data.description || "-";
                 new bootstrap.Modal($("#detailKodeModal")).show();
             } catch (err) {

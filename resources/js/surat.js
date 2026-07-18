@@ -38,8 +38,8 @@ if (window.SuratApp) {
         // /surat/filter/masuk dan Surat Keluar ke /surat/filter/keluar,
         // sehingga data tidak pernah bercampur antara kedua menu.
         const pageSuratEl = document.querySelector("#page-surat");
-        const lockJenis   = pageSuratEl?.dataset?.lockJenis || "";
-        const baseUrl     = pageSuratEl?.dataset?.baseUrl   || "/surat";
+        const lockJenis = pageSuratEl?.dataset?.lockJenis || "";
+        const baseUrl = pageSuratEl?.dataset?.baseUrl || "/surat";
 
         /* ========================
          * GLOBAL UTILITIES
@@ -113,6 +113,7 @@ if (window.SuratApp) {
 
         const debounce = window.debounce;
         const safeFetch = window.safeFetch;
+        const tableGuard = window.createFetchGuard(); // cegah race condition search/filter tabel surat
 
         /* ========== INLINE ALERT DI DALAM MODAL ========== */
         function showFormAlert(alertSelector, message, type = "warning") {
@@ -487,7 +488,7 @@ if (window.SuratApp) {
                 }
             }
             if (searchVal) params.append("search", searchVal);
-            if (sortVal)   params.append("sort", sortVal);
+            if (sortVal) params.append("sort", sortVal);
 
             // Jika halaman terkunci (Surat Masuk / Keluar), selalu kirim
             // parameter jenis agar backend tidak salah filter.
@@ -653,14 +654,20 @@ if (window.SuratApp) {
             // /surat/filter/masuk dan Surat Keluar ke /surat/filter/keluar,
             // bukan ke /surat umum yang menampilkan semua jenis.
             const fetchBase = url || baseUrl;
+            const { signal, isStale } = tableGuard.start();
             try {
                 const q = buildFilterParams();
                 const fetchUrl = fetchBase.split("?")[0] + (q ? `?${q}` : "");
 
                 const res = await safeFetch(fetchUrl, {
                     headers: { Accept: "text/html" },
+                    signal,
                 });
+                if (isStale()) return; // ada pencarian/filter lebih baru menyusul
+
                 const html = await res.text();
+                if (isStale()) return;
+
                 const container = $("#tableContainer");
                 if (container) {
                     container.innerHTML = html;
@@ -674,12 +681,12 @@ if (window.SuratApp) {
                     rebindRowActionButtons();
                 }
             } catch (err) {
+                if (err.name === "AbortError" || isStale()) return;
                 console.error(err);
                 const container = $("#tableContainer");
                 if (container) {
-                    container.innerHTML = `<div class="alert alert-danger">Gagal memuat tabel. ${
-                        err.message || ""
-                    }</div>`;
+                    container.innerHTML = `<div class="alert alert-danger">Gagal memuat tabel. ${err.message || ""
+                        }</div>`;
                 }
             }
         }
@@ -717,8 +724,8 @@ if (window.SuratApp) {
                     const row = clone.closest("tr");
                     const noSuratText = row
                         ? row
-                              .querySelector("td:nth-child(2)")
-                              ?.textContent?.trim()
+                            .querySelector("td:nth-child(2)")
+                            ?.textContent?.trim()
                         : id;
                     const noSuratEl = $("#delete_no_surat_text");
                     if (noSuratEl) noSuratEl.textContent = noSuratText || id;
@@ -1518,17 +1525,14 @@ if (window.SuratApp) {
                             fileItem.innerHTML = `
                             <span>
                                 <i class="${getFileIcon(
-                                    file.name
-                                )} me-2 fs-5"></i>
-                                <a href="${
-                                    file.url
-                                }" target="_blank" class="text-decoration-none">${
                                 file.name
-                            }</a>
+                            )} me-2 fs-5"></i>
+                                <a href="${file.url
+                                }" target="_blank" class="text-decoration-none">${file.name
+                                }</a>
                             </span>
                             <button type="button" class="btn btn-sm btn-outline-danger btn-delete-old-file" 
-                                data-path="${
-                                    file.path
+                                data-path="${file.path
                                 }" title="Tandai untuk dihapus">
                                 <i class="bi bi-trash"></i>
                             </button>
@@ -2014,8 +2018,8 @@ if (window.SuratApp) {
                                        data-path="${file.path}"
                                        data-url="${file.url}">
                                 <i class="${getFileIcon(
-                                    file.name
-                                )} me-2 fs-5"></i>
+                                file.name
+                            )} me-2 fs-5"></i>
                                 <span class="text-break">${file.name}</span>
                             </div>
                             <div class="btn-group btn-group-sm">
@@ -2200,7 +2204,7 @@ if (window.SuratApp) {
                     w.addEventListener("load", () => {
                         try {
                             w.print();
-                        } catch (_) {}
+                        } catch (_) { }
                     });
                 }
             });
@@ -2313,7 +2317,7 @@ if (window.SuratApp) {
             const pos = Math.max(0, start - removed);
             try {
                 el.setSelectionRange(pos, pos);
-            } catch (_) {}
+            } catch (_) { }
         }
 
         function setupAlphanumericGuards() {

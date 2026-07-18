@@ -78,6 +78,8 @@
     // ===== Table, filter, pagination =====
     const debounce = window.debounce;
 
+    const tableGuard = window.createFetchGuard(); // cegah race condition search/filter tabel user
+
     async function loadTable(url = `${baseUrl}/user`) {
         // BUGFIX: sebelumnya selalu menambahkan "?...", sehingga jika `url` sudah
         // mengandung query string (misalnya dari link pagination "?page=2"),
@@ -90,16 +92,24 @@
         formParams.forEach((value, key) => urlObj.searchParams.set(key, value));
         urlObj.searchParams.set("ajax", "1");
 
+        const { signal, isStale } = tableGuard.start();
+
         tableContainer.innerHTML = `<div class="py-5 text-muted text-center"><div class="spinner-border"></div><p>Memuat...</p></div>`;
         try {
             const res = await fetch(urlObj.toString(), {
                 headers: { "X-Requested-With": "XMLHttpRequest" },
-                credentials: "same-origin"
+                credentials: "same-origin",
+                signal,
             });
+            if (isStale()) return; // ada pencarian/filter lebih baru menyusul
+
             const html = await res.text();
+            if (isStale()) return;
+
             tableContainer.innerHTML = html;
             bindTableEvents();
         } catch (err) {
+            if (err.name === "AbortError" || isStale()) return;
             console.error(err);
             toast("Gagal memuat tabel", "error");
         }
@@ -408,7 +418,7 @@
     let activeCropTarget = null; // 'add' | 'edit'
 
     const cropModalEl = $("#cropFotoModal");
-    const cropImage   = $("#cropImage");
+    const cropImage = $("#cropImage");
 
     function openCropModal(file, target) {
         activeCropTarget = target;
@@ -559,7 +569,7 @@
         // Saat modal edit ditutup (dismiss/batal): pastikan state bersih
         editModalEl.addEventListener("hidden.bs.modal", () => {
             croppedFileEdit = null;
-            const fi  = $("#edit_foto");
+            const fi = $("#edit_foto");
             const img = $("#previewFotoEdit");
             if (fi) fi.value = "";
             // Kembalikan foto ke foto yang sedang tersimpan di server
