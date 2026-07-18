@@ -98,13 +98,29 @@ document.addEventListener("DOMContentLoaded", () => {
     applyTheme(savedTheme);
 
     // Tombol toggle tema (id: theme-switch / theme-toggle).
-    // Klik manual TIDAK pakai mode instant, supaya animasi geser
-    // thumb & transisi warna icon tetap smooth terlihat oleh user.
-    themeSwitch?.addEventListener("click", () => {
-        const current = localStorage.getItem(THEME_KEY) || "light";
-        const nextTheme = current === "dark" ? "light" : "dark";
-        applyTheme(nextTheme);
-    });
+    // Menggunakan throttling waktu agar event ganda (touchend diikuti click)
+    // tidak memicu perubahan tema dua kali yang membuat tombol terhambat/flick.
+    if (themeSwitch) {
+        let lastToggleTime = 0;
+        const toggleThemeAction = (e) => {
+            const now = Date.now();
+            if (now - lastToggleTime < 350) {
+                // Abaikan jika dipicu kurang dari 350ms (mencegah double trigger)
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+            lastToggleTime = now;
+
+            e.preventDefault();
+            e.stopPropagation();
+            const current = localStorage.getItem(THEME_KEY) || "light";
+            const nextTheme = current === "dark" ? "light" : "dark";
+            applyTheme(nextTheme);
+        };
+        themeSwitch.addEventListener("touchend", toggleThemeAction, { passive: false });
+        themeSwitch.addEventListener("click", toggleThemeAction);
+    }
 
     // =======================================================
     // 🧭 SIDEBAR TOGGLE (DESKTOP)

@@ -47,17 +47,18 @@
                     {{-- User Profile Dropdown --}}
                     <li class="dropdown pc-h-item header-user-profile">
                         <a class="pc-head-link dropdown-toggle arrow-none me-0 d-flex align-items-center gap-2" data-bs-toggle="dropdown" href="#"
-                            role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false" style="height:auto; width:auto; padding: 4px 8px; border-radius: 10px;">
+                            role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false"
+                            style="padding: 3px 3px; border-radius: 50%; height:auto; width:auto;">
                             <img src="{{ $fotoUrl }}" onerror="this.src='{{ asset('assets/img/default_staf.png') }}'"
                                 alt="Foto {{ $authUser->name }}" class="user-avatar"
                                 width="35" height="35"
                                 loading="eager" fetchpriority="high" decoding="sync">
-                            {{-- Nama & role — selalu tampil, termasuk di mobile --}}
-                            <div class="d-flex flex-column" style="line-height:1; min-width:0;">
+                            {{-- Nama & role — hanya di desktop (≥768px) --}}
+                            <div class="d-flex flex-column d-none d-md-flex" style="line-height:1; min-width:0;">
                                 <span class="navbar-username">{{ $authUser->name }}</span>
                                 <span class="navbar-user-role">{{ $roleName }}</span>
                             </div>
-                            <i class="bi bi-chevron-down" style="font-size:.6rem; color:#9ca3af; margin-left:2px;"></i>
+                            <i class="bi bi-chevron-down d-none d-md-inline" style="font-size:.6rem; color:#9ca3af; margin-left:2px;"></i>
                         </a>
 
                         <div id="userProfileDropdown"

@@ -41,6 +41,11 @@ return new class extends Migration {
                 ->on('users')
                 ->nullOnDelete();
             $table->timestamps();
+
+            // Indexes for Performance (Merged from add_performance_indexes)
+            $table->index('jenis_surat');
+            $table->index('tanggal_surat');
+            $table->index(['jenis_surat', 'tanggal_surat']);
         });
 
         // Trigger: Surat Keluar wajib pakai kode dari tabel master kode
