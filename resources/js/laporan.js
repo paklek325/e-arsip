@@ -64,6 +64,16 @@
     // ── Shortcut getElementById ───────────────────────────────────────────
     function $id(id) { return document.getElementById(id); }
 
+    // ── Guard race condition AJAX ─────────────────────────────────────────
+    // Setiap panggilan loadUrlIntoContainer() dapat "tiket" unik. Kalau ada
+    // request baru dipicu sebelum request lama selesai, request lama akan
+    // dibatalkan (AbortController) DAN hasilnya diabaikan walau sempat
+    // selesai duluan — supaya isi #laporan_hasil_container selalu sesuai
+    // filter TERAKHIR yang dipilih user, bukan filter yang responnya
+    // kebetulan datang lebih dulu.
+    let currentRequestToken = 0;
+    let currentAbortController = null;
+
     // ── Wrapper renderLoading (dari app.js) ──────────────────────────────
     // ELEMEN: #laporan_hasil_container
     // KAPAN : saat fetch dimulai — tampilkan spinner agar user tahu loading
@@ -238,6 +248,16 @@
 
         if (!container) return;
 
+        // Batalkan request sebelumnya (kalau masih berjalan) & ambil tiket baru
+        // untuk request ini. Response dari request lama — walau sempat datang
+        // belakangan — akan diabaikan karena tokennya sudah tidak yang terbaru.
+        if (currentAbortController) {
+            currentAbortController.abort();
+        }
+        const myToken = ++currentRequestToken;
+        currentAbortController = new AbortController();
+        const mySignal = currentAbortController.signal;
+
         try {
             renderLoading(container); // memastikan container terlihat saat loading
 
@@ -248,7 +268,12 @@
                     Accept: "text/html",
                 },
                 credentials: "same-origin",
+                signal: mySignal,
             });
+
+            // Ada request yang lebih baru menyusul sementara fetch ini
+            // berjalan → buang hasilnya, biarkan request terbaru yang menang.
+            if (myToken !== currentRequestToken) return;
 
             if (!res.ok) {
                 if (res.status === 422) {
@@ -273,6 +298,11 @@
             }
 
             const html = await res.text();
+
+            // Cek ulang setelah await res.text() — jaga-jaga request baru
+            // menyusul persis di antara res.ok check dan sini.
+            if (myToken !== currentRequestToken) return;
+
             container.innerHTML = html;
 
             // Berhasil load laporan -> tampilkan tombol print & download
@@ -292,7 +322,16 @@
             // re-bind delegated handlers (for new pagination/ajax links)
             attachDelegatedHandlers();
         } catch (err) {
+            // Fetch dibatalkan sengaja karena ada request lebih baru — bukan
+            // error sungguhan, jangan tampilkan pesan error ke user.
+            if (err && err.name === "AbortError") return;
+
             console.error("Fetch error:", err);
+
+            // Kalau ada request lain yang lebih baru sudah jalan, jangan
+            // timpa tampilannya dengan pesan error dari request lama ini.
+            if (myToken !== currentRequestToken) return;
+
             renderError(
                 container,
                 "Tidak dapat terhubung ke server. Periksa koneksi Anda."

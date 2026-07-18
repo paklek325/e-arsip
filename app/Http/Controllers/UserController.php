@@ -366,6 +366,16 @@ class UserController extends Controller
     // =========================
     public function destroy(User $user)
     {
+        // Kepala Staf tidak boleh dihapus dari sistem (hanya boleh diedit),
+        // supaya aplikasi tidak pernah kehilangan akun Kepala Staf.
+        $kepalaRoleId = $this->kepalaStafRoleId();
+        if ($kepalaRoleId && (int) $user->id_role === (int) $kepalaRoleId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun Kepala Staf tidak dapat dihapus.',
+            ], 422);
+        }
+
         try {
             $foto = $user->foto;
 

@@ -123,7 +123,7 @@ flatpickr.localize(Indonesian);
             try {
                 const body = await res.json();
                 msg = body.message || msg;
-            } catch (_) {}
+            } catch (_) { }
             throw new Error(msg || `HTTP ${res.status}`);
         }
         return res;
@@ -188,9 +188,9 @@ flatpickr.localize(Indonesian);
 
         const map = {
             success: ["app-toast-success", "bi-check-circle-fill"],
-            error:   ["app-toast-error",   "bi-x-circle-fill"],
+            error: ["app-toast-error", "bi-x-circle-fill"],
             warning: ["app-toast-warning", "bi-exclamation-triangle-fill"],
-            info:    ["app-toast-info",    "bi-info-circle-fill"],
+            info: ["app-toast-info", "bi-info-circle-fill"],
         };
         const [variant, icon] = map[type] ?? map.info;
 
@@ -223,4 +223,67 @@ flatpickr.localize(Indonesian);
         el.querySelector(".app-toast-close")?.addEventListener("click", remove);
         setTimeout(remove, 3500);
     };
+})();
+
+// ── FIX: body tidak bisa di-scroll di HP (bfcache & modal transisi terpotong) ──
+// GEJALA : setelah refresh (terutama di HP — Safari/Chrome iOS sering
+//          "me-restore" tab dari cache alih-alih reload murni) halaman kadang
+//          tidak bisa discroll sama sekali, atau baru bisa discroll setelah
+//          menunggu beberapa saat.
+// PENYEBAB: Bootstrap menambahkan class `modal-open` + inline style
+//          `overflow:hidden` (dan `padding-right` kompensasi scrollbar) ke
+//          <body> setiap kali modal dibuka, lalu baru membersihkannya di
+//          event `hidden.bs.modal` setelah transisi CSS modal selesai.
+//          Ada 2 skenario umum di HP yang membuat pembersihan itu GAGAL
+//          jalan, sehingga <body> "terkunci" overflow:hidden selamanya:
+//            1. User tap modal lalu langsung tap link lain / reload sebelum
+//               transisi modal selesai → event hidden.bs.modal tidak sempat
+//               terpicu.
+//            2. Browser mobile me-restore halaman dari bfcache (terasa
+//               seperti "refresh biasa" bagi user) — DOM dipulihkan PERSIS
+//               seperti kondisi sebelum ditinggal, termasuk class
+//               `modal-open` & inline style overflow:hidden yang saat itu
+//               masih menempel di <body>.
+// FIX     : (a) selalu bersihkan body setiap ada modal Bootstrap manapun
+//               yang selesai ditutup (bukan cuma modal profil seperti
+//               sebelumnya — sekarang berlaku GLOBAL untuk semua modal di
+//               semua halaman lewat event delegation), dan
+//           (b) saat halaman dipulihkan dari bfcache (`pageshow` dengan
+//               `event.persisted === true`), paksa bersihkan body kalau
+//               ternyata tidak ada modal yang benar-benar sedang terbuka.
+(function () {
+    function unlockBodyScrollIfNoModalOpen() {
+        if (document.querySelector(".modal.show")) return; // masih ada modal aktif, jangan sentuh
+
+        document.body.classList.remove("modal-open");
+        document.body.style.removeProperty("overflow");
+        document.body.style.removeProperty("padding-right");
+
+        // Bootstrap Offcanvas (menu mobile) pakai class & lock yang mirip
+        document.querySelectorAll(".offcanvas-backdrop").forEach((el) => {
+            if (!document.querySelector(".offcanvas.show")) el.remove();
+        });
+    }
+
+    // (a) Setiap modal Bootstrap manapun selesai ditutup — event delegation
+    // di `document` supaya berlaku untuk SEMUA modal (tambah/edit/hapus/detail
+    // di semua menu), tanpa perlu ulang-ulang kode ini di tiap file JS modul.
+    document.addEventListener("hidden.bs.modal", unlockBodyScrollIfNoModalOpen, true);
+    document.addEventListener("hidden.bs.offcanvas", unlockBodyScrollIfNoModalOpen, true);
+
+    // (b) Halaman dipulihkan dari bfcache (umum terjadi di HP saat pindah
+    // tab / tekan back / "refresh" versi mobile) → body bisa saja masih
+    // membawa kondisi terkunci dari sebelum halaman ditinggal.
+    window.addEventListener("pageshow", function (event) {
+        if (event.persisted) {
+            unlockBodyScrollIfNoModalOpen();
+        }
+    });
+
+    // Jaring pengaman terakhir: kalau untuk alasan lain body tetap terkunci
+    // beberapa saat setelah halaman dianggap selesai dimuat, paksa cek ulang.
+    // (setTimeout singkat, bukan polling terus-menerus — supaya tidak boros.)
+    window.addEventListener("load", function () {
+        setTimeout(unlockBodyScrollIfNoModalOpen, 500);
+    });
 })();

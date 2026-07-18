@@ -58,11 +58,19 @@
                       data-bs-toggle="tooltip">
                 <i class="bi bi-pencil"></i>
               </button>
-              <button class="btn btn-danger btn-sm btn-delete"
-                      data-id="{{ $u->id_user }}" data-name="{{ $u->name }}"
-                      title="Hapus" data-bs-toggle="tooltip">
-                <i class="bi bi-trash"></i>
-              </button>
+              @if(strtolower($roleName) === 'kepala staf')
+                <button class="btn btn-danger btn-sm" disabled
+                        title="Akun Kepala Staf tidak dapat dihapus"
+                        data-bs-toggle="tooltip">
+                  <i class="bi bi-trash"></i>
+                </button>
+              @else
+                <button class="btn btn-danger btn-sm btn-delete"
+                        data-id="{{ $u->id_user }}" data-name="{{ $u->name }}"
+                        title="Hapus" data-bs-toggle="tooltip">
+                  <i class="bi bi-trash"></i>
+                </button>
+              @endif
             </div>
           </td>
         </tr>
