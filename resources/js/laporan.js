@@ -9,10 +9,15 @@
  *  1. Halaman pertama kali dibuka → auto-load rekap tahunan
  *  2. User ganti Tahun / Bulan   → AJAX fetch partial hasil baru
  *  3. User klik Reset            → reset form + auto-load rekap tahunan
- *  4. User klik Cetak            → desktop: window.print() tanpa tab baru
- *                                    mobile: buka tab baru (route laporan.print);
+ *  4. User klik Cetak            → buka tab baru (route laporan.print),
+ *                                    sama seperti tombol Cetak di widget
+ *                                    Chat AI Rekap (eacCetak, lihat chat.js);
  *                                    tab itu SENDIRI yang auto-print lalu
- *                                    coba auto-close (lihat export.blade.php)
+ *                                    coba auto-close (lihat export.blade.php).
+ *                                    Ini berlaku sama di desktop & mobile,
+ *                                    supaya opsi Potret/Lanskap di dialog
+ *                                    cetak browser selalu benar walau
+ *                                    halaman /laporan disemat lewat iframe.
  *  5. User klik Download         → buka URL export di tab baru
  *  6. User klik link pagination  → AJAX fetch halaman berikutnya
  *  7. Browser Back/Forward       → restore state dari URL (popstate)
@@ -108,24 +113,6 @@
     }
 
     /**
-     * isMobileDevice — deteksi perangkat mobile
-     * ─────────────────────────────────────────────────────────
-     * Dipakai untuk menentukan alur Cetak:
-     *  - Desktop → window.print() langsung di halaman (perilaku lama)
-     *  - Mobile  → cetak lewat <iframe> tersembunyi (lihat printViaIframe)
-     *    karena di banyak browser/webview mobile, window.print() pada
-     *    halaman utama (yang punya sidebar/layout kompleks) tidak
-     *    memicu dialog cetak dengan benar, dan window.open(url,"_blank")
-     *    untuk tab baru sering diblokir popup blocker mobile.
-     */
-    function isMobileDevice() {
-        const ua = navigator.userAgent || navigator.vendor || window.opera || "";
-        const uaMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(ua);
-        const touchSmall = ("ontouchstart" in window) && window.innerWidth <= 992;
-        return uaMobile || touchSmall;
-    }
-
-    /**
      * Build URL export berdasarkan URL AKTIF + format (pdf/excel/word).
      * Supaya ketika sedang lihat detail bulan (tipe=Bulan&bulan=...&jenis=...),
      * export juga ikut pakai filter yang sama.
@@ -157,10 +144,12 @@
     }
 
     /**
-     * Build URL untuk PRINT PREVIEW mobile (route laporan.print).
-     * Endpoint ini mengembalikan HTML biasa (bukan stream PDF dari DomPDF),
-     * supaya <iframe> tersembunyi benar-benar punya dokumen HTML yang bisa
-     * di-print via window.print() bawaan browser, dan tidak dianggap file
+     * Build URL untuk PRINT PREVIEW (route laporan.print), dipakai untuk
+     * SEMUA perangkat (desktop & mobile) — dibuka di tab baru oleh
+     * handlePrint(). Endpoint ini mengembalikan HTML biasa (bukan stream
+     * PDF dari DomPDF), supaya tab baru punya dokumen HTML top-level yang
+     * bisa langsung di-print via window.print() bawaan browser (lihat
+     * script auto-print di export.blade.php), dan tidak dianggap file
      * unduhan oleh extension seperti IDM.
      */
     function buildPrintUrl() {
@@ -516,29 +505,32 @@
      * ─────────────────────────────────────────────────────────
      * MENU    : Laporan — header halaman (laporan/index.blade.php)
      * TOMBOL  : #btn_print  (btn btn-outline-light "Cetak")
-     * ALUR:
-     *  DESKTOP:
-     *   1. Tambahkan class "laporan-print-mode" ke <body>
-     *   2. CSS @media print di laporan.css membaca class ini:
-     *      - sembunyikan sidebar, navbar, filter card, page header
-     *      - perlebar kolom hasil laporan ke 100%
-     *   3. Panggil window.print() → dialog cetak browser muncul
-     *   4. Setelah selesai (event afterprint) → hapus class dari <body>
+     * ALUR (DESKTOP & MOBILE — DISAMAKAN, MENGIKUTI POLA "Cetak" DI
+     * WIDGET CHAT AI REKAP / eacCetak() di chat.js):
+     *   1. Buka route laporan.print (HTML biasa, siap cetak, tanpa
+     *      sidebar/filter) di TAB BARU lewat window.open(url, "_blank").
+     *   2. Halaman itu sendiri yang otomatis memanggil window.print()
+     *      begitu selesai dimuat, dan mencoba menutup diri sendiri
+     *      begitu event "afterprint" terpicu — lihat script di
+     *      laporan/partials/export.blade.php, blok @if($autoprint).
      *
-     *  MOBILE:
-     *   window.print() pada halaman utama (sidebar + layout kompleks)
-     *   sering tidak memicu dialog cetak dengan baik di browser/webview
-     *   mobile. Sebelumnya dicoba lewat <iframe> tersembunyi + 
-     *   iframe.contentWindow.print(), TAPI itu tidak reliable di banyak
-     *   browser mobile (terutama Android Chrome) — API print mobile
-     *   pada praktiknya cuma bisa mencetak dokumen utama yang sedang
-     *   tampil, bukan isi iframe (hasil cetak jadi kosong / "about:blank").
-     *
-     *   Jadi sekarang: buka route laporan.print (HTML biasa, siap cetak,
-     *   tanpa sidebar) di TAB BARU. Halaman itu sendiri yang otomatis
-     *   memanggil window.print() begitu selesai dimuat, dan mencoba
-     *   menutup diri sendiri begitu event "afterprint" terpicu — lihat
-     *   script di laporan/partials/export.blade.php, blok @if($autoprint).
+     *   KENAPA TIDAK LAGI window.print() LANGSUNG DI HALAMAN UTAMA:
+     *   Sebelumnya desktop memanggil window.print() pada dokumen utama
+     *   (halaman /laporan yang punya sidebar + layout kompleks). Ini
+     *   bermasalah setiap kali halaman /laporan sendiri dimuat di dalam
+     *   <iframe> (mis. dibuka lewat pratinjau/preview berbasis iframe,
+     *   webview, atau widget tersemat) karena:
+     *     - window.print() ikut mengambil konteks/ukuran frame induk,
+     *       sehingga opsi orientasi Potret/Lanskap pada dialog cetak
+     *       browser jadi tidak akurat atau tidak muncul sama sekali.
+     *     - @page di laporan.css tidak bisa "lolos" dari batasan iframe,
+     *       beda dengan tab baru yang selalu berupa top-level browsing
+     *       context penuh.
+     *   Route laporan.print dibuka di TAB BARU (bukan di dalam iframe),
+     *   persis seperti eacCetak() pada widget Chat AI Rekap — sehingga
+     *   @page dan pilihan Potret/Lanskap di dialog cetak browser selalu
+     *   diterapkan dengan benar, baik di desktop maupun mobile, baik
+     *   halaman /laporan diakses langsung maupun disemat lewat iframe.
      *
      *   CATATAN: sempat dicoba window.open() dengan feature string "popup"
      *   supaya window.close() lebih reliable, TAPI itu malah membuat
@@ -551,31 +543,18 @@
      *   sudah menangani fallback-nya (pesan "tutup manual" jika close() gagal).
      */
     function handlePrint() {
-        if (isMobileDevice()) {
-            const url = buildPrintUrl();
-            if (!url) {
-                window.AppToast("Tidak dapat membuat URL cetak.", "error");
-                return;
-            }
-            const printWindow = window.open(url, "_blank");
-            if (!printWindow) {
-                window.AppToast(
-                    "Pop-up diblokir browser. Izinkan pop-up untuk mencetak.",
-                    "error"
-                );
-            }
+        const url = buildPrintUrl();
+        if (!url) {
+            window.AppToast("Tidak dapat membuat URL cetak.", "error");
             return;
         }
-
-        document.body.classList.add("laporan-print-mode");
-        window.addEventListener(
-            "afterprint",
-            function () {
-                document.body.classList.remove("laporan-print-mode");
-            },
-            { once: true }
-        );
-        window.print();
+        const printWindow = window.open(url, "_blank");
+        if (!printWindow) {
+            window.AppToast(
+                "Pop-up diblokir browser. Izinkan pop-up untuk mencetak.",
+                "error"
+            );
+        }
     }
 
     /**

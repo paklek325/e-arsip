@@ -2,53 +2,66 @@
 
 namespace App\Console\Commands;
 
+use App\Models\PesertaDidik;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 
-class CleanTempFiles extends Command
+class SyncStatusPesertaDidik extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:clean-temp-files';
+    protected $signature = 'app:sync-status-peserta-didik';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Clean temporary files older than 1 day in storage/app/public/temp';
+    protected $description = 'Hitung ulang status kelengkapan berkas (lengkap/belum lengkap) untuk semua data peserta didik yang sudah ada, berdasarkan dokumen wajib (KK, KTP Orang Tua, Akte Kelahiran, Ijazah SMP/MTs). KIP opsional, tidak dihitung.';
+
+    /**
+     * Dokumen wajib untuk status "lengkap". Harus SAMA PERSIS dengan
+     * daftar di PesertaDidikController::wajibFileFields().
+     */
+    private array $wajibFileFields = [
+        'file_kk',
+        'file_akte',
+        'file_ktp',
+        'file_ijazah_smp',
+    ];
 
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
-        $tempDir = 'temp';
-        $disk = Storage::disk('public');
+        $updated = 0;
+        $total = PesertaDidik::count();
 
-        if (!$disk->exists($tempDir)) {
-            $this->info("Directory $tempDir does not exist.");
-            return;
-        }
+        $this->info("Memproses {$total} data peserta didik...");
 
-        $files = $disk->files($tempDir);
-        $deleted = 0;
-        $now = Carbon::now();
+        PesertaDidik::chunkById(200, function ($rows) use (&$updated) {
+            foreach ($rows as $peserta_didik) {
+                $statusBaru = 'lengkap';
 
-        foreach ($files as $file) {
-            $lastModified = Carbon::createFromTimestamp($disk->lastModified($file));
-            if ($now->diffInHours($lastModified) >= 24) {
-                $disk->delete($file);
-                $deleted++;
+                foreach ($this->wajibFileFields as $field) {
+                    if (empty($peserta_didik->$field)) {
+                        $statusBaru = 'belum lengkap';
+                        break;
+                    }
+                }
+
+                if ($peserta_didik->status !== $statusBaru) {
+                    $peserta_didik->update(['status' => $statusBaru]);
+                    $updated++;
+                }
             }
-        }
+        }, 'id_peserta_didik');
 
-        $this->info("Deleted $deleted temporary files.");
-        Log::info("CleanTempFiles: Deleted $deleted temporary files.");
+        $this->info("Selesai. {$updated} dari {$total} data status-nya diperbarui.");
+
+        return self::SUCCESS;
     }
 }

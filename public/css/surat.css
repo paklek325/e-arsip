@@ -9,31 +9,31 @@
    🎨 SURAT THEME VARIABLES
 ======================================================= */
 :root {
-  --surat-input-ph:     #6c757d;
-  --surat-thead-bg:     #f8f9fa;
-  --surat-thead-color:  #495057;
-  --surat-td-color:     #212529;
-  --surat-tr-hover:     #f1f3f5;
-  --surat-row-border:   #e9ecef;
-  --surat-footer-bg:    #f9fafb;
-  --surat-modal-bg:     #ffffff;
+  --surat-input-ph: #6c757d;
+  --surat-thead-bg: #f8f9fa;
+  --surat-thead-color: #495057;
+  --surat-td-color: #212529;
+  --surat-tr-hover: #f1f3f5;
+  --surat-row-border: #e9ecef;
+  --surat-footer-bg: #f9fafb;
+  --surat-modal-bg: #ffffff;
   --surat-modal-footer: #f8f9fa;
-  --surat-file-bg:      #f8f9fa;
-  --surat-file-border:  #e9ecef;
+  --surat-file-bg: #f8f9fa;
+  --surat-file-border: #e9ecef;
 }
 
 [data-theme="dark"] {
-  --surat-input-ph:     #64748b;
-  --surat-thead-bg:     #1a2942;
-  --surat-thead-color:  #94a3b8;
-  --surat-td-color:     #cbd5e1;
-  --surat-tr-hover:     #273549;
-  --surat-row-border:   #1e293b;
-  --surat-footer-bg:    #172033;
-  --surat-modal-bg:     #1e293b;
+  --surat-input-ph: #64748b;
+  --surat-thead-bg: #1a2942;
+  --surat-thead-color: #94a3b8;
+  --surat-td-color: #cbd5e1;
+  --surat-tr-hover: #273549;
+  --surat-row-border: #1e293b;
+  --surat-footer-bg: #172033;
+  --surat-modal-bg: #1e293b;
   --surat-modal-footer: #172033;
-  --surat-file-bg:      #172033;
-  --surat-file-border:  #334155;
+  --surat-file-bg: #172033;
+  --surat-file-border: #334155;
 }
 
 /* filter-bar → dipindah ke layout.css */
@@ -97,12 +97,15 @@
   background-size: 0.65rem auto !important;
   padding-right: 5rem !important;
 }
+
 [data-theme="dark"] .pd-select-trigger {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E") !important;
 }
+
 .pd-select-trigger:focus {
   outline: none;
 }
+
 .pd-select-trigger.active {
   border-color: var(--active-color, #0d6efd);
   box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
@@ -123,6 +126,7 @@
   display: none;
   padding: 0.3rem;
 }
+
 .pd-select-panel.show {
   display: block;
 }
@@ -137,9 +141,11 @@
   word-break: break-word;
   line-height: 1.3;
 }
+
 .pd-select-option:hover {
   background: rgba(13, 110, 253, 0.08);
 }
+
 .pd-select-option.is-selected {
   background: var(--active-color, #0d6efd);
   color: #fff;
@@ -151,9 +157,11 @@
   border-color: rgba(255, 255, 255, 0.12);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
+
 [data-theme="dark"] .pd-select-option:hover {
   background: rgba(255, 255, 255, 0.06);
 }
+
 [data-theme="dark"] .pd-select-option.is-selected {
   background: #3b82f6;
   color: #fff;
@@ -167,16 +175,35 @@
 }
 
 @media (max-width: 768px) {
-  .filter-bar { padding: 0.75rem; }
+  .filter-bar {
+    padding: 0.75rem;
+  }
+
   /* Full width hanya untuk halaman surat (bukan peserta didik) */
-  #page-surat .filter-bar .row > div { flex: 1 1 100%; }
+  #page-surat .filter-bar .row>div {
+    flex: 1 1 100%;
+  }
 }
 
 @media (max-width: 992px) {
-  .filter-bar    { flex-direction: column; align-items: stretch; }
-  .filter-group  { width: 100%; justify-content: space-between; }
-  .filter-group > div { flex: 1 1 48%; }
-  .filter-actions { width: 100%; justify-content: flex-end; }
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .filter-group>div {
+    flex: 1 1 48%;
+  }
+
+  .filter-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 
 /* =======================================================
@@ -207,7 +234,9 @@
   font-weight: 600;
 }
 
-.table-custom thead th { color: var(--surat-thead-color); }
+.table-custom thead th {
+  color: var(--surat-thead-color);
+}
 
 .table-custom tbody tr {
   transition: all 0.2s ease-in-out;
@@ -221,7 +250,9 @@
 
 [data-theme="dark"] .table-custom td,
 [data-theme="dark"] .table-custom th,
-[data-theme="dark"] .table-custom tbody tr td { color: #e2e8f0 !important; }
+[data-theme="dark"] .table-custom tbody tr td {
+  color: #e2e8f0 !important;
+}
 
 [data-theme="dark"] .table-custom thead th {
   color: #94a3b8 !important;
@@ -229,9 +260,13 @@
 }
 
 [data-theme="dark"] .table-custom td strong,
-[data-theme="dark"] .table-custom td span:not(.badge) { color: #e2e8f0 !important; }
+[data-theme="dark"] .table-custom td span:not(.badge) {
+  color: #e2e8f0 !important;
+}
 
-[data-theme="dark"] .table-custom td .text-muted { color: #64748b !important; }
+[data-theme="dark"] .table-custom td .text-muted {
+  color: #64748b !important;
+}
 
 /* =======================================================
    🔘 TOMBOL CLEAR FILTER (X)
@@ -257,7 +292,10 @@
   transition: all 0.2s ease-in-out !important;
 }
 
-.filter-clear-btn i { font-size: 0.8rem !important; pointer-events: none !important; }
+.filter-clear-btn i {
+  font-size: 0.8rem !important;
+  pointer-events: none !important;
+}
 
 .filter-clear-btn:hover {
   background-color: #f1f3f5 !important;
@@ -269,7 +307,10 @@
   display: none !important;
 }
 
-[data-theme="dark"] .filter-clear-btn { color: #64748b !important; }
+[data-theme="dark"] .filter-clear-btn {
+  color: #64748b !important;
+}
+
 [data-theme="dark"] .filter-clear-btn:hover {
   background-color: #334155 !important;
   color: #f87171 !important;
@@ -304,9 +345,9 @@
 }
 
 /* Sembunyikan trigger custom jika select native-nya di-disable atau disembunyikan */
-.pd-select-native[style*="display: none"] + .pd-select-trigger,
-.pd-select-native[disabled] + .pd-select-trigger,
-.pd-select-native.d-none + .pd-select-trigger {
+.pd-select-native[style*="display: none"]+.pd-select-trigger,
+.pd-select-native[disabled]+.pd-select-trigger,
+.pd-select-native.d-none+.pd-select-trigger {
   display: none !important;
 }
 
@@ -319,8 +360,14 @@
 }
 
 
-.modal-header .btn-close { opacity: 0.8; transition: opacity 0.2s; }
-.modal-header .btn-close:hover { opacity: 1; }
+.modal-header .btn-close {
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.modal-header .btn-close:hover {
+  opacity: 1;
+}
 
 #editSuratModal .modal-header {
   background-color: #ffc107 !important;
@@ -329,7 +376,10 @@
 
 .modal-content .form-text,
 .modal-body p,
-.modal-body span { color: var(--text-color); opacity: 0.7; }
+.modal-body span {
+  color: var(--text-color);
+  opacity: 0.7;
+}
 
 /* =======================================================
    📎 FILE ITEM
@@ -355,7 +405,9 @@
   color: #f87171 !important;
 }
 
-[data-theme="dark"] .file-item a { color: #60a5fa; }
+[data-theme="dark"] .file-item a {
+  color: #60a5fa;
+}
 
 /* =======================================================
    🤖 AI SEARCH ANIMASI
@@ -370,14 +422,32 @@
 }
 
 @keyframes ai-spin-pulse {
-  0%   { transform: scale(1) rotate(0deg);     opacity: 1; }
-  50%  { transform: scale(1.25) rotate(180deg); opacity: 0.6; }
-  100% { transform: scale(1) rotate(360deg);   opacity: 1; }
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.25) rotate(180deg);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: scale(1) rotate(360deg);
+    opacity: 1;
+  }
 }
 
 @keyframes ai-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.55); }
-  50%       { box-shadow: 0 0 0 8px rgba(13, 110, 253, 0); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.55);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(13, 110, 253, 0);
+  }
 }
 
 [data-theme="dark"] #btnAiSearch.ai-searching {
@@ -385,8 +455,15 @@
 }
 
 @keyframes ai-glow-dark {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.6); }
-  50%       { box-shadow: 0 0 0 8px rgba(96, 165, 250, 0); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.6);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(96, 165, 250, 0);
+  }
 }
 
 /* pagination dark mode → dipindah ke layout.css */
@@ -399,23 +476,28 @@
   border-color: #334155;
   color: #e2e8f0;
 }
+
 [data-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__rendered {
   color: #e2e8f0;
 }
+
 [data-theme="dark"] .select2-dropdown {
   background-color: #1e293b;
   border-color: #334155;
   color: #e2e8f0;
 }
+
 [data-theme="dark"] .select2-container--default .select2-results__option {
   color: #cbd5e1;
 }
+
 [data-theme="dark"] .select2-container--default .select2-results__option--highlighted[aria-selected] {
   background-color: #334155;
   color: #e2e8f0;
 }
 
 @media (max-width: 576px) {
+
   /* Hilangkan nowrap di mobile agar card-view bekerja */
   .table-custom,
   .table-custom th,
@@ -484,11 +566,14 @@
   #btnGenerateNoSuratEdit .bi {
     margin-right: 0 !important;
   }
+
   #btnGenerateNoSuratAdd,
   #btnGenerateNoSuratEdit {
-    font-size: 0 !important; /* sembunyikan teks, tampilkan hanya icon */
+    font-size: 0 !important;
+    /* sembunyikan teks, tampilkan hanya icon */
     padding: 0 0.7rem !important;
   }
+
   #btnGenerateNoSuratAdd .bi,
   #btnGenerateNoSuratEdit .bi {
     font-size: 1rem !important;
@@ -559,10 +644,54 @@
 }
 
 /* ── Lebar kolom tabel surat ────────────────────────────────────────────── */
-.surat-col-no      { width: 50px; }
-.surat-col-nomor   { min-width: 230px; }
-.surat-col-kode    { min-width: 120px; }
-.surat-col-jenis   { width: 100px; }
-.surat-col-perihal { min-width: 200px; }
-.surat-col-instansi{ min-width: 160px; }
-.surat-col-aksi    { width: 110px; }
+.surat-col-no {
+  width: 50px;
+}
+
+.surat-col-nomor {
+  min-width: 230px;
+}
+
+.surat-col-kode {
+  min-width: 120px;
+}
+
+.surat-col-jenis {
+  width: 100px;
+}
+
+.surat-col-perihal {
+  min-width: 200px;
+}
+
+.surat-col-instansi {
+  min-width: 160px;
+}
+
+.surat-col-aksi {
+  width: 110px;
+}
+
+/* ==== SCROLLBAR TABEL SURAT (disamakan dengan Peserta Didik) ==== */
+.table-responsive {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 transparent;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: #cbd5e0;
+  border-radius: 3px;
+}
+
+[data-theme="dark"] .table-responsive {
+  scrollbar-color: #4b5563 transparent;
+}
+
+[data-theme="dark"] .table-responsive::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
+}

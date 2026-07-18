@@ -16,7 +16,7 @@
         {{-- Kiri: Judul --}}
         <div class="d-flex align-items-center gap-2">
             <i class="bi bi-people-fill fs-5 text-primary"></i>
-            <h5 class="fw-bold text-primary mb-0">Master Peserta Didik</h5>
+            <h5 class="fw-bold text-primary mb-0"> Peserta Didik</h5>
         </div>
         {{-- Kanan: Tombol Reset Filter dan Tombol Tambah Peserta Didik --}}
         <div class="d-flex align-items-center gap-2 flex-shrink-0">

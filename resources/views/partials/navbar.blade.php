@@ -151,9 +151,15 @@
 
                         <div class="mb-3">
                             <label class="form-label" for="profil_email">Email</label>
-                            <input type="email" name="email" id="profil_email" class="form-control"
-                                value="{{ $authUser->email }}" required autocomplete="email">
+                            @php $isKepalaStaf = strtolower($authUser->role?->name ?? '') === 'kepala staf'; @endphp
+                            <input type="email" name="email" id="profil_email"
+                                class="form-control @if($isKepalaStaf) bg-body-secondary @endif"
+                                value="{{ $authUser->email }}" required autocomplete="email"
+                                @if($isKepalaStaf) readonly @endif>
                             <div class="invalid-feedback" id="error_profil_email"></div>
+                            @if($isKepalaStaf)
+                                <div class="form-text">Email Kepala Staf tidak dapat diubah sendiri.</div>
+                            @endif
                         </div>
 
                         <div class="mb-3">

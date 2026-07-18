@@ -30,6 +30,39 @@ class PesertaDidikController extends Controller
     }
 
     /**
+     * Dokumen WAJIB untuk status "lengkap": KK, KTP Orang Tua, Akte
+     * Kelahiran, Ijazah SMP/MTs. KIP sengaja TIDAK dimasukkan di sini
+     * karena bersifat opsional (boleh kosong, tidak menggagalkan status
+     * "lengkap").
+     */
+    private function wajibFileFields(): array
+    {
+        return [
+            'file_kk',
+            'file_akte',
+            'file_ktp',
+            'file_ijazah_smp',
+        ];
+    }
+
+    /**
+     * Hitung status kelengkapan berkas berdasarkan dokumen wajib yang
+     * sudah terisi. Dipanggil setelah semua proses upload/hapus file
+     * selesai (baik saat store maupun update), supaya status selalu
+     * sinkron dengan kondisi berkas terbaru.
+     */
+    private function hitungStatusKelengkapan(PesertaDidik $peserta_didik): string
+    {
+        foreach ($this->wajibFileFields() as $field) {
+            if (empty($peserta_didik->$field)) {
+                return 'belum lengkap';
+            }
+        }
+
+        return 'lengkap';
+    }
+
+    /**
      * Path folder penyimpanan peserta_didik
      * peserta_didik/<tahun>/<rombel>/<slug-nama>
      */
@@ -369,6 +402,11 @@ PROMPT
                 }
             }
 
+            // Set status kelengkapan berkas otomatis berdasarkan dokumen
+            // wajib (KK, KTP Orang Tua, Akte Kelahiran, Ijazah SMP/MTs).
+            // KIP opsional, tidak memengaruhi status.
+            $peserta_didik->update(['status' => $this->hitungStatusKelengkapan($peserta_didik)]);
+
             return response()->json(['success' => true, 'message' => 'PesertaDidik berhasil ditambahkan!']);
         } catch (\Exception $e) {
 
@@ -472,6 +510,10 @@ PROMPT
                 $peserta_didik->update([$field => $fileName]);
             }
         }
+
+        // Set ulang status kelengkapan berkas otomatis (lihat catatan di
+        // store()) setelah semua perubahan file (hapus/upload) selesai.
+        $peserta_didik->update(['status' => $this->hitungStatusKelengkapan($peserta_didik)]);
 
         return response()->json(['success' => true, 'message' => 'PesertaDidik berhasil diperbarui!']);
     }

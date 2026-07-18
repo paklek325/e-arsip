@@ -277,8 +277,9 @@ class UserController extends Controller
 
     public function updateProfil(Request $request)
     {
-        $user   = auth()->user();
-        $isAjax = $request->ajax() || $request->wantsJson();
+        $user         = auth()->user()->load('role');
+        $isAjax       = $request->ajax() || $request->wantsJson();
+        $isKepalaStaf = strtolower($user->role->name ?? '') === 'kepala staf';
 
         $validator = Validator::make($request->all(), [
             'name'     => 'required|max:150',
@@ -301,9 +302,26 @@ class UserController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        // Kepala Staf tidak boleh mengubah email sendiri. Field di form sudah
+        // dibuat readonly, tapi validasi di server tetap diperlukan supaya
+        // permintaan yang dikirim langsung (bypass UI) juga ditolak.
+        if ($isKepalaStaf && $request->email !== $user->email) {
+            $errors = ['email' => ['Email Kepala Staf tidak dapat diubah.']];
+
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validasi gagal',
+                    'errors'  => $errors,
+                ], 422);
+            }
+
+            return back()->withErrors($errors)->withInput();
+        }
+
         $data = [
             'name'  => $request->name,
-            'email' => $request->email,
+            'email' => $isKepalaStaf ? $user->email : $request->email,
         ];
 
         if ($request->filled('password')) {

@@ -73,7 +73,7 @@ class ChatController extends Controller
                 ->post($this->apiUrl, [
                     'model'       => $this->model,
                     'max_tokens'  => 1024,
-                    'temperature' => 0.5,
+                    'temperature' => 0.2,
                     'messages'    => $messages,
                 ]);
 
@@ -153,7 +153,7 @@ class ChatController extends Controller
                 ->post($this->apiUrl, [
                     'model'       => $this->model,
                     'max_tokens'  => 1024,
-                    'temperature' => 0.3,
+                    'temperature' => 0.2,
                     'messages'    => [
                         ['role' => 'system', 'content' => "Kamu adalah asisten AI bernama \"Arsy\" untuk sistem E-Arsip SMA Babussalam. Pengguna: {$name} (Role: {$role}). Di bawah ini adalah TEKS ASLI hasil ekstraksi dari file PDF/Word yang dikirim pengguna, diapit tanda === File: ... ===. ATURAN KETAT: (1) Jawab HANYA berdasarkan teks yang benar-benar ada di dalamnya — JANGAN menambahkan, menebak, atau mengarang informasi apapun yang tidak tertulis di sana. (2) Jika teks kosong/tidak terbaca, katakan terus terang bahwa isinya tidak bisa dibaca — jangan berpura-pura tahu isinya. (3) Kutip angka, nama, tanggal, dan istilah PERSIS seperti tertulis di dokumen, jangan diubah/dibulatkan. (4) Berikan ringkasan informatif dalam Bahasa Indonesia, format Markdown, JANGAN output tag HTML."],
                         ['role' => 'user',   'content' => $caption . "\n\n" . implode("\n\n", $textParts)],
@@ -371,7 +371,7 @@ class ChatController extends Controller
 
         $reply = "Halo **{$name}**! 👋 Saya **Arsy**, asisten E-Arsip SMA Babussalam. Ini yang bisa saya bantu:\n\n"
             . "🔍 **Cari surat** — cari surat masuk/keluar berdasarkan perihal, nomor, instansi, kode, atau periode. Contoh: \"carikan surat wisuda bulan ini\".\n\n"
-            . "🎓 **Cari data peserta didik** — cari berdasarkan nama, rombel, tahun angkatan, atau status kelengkapan dokumen. Contoh: \"cari peserta didik IPA angkatan 2024\".\n\n"
+            . "🎓 **Cari data peserta didik** — cari berdasarkan nama, rombel, tahun angkatan, atau status kelengkapan dokumen. Contoh: \"cari peserta didik rombel angkatan 2024-2025\".\n\n"
             . "📊 **Statistik ringkas** — total surat masuk/keluar, jumlah peserta didik, dan kelengkapan dokumen. Contoh: \"berapa total surat masuk tahun ini?\".\n\n"
             . "📋 **Rekap & export laporan** — rekap bulanan/tahunan surat, bisa diekspor ke PDF atau Word lewat tab Rekap Surat.\n\n"
             . "🧭 **Navigasi cepat** — arahkan langsung ke menu Peserta Didik, Surat, Kode Surat, Laporan, atau User. Contoh: \"buka menu laporan\".\n\n"
@@ -650,7 +650,7 @@ class ChatController extends Controller
         }
         if ($pdSearchActive) {
             $pesertaDidikData = $this->queryPesertaDidik($message);
-            if (!empty($pesertaDidikData)) $context['peserta_didik'] = $pesertaDidikData;
+            $context['peserta_didik'] = $pesertaDidikData; // selalu di-set (walau array kosong) supaya AI tahu hasil pencariannya, bukan mengarang
         }
 
         // Kode surat
@@ -726,9 +726,14 @@ PROMPT;
                 $contextSection .= "\n\n## DATA SURAT (0 hasil dari database){$meta}\n\n⚠️ WAJIB: Database tidak menemukan surat sesuai filter tersebut. Sampaikan kepada pengguna bahwa tidak ada surat yang cocok dengan kriteria itu. JANGAN mengarang atau menyebutkan contoh surat apapun.";
             }
         }
-        if (!empty($context['peserta_didik'])) {
+        if (isset($context['peserta_didik'])) {
             $count = count($context['peserta_didik']);
-            $contextSection .= "\n\n## DATA PESERTA_DIDIK ({$count} hasil dari database)\n" . json_encode($context['peserta_didik'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            if ($count > 0) {
+                $contextSection .= "\n\n## DATA PESERTA_DIDIK ({$count} hasil dari database)\n" . json_encode($context['peserta_didik'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                $contextSection .= "\n\n⚠️ WAJIB: Tampilkan HANYA peserta_didik yang benar-benar ada di data di atas. JANGAN menambahkan peserta_didik lain di luar daftar ini walau namanya mirip/relevan.";
+            } else {
+                $contextSection .= "\n\n## DATA PESERTA_DIDIK (0 hasil dari database)\n\n⚠️ WAJIB: Database TIDAK menemukan peserta_didik yang cocok dengan kriteria pencarian tersebut (nama/rombel/angkatan/status). Sampaikan dengan jelas kepada pengguna bahwa datanya tidak ditemukan. JANGAN mengarang, menebak, atau menyebutkan nama/data peserta_didik apapun — termasuk JANGAN membuat contoh nama fiktif meskipun terdengar masuk akal.";
+            }
         }
         if (!empty($context['kode'])) {
             $count = count($context['kode']);
@@ -778,7 +783,8 @@ Kamu adalah asisten AI bernama "Arsy" untuk sistem E-Arsip SMA Babussalam.
 6. **PENTING — TANGGAL SURAT vs TANGGAL INPUT**: Filter "bulan ini", "bulan lalu", dll mengacu pada **tanggal surat** (tanggal tertulis di surat), BUKAN tanggal surat diinput ke sistem. Jika hasil pencarian kosong, jelaskan hal ini kepada pengguna — surat mungkin sudah diinput tapi tanggal suratnya berbeda dari bulan yang dicari.
 7. **FORMAT TAMPILAN DATA SURAT**: Jika ada data surat dan ada URL_SEMUA di meta, tampilkan link "[📋 Lihat Semua Surat di Halaman Surat](URL_SEMUA)" di PALING ATAS sebelum daftar surat. Setiap item surat cukup tampilkan: nomor, jenis, tanggal, perihal, instansi — TANPA link per item.
 8. Aturan Kode Surat (PENTING, jangan sampai salah jawab): saat menambah/mengedit surat, jika Jenis Surat = **Masuk**, kolom Kode Surat berupa isian teks bebas (diketik manual, opsional). Jika Jenis Surat = **Keluar**, kolom Kode Surat berubah jadi dropdown dan WAJIB dipilih dari daftar master Kode Surat — tidak bisa diketik manual.
-9. **BATASAN KONTEKS (SANGAT KRITIS)**: Kamu HANYA BOLEH menjawab pertanyaan yang berkaitan dengan sistem E-Arsip, navigasi menu, panduan penggunaan aplikasi, atau data yang diberikan di prompt ini. Jika pengguna menanyakan hal UMUM di luar konteks (seperti pertanyaan sejarah, coding, matematika, resep, cuaca, dll), KAMU WAJIB MENOLAKNYA dengan sopan dan menjelaskan bahwa kamu khusus dibuat sebagai asisten E-Arsip.{$contextSection}
+9. **BATASAN KONTEKS (SANGAT KRITIS)**: Kamu HANYA BOLEH menjawab pertanyaan yang berkaitan dengan sistem E-Arsip, navigasi menu, panduan penggunaan aplikasi, atau data yang diberikan di prompt ini. Jika pengguna menanyakan hal UMUM di luar konteks (seperti pertanyaan sejarah, coding, matematika, resep, cuaca, dll), KAMU WAJIB MENOLAKNYA dengan sopan dan menjelaskan bahwa kamu khusus dibuat sebagai asisten E-Arsip.
+10. **ATURAN AKURASI MUTLAK — BERLAKU UNTUK SEMUA DATA (surat, peserta_didik, kode, statistik, dsb)**: Kamu TIDAK PERNAH boleh mengarang, menebak, atau mengasumsikan data apapun yang tidak eksplisit tersedia di context di bawah ini. Setiap section "DATA ..." adalah HASIL QUERY LANGSUNG DARI DATABASE — anggap itu satu-satunya kebenaran. Jika sebuah section tidak muncul sama sekali di prompt ini untuk suatu topik yang ditanyakan, itu artinya kamu TIDAK PUNYA data itu — katakan dengan jujur bahwa kamu tidak menemukan datanya atau minta pengguna memperjelas, JANGAN mengisi kekosongan dengan data rekaan meskipun terdengar masuk akal atau spesifik (nama, angka, tanggal, status). Lebih baik jujur "tidak ditemukan" daripada memberi jawaban yang terlihat meyakinkan tapi salah.{$contextSection}
 PROMPT;
     }
 
@@ -913,7 +919,10 @@ PROMPT;
         if (preg_match('/\brombel\s*a\b/u', $msg)) $query->where('rombel', 'A');
         elseif (preg_match('/\brombel\s*b\b/u', $msg)) $query->where('rombel', 'B');
 
-        if (preg_match('/(?:angkatan|tahun)\s+(20\d{2})/i', $message, $m)) $query->where('tahun_angkatan', $m[1]);
+        if (preg_match('/(?:angkatan|tahun)\s+(20\d{2}(?:\s*[\/-]\s*20\d{2})?)/i', $message, $m)) {
+            $tahun = preg_replace('/\s+/', '', $m[1]); // normalisasi "2024 - 2025" -> "2024-2025"
+            $query->where('tahun_angkatan', 'LIKE', '%' . $tahun . '%');
+        }
 
         if (str_contains($msg, 'belum lengkap')) $query->where('status', 'belum lengkap');
         elseif (str_contains($msg, 'lengkap') && !str_contains($msg, 'belum')) $query->where('status', 'lengkap');

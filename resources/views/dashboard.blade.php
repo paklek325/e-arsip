@@ -104,9 +104,22 @@
 
         $maxCount = collect($cards)->where('type', 'stat')->max('count');
         $maxCount = $maxCount > 0 ? $maxCount : 1;
+
+        // Jumlah kolom per breakpoint dibatasi oleh jumlah card yang benar-benar
+        // tampil (bukan angka tetap 6), supaya untuk role Staf (5 card, tanpa
+        // card "Users") barisnya pas terisi penuh dan tidak menyisakan slot
+        // kosong di kanan seperti sebelumnya.
+        $cardCount = count($cards);
+        $colsXxlXl = min($cardCount, 6);
+        $colsLg    = min($cardCount, 3);
+        $colsMd    = min($cardCount, 2);
+        // Mobile (base, <576px): sebelumnya row-cols-1 (card full-width, ditumpuk
+        // satu-satu ke bawah). Diubah jadi berpasangan 2 kolom supaya sejajar,
+        // tidak makan tempat vertikal berlebihan.
+        $colsBase  = min($cardCount, 2);
     @endphp
 
-    <div class="row g-2 mb-4 row-cols-xxl-6 row-cols-xl-6 row-cols-lg-3 row-cols-md-2 row-cols-1">
+    <div class="row g-2 mb-4 row-cols-xxl-{{ $colsXxlXl }} row-cols-xl-{{ $colsXxlXl }} row-cols-lg-{{ $colsLg }} row-cols-md-{{ $colsMd }} row-cols-{{ $colsBase }}">
 
         @foreach ($cards as $card)
             @php

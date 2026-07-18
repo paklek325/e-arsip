@@ -1271,7 +1271,7 @@ body[data-theme-transition] * {
     display: none !important;
   }
 
-  .chart-card .card-header .chart-header-controls > .ms-auto {
+  .chart-card .card-header .chart-header-controls>.ms-auto {
     margin-left: auto !important;
     flex-shrink: 0 !important;
   }
@@ -1510,6 +1510,21 @@ body[data-theme-transition] * {
   background-color: #263149;
   border-color: #334155;
   color: #94a3b8;
+}
+
+/* Field readonly (mis. "Role" di modal Profil Saya) pakai utility Bootstrap
+   .bg-body-secondary yang membawa !important, sehingga mengalahkan rule
+   dark-mode .form-control di atas — background tetap abu-abu terang padahal
+   teksnya sudah ikut jadi terang, bikin nyaris tak terbaca di mode malam.
+   Rule ini ditulis lebih spesifik + !important supaya menang. */
+[data-theme="dark"] .modal-content .form-control.bg-body-secondary {
+  background-color: #1c2436 !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .modal-content .form-text {
+  color: #64748b;
 }
 
 [data-theme="dark"] .modal-content small.text-muted,

@@ -33,10 +33,10 @@
        dianggap "sesi yang sama" padahal sudah logout — riwayat lama jadi
        tidak ke-reset. Makanya dibandingkan juga session ID Laravel-nya,
        yang selalu berubah tiap kali sesi login baru dibuat. */
-    const CURRENT_USER  = widget.dataset.user || '';
-    const CURRENT_SID   = widget.dataset.sid || '';
-    const STORED_USER   = sessionStorage.getItem('eac_user');
-    const STORED_SID    = sessionStorage.getItem('eac_sid');
+    const CURRENT_USER = widget.dataset.user || '';
+    const CURRENT_SID = widget.dataset.sid || '';
+    const STORED_USER = sessionStorage.getItem('eac_user');
+    const STORED_SID = sessionStorage.getItem('eac_sid');
     const isSameSession = !!STORED_USER && STORED_USER === CURRENT_USER
         && !!STORED_SID && STORED_SID === CURRENT_SID;
     if (!isSameSession) {
@@ -59,25 +59,25 @@
         try { history = JSON.parse(sessionStorage.getItem(HKEY) || '[]'); } catch (_) { history = []; }
     }
     function persistHistory() {
-        try { sessionStorage.setItem(HKEY, JSON.stringify(history.slice(-20))); } catch (_) {}
+        try { sessionStorage.setItem(HKEY, JSON.stringify(history.slice(-20))); } catch (_) { }
     }
-    let isTyping  = false;
+    let isTyping = false;
     let currentPage = 1;
-    let lastFilter  = {};
+    let lastFilter = {};
 
     /* ── elements ── */
-    const btn      = document.getElementById('earsipchat-btn');
-    const panel    = document.getElementById('earsipchat-panel');
+    const btn = document.getElementById('earsipchat-btn');
+    const panel = document.getElementById('earsipchat-panel');
     const closeBtn = document.getElementById('earsipchat-close');
     const clearBtn = document.getElementById('eac-clear-btn');
-    const msgs     = document.getElementById('eac-messages');
+    const msgs = document.getElementById('eac-messages');
     const WELCOME_HTML = msgs.innerHTML; // tampilan awal (sebelum dipulihkan dari sessionStorage), dipakai lagi saat "Hapus Percakapan"
-    const input    = document.getElementById('eac-input');
-    const sendBtn  = document.getElementById('eac-send');
-    const sugsEl   = document.getElementById('eac-suggestions');
+    const input = document.getElementById('eac-input');
+    const sendBtn = document.getElementById('eac-send');
+    const sugsEl = document.getElementById('eac-suggestions');
     const exportBtns = document.getElementById('eac-export-btns');
-    const attachBtn  = document.getElementById('eac-attach');
-    const fileInput  = document.getElementById('eac-file-input');
+    const attachBtn = document.getElementById('eac-attach');
+    const fileInput = document.getElementById('eac-file-input');
     const filePreview = document.getElementById('eac-file-preview');
     let pendingFiles = []; // file yang belum dikirim
 
@@ -105,7 +105,7 @@
 
     function renderFilePreviews() {
         filePreview.innerHTML = '';
-        if (pendingFiles.length === 0) { filePreview.style.display='none'; return; }
+        if (pendingFiles.length === 0) { filePreview.style.display = 'none'; return; }
         filePreview.style.display = 'flex';
         pendingFiles.forEach((f, i) => {
             const icon = getFileIcon(f.name);
@@ -116,7 +116,7 @@
         });
     }
 
-    window.removeFile = function(i) {
+    window.removeFile = function (i) {
         pendingFiles.splice(i, 1);
         renderFilePreviews();
     };
@@ -140,13 +140,13 @@
         cleanBackdrop();
         panel.classList.add('open');
         btn.style.display = 'none';
-        try { sessionStorage.setItem(PKEY, '1'); } catch (_) {}
+        try { sessionStorage.setItem(PKEY, '1'); } catch (_) { }
     }
     function closePanel() {
         panel.classList.remove('open');
         btn.style.display = 'flex';
         cleanBackdrop();
-        try { sessionStorage.setItem(PKEY, '0'); } catch (_) {}
+        try { sessionStorage.setItem(PKEY, '0'); } catch (_) { }
     }
     btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -194,18 +194,30 @@
             }
         } catch (_) { /* abaikan, lanjut fallback navigasi normal di bawah */ }
 
-        try { closePanel(); } catch (_) {}
+        try { closePanel(); } catch (_) { }
         window.location.href = url;
     };
 
-    /* ── clear ── */
-    clearBtn.addEventListener('click', () => {
+    /* ── clear ──
+       Fungsi nyata yang benar-benar mengosongkan riwayat & mengembalikan
+       tampilan ke welcome screen. Dipakai oleh tombol 🗑️ DAN oleh perintah
+       teks ("reset chat", "bersihkan percakapan", dst — lihat
+       tryHandleResetCommand di bawah), supaya keduanya konsisten:
+       sebelumnya perintah teks hanya dijawab basa-basi oleh AI ("Chat
+       telah direset...") tanpa benar-benar mengosongkan apa pun. */
+    function doResetChat() {
         history.length = 0;
         persistHistory();
-        try { sessionStorage.removeItem(MKEY); } catch (_) {}
+        try { sessionStorage.removeItem(MKEY); } catch (_) { }
         msgs.innerHTML = WELCOME_HTML;
         sugsEl.style.display = 'grid';
-    });
+        msgs.scrollTop = 0;
+        // CATATAN: reset/hapus chat SENGAJA tidak menyentuh tema lagi — tema
+        // cuma boleh berubah lewat perintah eksplisit ("rubah tema",
+        // "ganti mode", tombol 🎨, dll — lihat tryHandleThemeCommand &
+        // chip 'reset-theme'). Reset chat != reset tema.
+    }
+    clearBtn.addEventListener('click', (e) => { e.stopPropagation(); doResetChat(); });
 
     /* ══════════════════════════════════════
        GANTI TEMA (GELAP / TERANG)
@@ -214,8 +226,8 @@
        ('earsip-theme') supaya tombol di chat & tombol di header
        aplikasi selalu sinkron satu sama lain.
     ══════════════════════════════════════ */
-    const THEME_KEY  = 'earsip-theme';
-    const themeBtn   = document.getElementById('eac-theme-btn');
+    const THEME_KEY = 'earsip-theme';
+    const themeBtn = document.getElementById('eac-theme-btn');
 
     function currentTheme() {
         return document.documentElement.getAttribute('data-theme')
@@ -226,7 +238,7 @@
     function applyEacTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         document.body.classList.toggle('dark-mode', theme === 'dark');
-        try { localStorage.setItem(THEME_KEY, theme); } catch (_) {}
+        try { localStorage.setItem(THEME_KEY, theme); } catch (_) { }
         if (themeBtn) themeBtn.classList.toggle('is-dark', theme === 'dark');
     }
 
@@ -266,10 +278,14 @@
         const mentionsTheme = /\b(tema|theme|tampilan|mode)\b/.test(msg);
         if (!mentionsTheme) return false;
 
-        const wantsDark  = /\b(gelap|dark|malam)\b/.test(msg);
+        const wantsDark = /\b(gelap|dark|malam)\b/.test(msg);
         const wantsLight = /\b(terang|light|siang)\b/.test(msg);
-        // "ganti tema" / "toggle tema" tanpa spesifik gelap/terang → toggle saja
-        const wantsToggle = !wantsDark && !wantsLight && /\b(ubah|ganti|ganti\s*ke|toggle|switch)\b/.test(msg);
+        // "ganti tema" / "toggle tema" tanpa spesifik gelap/terang → toggle saja.
+        // Catatan: "rubah" SENGAJA ditulis terpisah dari "ubah" (bukan cukup
+        // \bubah\b) karena \b butuh batas kata tepat sebelum "ubah" — pada kata
+        // "rubah", huruf r dan u sama-sama karakter kata jadi tidak ada
+        // word-boundary di antaranya, sehingga \bubah\b TIDAK match "rubah".
+        const wantsToggle = !wantsDark && !wantsLight && /\b(ubah|rubah|ganti|ganti\s*ke|pindah|toggle|switch)\b/.test(msg);
 
         if (!wantsDark && !wantsLight && !wantsToggle) return false;
 
@@ -288,6 +304,57 @@
         return true;
     }
 
+    /**
+     * Deteksi perintah "reset/bersihkan chat" lewat teks (mis. "reset chat",
+     * "bersihkan percakapan", "hapus obrolan ini", "ok silahkan reset chat").
+     * Ditangani LANGSUNG di sini (client-side, tanpa ke server) supaya chat
+     * BENAR-BENAR kosong seketika — sebelumnya perintah ini dikirim ke AI
+     * yang cuma menjawab basa-basi "Chat telah direset" tanpa efek nyata.
+     * Pertanyaan (mengandung "?" atau kata tanya) sengaja TIDAK dianggap
+     * perintah, supaya user masih bisa bertanya "gimana cara reset chat?"
+     * dan dijawab oleh AI seperti biasa.
+     */
+    function tryHandleResetCommand(text) {
+        const msg = text.toLowerCase().trim();
+        if (!msg || msg.includes('?')) return false;
+
+        const isQuestion = /\b(bagaimana|gimana|kenapa|apa|apakah|kok|cara|dimana)\b/.test(msg);
+        if (isQuestion) return false;
+
+        const mentionsChat = /\b(chat|percakapan|obrolan|riwayat\s*chat)\b/.test(msg);
+        if (!mentionsChat) return false;
+
+        const wantsReset = /\b(reset|hapus|bersihkan|clear|kosongkan|hapuskan|mulai\s*ulang|ulangi\s*dari\s*awal)\b/.test(msg);
+        if (!wantsReset) return false;
+
+        doResetChat();
+        return true;
+    }
+
+    /**
+     * Deteksi kata "reset" YANG AMBIGU — dikirim sendirian, tanpa qualifier
+     * "chat"/"percakapan" (→ ditangani tryHandleResetCommand) atau
+     * "tema"/"mode" (→ ditangani tryHandleThemeCommand). Sebelumnya pesan
+     * seperti ini lolos ke AI dan cuma dibalas basa-basi tanpa efek nyata
+     * (lihat screenshot bug). Sekarang tampilkan 2 tombol pilihan supaya
+     * user tinggal klik: Reset Chat atau Reset Tema.
+     */
+    function tryHandleAmbiguousReset(text) {
+        const msg = text.toLowerCase().trim();
+        if (!/^reset[.!\s]*$/.test(msg)) return false;
+
+        addUserBubble(text, []);
+        addBotBubble('Mau reset yang mana nih? 🤔');
+        addChoiceChips([
+            { label: '🗑️ Reset Chat', action: 'reset-chat' },
+            { label: '🎨 Reset Tema (Terang)', action: 'reset-theme' },
+        ]);
+        history.push({ role: 'user', content: text });
+        history.push({ role: 'assistant', content: 'Menanyakan pilihan reset chat atau reset tema.' });
+        persistHistory();
+        return true;
+    }
+
     /* ── tabs ── */
     let rekapAutoLoaded = false;
     document.querySelectorAll('.eac-tab').forEach(tab => {
@@ -295,14 +362,18 @@
             document.querySelectorAll('.eac-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             const t = tab.dataset.tab;
-            document.getElementById('eac-tab-chat').style.display  = t==='chat'  ? 'flex' : 'none';
-            document.getElementById('eac-tab-rekap').style.display = t==='rekap' ? 'flex' : 'none';
+            document.getElementById('eac-tab-chat').style.display = t === 'chat' ? 'flex' : 'none';
+            document.getElementById('eac-tab-rekap').style.display = t === 'rekap' ? 'flex' : 'none';
 
             // Rekap sepenuhnya AJAX — begitu tab dibuka pertama kali, langsung
             // muat data sesuai filter default (bulan & tahun berjalan) tanpa
             // perlu klik apapun lagi.
             if (t === 'rekap' && !rekapAutoLoaded) {
                 rekapAutoLoaded = true;
+                const bulanSel = document.getElementById('eac-r-bulan');
+                if (bulanSel) {
+                    bulanSel.value = String(new Date().getMonth() + 1);
+                }
                 window.eacLoadRekap(1);
             }
         });
@@ -320,8 +391,8 @@
     });
 
     /* ── input ── */
-    input.addEventListener('input', () => { input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,90)+'px'; });
-    input.addEventListener('keydown', e => { if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage(input.value.trim());} });
+    input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 90) + 'px'; });
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input.value.trim()); } });
     sendBtn.addEventListener('click', () => sendMessage(input.value.trim()));
 
     /* ── CSRF ── */
@@ -341,7 +412,7 @@
                     if (m) m.setAttribute('content', data.token);
                 }
             }
-        } catch (_) {}
+        } catch (_) { }
     }
 
     async function fetchWithCsrf(url, options) {
@@ -360,11 +431,26 @@
         if (!text && !hasFile) return;
         if (isTyping) return;
 
+        // Kata "reset" polos (tanpa qualifier chat/tema) → tanyakan dulu
+        // mau reset yang mana lewat tombol pilihan, jangan langsung ke AI.
+        if (!hasFile && tryHandleAmbiguousReset(text)) {
+            input.value = ''; input.style.height = 'auto';
+            sugsEl.style.display = 'none';
+            return;
+        }
+
         // Perintah ganti tema ditangani langsung di sini (client-side),
         // tidak perlu ke server — supaya benar-benar berubah seketika.
         if (!hasFile && tryHandleThemeCommand(text)) {
             input.value = ''; input.style.height = 'auto';
             sugsEl.style.display = 'none';
+            return;
+        }
+
+        // Perintah reset/bersihkan chat juga ditangani langsung di sini —
+        // supaya benar-benar mengosongkan riwayat, bukan cuma dijawab AI.
+        if (!hasFile && tryHandleResetCommand(text)) {
+            input.value = ''; input.style.height = 'auto';
             return;
         }
 
@@ -398,20 +484,20 @@
             headers: { 'Accept': 'application/json' },
             body: fd
         })
-        .then(r => r.json())
-        .then(data => {
-            typingEl.remove();
-            if (data.success && data.message) {
-                addBotBubble(data.message);
-                history.push({role:'user', content: caption || '[File dikirim]'});
-                history.push({role:'assistant', content: data.message});
-                persistHistory();
-            } else {
-                addErrorBubble(data.message || 'Gagal menganalisis file.');
-            }
-        })
-        .catch(() => { typingEl.remove(); addErrorBubble('Koneksi bermasalah saat upload file.'); })
-        .finally(() => { isTyping=false; sendBtn.disabled=false; input.focus(); });
+            .then(r => r.json())
+            .then(data => {
+                typingEl.remove();
+                if (data.success && data.message) {
+                    addBotBubble(data.message);
+                    history.push({ role: 'user', content: caption || '[File dikirim]' });
+                    history.push({ role: 'assistant', content: data.message });
+                    persistHistory();
+                } else {
+                    addErrorBubble(data.message || 'Gagal menganalisis file.');
+                }
+            })
+            .catch(() => { typingEl.remove(); addErrorBubble('Koneksi bermasalah saat upload file.'); })
+            .finally(() => { isTyping = false; sendBtn.disabled = false; input.focus(); });
     }
 
     function fetchData(text, typingEl) {
@@ -419,50 +505,50 @@
         const timeout = setTimeout(() => controller.abort(), 25000); // 25s timeout
 
         fetchWithCsrf('/chat/ask', {
-            method:'POST',
-            headers:{'Content-Type':'application/json','Accept':'application/json'},
-            body: JSON.stringify({ message:text, history:history.slice(-8), page:window.location.pathname }),
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ message: text, history: history.slice(-8), page: window.location.pathname }),
             signal: controller.signal,
         })
-        .then(r => {
-            clearTimeout(timeout);
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            return r.json();
-        })
-        .then(data => {
-            typingEl.remove();
-            const reply = data.message || '';
-            if (reply) {
-                addBotBubble(reply);
-                history.push({role:'user',content:text});
-                history.push({role:'assistant',content:reply});
-                persistHistory();
-                // sugsEl (tanya cepat awal) tetap tersembunyi setelah chat dimulai
-                if (Array.isArray(data.suggestions) && data.suggestions.length) {
-                    addQuickChips(data.suggestions);
+            .then(r => {
+                clearTimeout(timeout);
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(data => {
+                typingEl.remove();
+                const reply = data.message || '';
+                if (reply) {
+                    addBotBubble(reply);
+                    history.push({ role: 'user', content: text });
+                    history.push({ role: 'assistant', content: reply });
+                    persistHistory();
+                    // sugsEl (tanya cepat awal) tetap tersembunyi setelah chat dimulai
+                    if (Array.isArray(data.suggestions) && data.suggestions.length) {
+                        addQuickChips(data.suggestions);
+                    }
+                    // Jika AI baru saja benar-benar mengubah data (bukan cuma teks),
+                    // refresh tabel di halaman supaya user langsung lihat perubahannya
+                    // tanpa perlu reload manual.
+                    if (data.refresh && data.refresh.menu) {
+                        refreshMenuTable(data.refresh.menu);
+                    }
+                } else {
+                    addErrorBubble('Maaf, tidak ada respons dari server. Coba lagi.');
                 }
-                // Jika AI baru saja benar-benar mengubah data (bukan cuma teks),
-                // refresh tabel di halaman supaya user langsung lihat perubahannya
-                // tanpa perlu reload manual.
-                if (data.refresh && data.refresh.menu) {
-                    refreshMenuTable(data.refresh.menu);
+            })
+            .catch(err => {
+                clearTimeout(timeout);
+                typingEl.remove();
+                if (err.name === 'AbortError') {
+                    addErrorBubble('⏱️ Permintaan terlalu lama. Coba pertanyaan yang lebih singkat.');
+                } else if (err.message.includes('HTTP 5')) {
+                    addErrorBubble('⚠️ Server sedang bermasalah. Coba beberapa saat lagi.');
+                } else {
+                    addErrorBubble('🔌 Koneksi bermasalah. Periksa internet dan coba lagi.');
                 }
-            } else {
-                addErrorBubble('Maaf, tidak ada respons dari server. Coba lagi.');
-            }
-        })
-        .catch(err => {
-            clearTimeout(timeout);
-            typingEl.remove();
-            if (err.name === 'AbortError') {
-                addErrorBubble('⏱️ Permintaan terlalu lama. Coba pertanyaan yang lebih singkat.');
-            } else if (err.message.includes('HTTP 5')) {
-                addErrorBubble('⚠️ Server sedang bermasalah. Coba beberapa saat lagi.');
-            } else {
-                addErrorBubble('🔌 Koneksi bermasalah. Periksa internet dan coba lagi.');
-            }
-        })
-        .finally(()=>{ isTyping=false; sendBtn.disabled=false; input.focus(); });
+            })
+            .finally(() => { isTyping = false; sendBtn.disabled = false; input.focus(); });
     }
 
     /* ══════════════════════════════════════════════════════════
@@ -487,23 +573,23 @@
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
             credentials: 'same-origin',
         })
-        .then(r => r.ok ? r.text() : Promise.reject(r.status))
-        .then(html => {
-            wrapper.innerHTML = html;
-            // restart animasi fade-in biar user sadar tabelnya baru saja diperbarui
-            wrapper.classList.remove('animate-fade-in');
-            void wrapper.offsetWidth;
-            wrapper.classList.add('animate-fade-in');
-        })
-        .catch(() => { /* diamkan — tabel tetap akan sinkron saat halaman di-refresh manual */ });
+            .then(r => r.ok ? r.text() : Promise.reject(r.status))
+            .then(html => {
+                wrapper.innerHTML = html;
+                // restart animasi fade-in biar user sadar tabelnya baru saja diperbarui
+                wrapper.classList.remove('animate-fade-in');
+                void wrapper.offsetWidth;
+                wrapper.classList.add('animate-fade-in');
+            })
+            .catch(() => { /* diamkan — tabel tetap akan sinkron saat halaman di-refresh manual */ });
     }
 
     /* ── bubble helpers ── */
     function addUserBubble(t, files) {
-        const d=document.createElement('div'); d.className='eac-bubble user';
+        const d = document.createElement('div'); d.className = 'eac-bubble user';
         let fileHtml = '';
         if (files && files.length > 0) {
-            fileHtml = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:' + (t?'5px':'0') + '">';
+            fileHtml = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:' + (t ? '5px' : '0') + '">';
             files.forEach(f => {
                 if (f.type.startsWith('image/')) {
                     const url = URL.createObjectURL(f);
@@ -514,22 +600,22 @@
             });
             fileHtml += '</div>';
         }
-        d.innerHTML=`<div class="eac-bubble-avatar">👤</div><div class="eac-bubble-text">${fileHtml}${t ? esc(t) : ''}</div>`;
-        msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
+        d.innerHTML = `<div class="eac-bubble-avatar">👤</div><div class="eac-bubble-text">${fileHtml}${t ? esc(t) : ''}</div>`;
+        msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
     }
     function addBotBubble(html) {
-        const d=document.createElement('div'); d.className='eac-bubble bot';
-        d.innerHTML=`<div class="eac-bubble-avatar">🤖</div><div class="eac-bubble-text">${md(html)}</div>`;
-        msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; return d;
+        const d = document.createElement('div'); d.className = 'eac-bubble bot';
+        d.innerHTML = `<div class="eac-bubble-avatar">🤖</div><div class="eac-bubble-text">${md(html)}</div>`;
+        msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; return d;
     }
     function addErrorBubble(msg) {
-        const d=document.createElement('div'); d.className='eac-error';
-        d.innerHTML=`⚠️ ${esc(msg)}`; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
+        const d = document.createElement('div'); d.className = 'eac-error';
+        d.innerHTML = `⚠️ ${esc(msg)}`; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
     }
     function addTypingIndicator() {
-        const d=document.createElement('div'); d.className='eac-bubble bot';
-        d.innerHTML=`<div class="eac-bubble-avatar">🤖</div><div class="eac-bubble-text"><div class="eac-typing"><span></span><span></span><span></span></div><div class="eac-typing-label">Arsy sedang mengetik...</div></div>`;
-        msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; return d;
+        const d = document.createElement('div'); d.className = 'eac-bubble bot';
+        d.innerHTML = `<div class="eac-bubble-avatar">🤖</div><div class="eac-bubble-text"><div class="eac-typing"><span></span><span></span><span></span></div><div class="eac-typing-label">Arsy sedang mengetik...</div></div>`;
+        msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; return d;
     }
 
     /* ── Saran tanya cepat inline (muncul setelah jawaban navigasi menu) ── */
@@ -540,9 +626,28 @@
         suggestions.forEach(s => {
             const b = document.createElement('button');
             b.type = 'button';
-            b.className = 'eac-sug-btn eac-quick-chip';
+            b.className = 'eac-quick-chip';
             if (s.url) b.dataset.url = s.url; else b.dataset.msg = s.msg;
             b.textContent = s.label;
+            wrap.appendChild(b);
+        });
+        msgs.appendChild(wrap);
+        msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    /* ── Tombol pilihan (mis. "Reset Chat" vs "Reset Tema") — beda dari
+       addQuickChips karena aksinya ditangani langsung di client (data-action),
+       bukan dikirim sebagai pesan ke AI. ── */
+    function addChoiceChips(options) {
+        const wrap = document.createElement('div');
+        wrap.className = 'eac-inline-chips';
+        wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 4px 36px;';
+        options.forEach(o => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'eac-quick-chip';
+            b.dataset.action = o.action;
+            b.textContent = o.label;
             wrap.appendChild(b);
         });
         msgs.appendChild(wrap);
@@ -552,11 +657,28 @@
     msgs.addEventListener('click', e => {
         const chip = e.target.closest('.eac-quick-chip');
         if (!chip || isTyping) return;
+
+        // PENTING: stopPropagation dulu, SEBELUM aksi apa pun dijalankan.
+        // Aksi reset-chat mengganti msgs.innerHTML — yang menghapus tombol
+        // ini sendiri dari DOM. Kalau event dibiarkan lanjut bubbling ke
+        // listener global di document, panel.contains(e.target) akan
+        // bernilai false (karena node-nya sudah lepas dari DOM), sehingga
+        // listener close-on-outside-click salah kira klik ini "di luar
+        // panel" dan menutup panel chat. stopPropagation mencegah itu.
+        e.stopPropagation();
+
+        const action = chip.dataset.action;
+        if (action === 'reset-chat') { doResetChat(); return; }
+        if (action === 'reset-theme') {
+            applyEacTheme('light');
+            return;
+        }
+
         const url = chip.dataset.url;
         if (url) { window.eacNavigate(url); return; }
         sendMessage(chip.dataset.msg);
     });
-    function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
     function md(t) {
         // Langkah 1: ekstrak semua link markdown dulu, ganti dengan placeholder
         // agar tanda kurung/kutip di URL tidak ikut di-escape
@@ -574,28 +696,28 @@
         });
 
         // Langkah 2: baru escape HTML pada teks biasa
-        s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
         // Langkah 3: kembalikan placeholder link
         s = s.replace(/\x00LINK(\d+)\x00/g, (_, i) => links[+i]);
 
         // Plain URLs (belum jadi anchor)
-        s = s.replace(/(?<!href=")(https?:\/\/[^\s<"&]+)/g, u=>`<a href="${u}" target="_blank" rel="noopener" style="color:#6C3EAB">${u}</a>`);
+        s = s.replace(/(?<!href=")(https?:\/\/[^\s<"&]+)/g, u => `<a href="${u}" target="_blank" rel="noopener" style="color:#6C3EAB">${u}</a>`);
 
         // Headers
-        s = s.replace(/^### (.+)$/gm,'<strong style="font-size:12.5px;color:#5a3d96">$1</strong>');
-        s = s.replace(/^## (.+)$/gm,'<strong style="font-size:13px;color:#4F46E5">$1</strong>');
+        s = s.replace(/^### (.+)$/gm, '<strong style="font-size:12.5px;color:#5a3d96">$1</strong>');
+        s = s.replace(/^## (.+)$/gm, '<strong style="font-size:13px;color:#4F46E5">$1</strong>');
         // Bold & italic
-        s = s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-        s = s.replace(/\*(.+?)\*/g,'<em>$1</em>');
+        s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
         // Bullet lists
-        s = s.replace(/^[\-•] (.+)$/gm,'<span style="display:block;padding-left:10px">• $1</span>');
+        s = s.replace(/^[\-•] (.+)$/gm, '<span style="display:block;padding-left:10px">• $1</span>');
         // Numbered list
-        s = s.replace(/^(\d+)\. (.+)$/gm,'<span style="display:block;padding-left:4px"><strong>$1.</strong> $2</span>');
+        s = s.replace(/^(\d+)\. (.+)$/gm, '<span style="display:block;padding-left:4px"><strong>$1.</strong> $2</span>');
         // Divider
-        s = s.replace(/^---+$/gm,'<hr style="border:none;border-top:1px solid #e0dcf0;margin:6px 0">');
+        s = s.replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid #e0dcf0;margin:6px 0">');
         // Newlines
-        s = s.replace(/\n/g,'<br>');
+        s = s.replace(/\n/g, '<br>');
         return s;
     }
 
@@ -603,8 +725,8 @@
        REKAP SURAT
     ══════════════════════════════════════ */
 
-    const MONTHS = ['','Januari','Februari','Maret','April','Mei','Juni',
-                    'Juli','Agustus','September','Oktober','November','Desember'];
+    const MONTHS = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
     const DEFAULT_BULAN = ''; // kosong = "Semua Bulan" (tampilan awal & reset)
     const DEFAULT_TAHUN = String(new Date().getFullYear());
@@ -626,7 +748,7 @@
         window.eacLoadRekap(1);
     };
 
-    window.eacLoadRekap = function(page) {
+    window.eacLoadRekap = function (page) {
         page = page || 1;
         const bulan = document.getElementById('eac-r-bulan').value;
         const tahun = document.getElementById('eac-r-tahun').value;
@@ -668,8 +790,8 @@
         let html = `<div class="eac-rekap-info">
             <span>📋 <strong>${bulanNama} ${tahun}${jenisLabel}</strong></span>
             <div class="eac-rekap-badges">`;
-        if (!jenis || jenis==='masuk')  html += `<span class="eac-badge masuk">Masuk: ${total_masuk}</span>`;
-        if (!jenis || jenis==='keluar') html += `<span class="eac-badge keluar">Keluar: ${total_keluar}</span>`;
+        if (!jenis || jenis === 'masuk') html += `<span class="eac-badge masuk">Masuk: ${total_masuk}</span>`;
+        if (!jenis || jenis === 'keluar') html += `<span class="eac-badge keluar">Keluar: ${total_keluar}</span>`;
         html += `</div></div>`;
 
         if (!surat || surat.length === 0) {
@@ -693,11 +815,11 @@
             const badge = s.jenis_surat === 'Masuk'
                 ? `<span class="eac-badge masuk">Masuk</span>`
                 : `<span class="eac-badge keluar">Keluar</span>`;
-            const tgl = s.tanggal_surat ? new Date(s.tanggal_surat).toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'}) : '-';
+            const tgl = s.tanggal_surat ? new Date(s.tanggal_surat).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
             html += `<tr>
                 <td>${offset + i + 1}</td>
-                <td><a class="eac-tbl-link" href="/surat?detail=${s.id}" onclick="window.eacNavigate('/surat?detail=${s.id}');return false;">${esc(s.no_surat||'-')}</a></td>
-                <td>${esc(s.perihal||'-')}</td>
+                <td><a class="eac-tbl-link" href="/surat?detail=${s.id}" onclick="window.eacNavigate('/surat?detail=${s.id}');return false;">${esc(s.no_surat || '-')}</a></td>
+                <td>${esc(s.perihal || '-')}</td>
                 <td style="white-space:nowrap;font-size:11px">${tgl}</td>
                 <td>${badge}</td>
             </tr>`;
@@ -706,11 +828,11 @@
 
         if (last_page > 1) {
             html += `<div class="eac-pagination">`;
-            if (current_page > 1) html += `<button class="eac-pg-btn" onclick="eacLoadRekap(${current_page-1})">‹ Prev</button>`;
-            for (let p = Math.max(1,current_page-2); p <= Math.min(last_page,current_page+2); p++) {
-                html += `<button class="eac-pg-btn${p===current_page?' active':''}" onclick="eacLoadRekap(${p})">${p}</button>`;
+            if (current_page > 1) html += `<button class="eac-pg-btn" onclick="eacLoadRekap(${current_page - 1})">‹ Prev</button>`;
+            for (let p = Math.max(1, current_page - 2); p <= Math.min(last_page, current_page + 2); p++) {
+                html += `<button class="eac-pg-btn${p === current_page ? ' active' : ''}" onclick="eacLoadRekap(${p})">${p}</button>`;
             }
-            if (current_page < last_page) html += `<button class="eac-pg-btn" onclick="eacLoadRekap(${current_page+1})">Next ›</button>`;
+            if (current_page < last_page) html += `<button class="eac-pg-btn" onclick="eacLoadRekap(${current_page + 1})">Next ›</button>`;
             html += `</div>`;
         }
 
@@ -734,8 +856,8 @@
         out += `<table class="eac-tbl eac-tbl-year">
             <thead><tr>
                 <th>Bulan</th>`;
-        if (!jenis || jenis==='masuk')  out += `<th>Masuk</th>`;
-        if (!jenis || jenis==='keluar') out += `<th>Keluar</th>`;
+        if (!jenis || jenis === 'masuk') out += `<th>Masuk</th>`;
+        if (!jenis || jenis === 'keluar') out += `<th>Keluar</th>`;
         if (!jenis) out += `<th>Total</th>`;
         out += `</tr></thead><tbody>`;
 
@@ -746,15 +868,15 @@
             totalM += m; totalK += k;
 
             out += `<tr><td><strong>${row.bulan_nama}</strong></td>`;
-            if (!jenis || jenis==='masuk')  out += `<td>${m > 0 ? `<strong style="color:#2d7a4f">${m}</strong>` : '<span style="color:#ccc">0</span>'}</td>`;
-            if (!jenis || jenis==='keluar') out += `<td>${k > 0 ? `<strong style="color:#856404">${k}</strong>` : '<span style="color:#ccc">0</span>'}</td>`;
-            if (!jenis) out += `<td>${m+k > 0 ? m+k : '<span style="color:#ccc">0</span>'}</td>`;
+            if (!jenis || jenis === 'masuk') out += `<td>${m > 0 ? `<strong style="color:#2d7a4f">${m}</strong>` : '<span style="color:#ccc">0</span>'}</td>`;
+            if (!jenis || jenis === 'keluar') out += `<td>${k > 0 ? `<strong style="color:#856404">${k}</strong>` : '<span style="color:#ccc">0</span>'}</td>`;
+            if (!jenis) out += `<td>${m + k > 0 ? m + k : '<span style="color:#ccc">0</span>'}</td>`;
             out += `</tr>`;
         });
 
         out += `<tr class="total-row"><td>TOTAL</td>`;
-        if (!jenis || jenis==='masuk')  out += `<td>${totalM}</td>`;
-        if (!jenis || jenis==='keluar') out += `<td>${totalK}</td>`;
+        if (!jenis || jenis === 'masuk') out += `<td>${totalM}</td>`;
+        if (!jenis || jenis === 'keluar') out += `<td>${totalK}</td>`;
         if (!jenis) out += `<td>${totalM + totalK}</td>`;
         out += `</tr></tbody></table>`;
 
@@ -764,28 +886,28 @@
 
     /* ── FETCH JSON untuk rekap bulanan ── */
     function fetchRekapJSON(bulan, tahun, jenis, page, cb) {
-        const params = new URLSearchParams({ bulan, tahun, ...(jenis?{jenis}:{}), page });
+        const params = new URLSearchParams({ bulan, tahun, ...(jenis ? { jenis } : {}), page });
         fetch('/chat/rekap?' + params.toString(), {
             headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() }
         })
-        .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-        .then(d => cb(null, d))
-        .catch(e => cb(e, null));
+            .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+            .then(d => cb(null, d))
+            .catch(e => cb(e, null));
     }
 
     /* ── FETCH JSON untuk rekap tahunan ── */
     function fetchRekapTahunanJSON(tahun, jenis, cb) {
-        const params = new URLSearchParams({ tahun, tipe:'Tahun', ...(jenis?{jenis}:{}) });
+        const params = new URLSearchParams({ tahun, tipe: 'Tahun', ...(jenis ? { jenis } : {}) });
         fetch('/chat/rekap-tahunan?' + params.toString(), {
             headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() }
         })
-        .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-        .then(d => cb(null, d))
-        .catch(e => cb(e, null));
+            .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+            .then(d => cb(null, d))
+            .catch(e => cb(e, null));
     }
 
     /* ══ EXPORT ══ */
-    window.eacExport = function(format) {
+    window.eacExport = function (format) {
         const { bulan, tahun, jenis } = lastFilter;
         if (!tahun) return;
         const params = new URLSearchParams({
@@ -809,20 +931,23 @@
     });
 
     /* ══ CETAK ══ */
-    window.eacCetak = function() {
+    window.eacCetak = function () {
         const { bulan, tahun, jenis } = lastFilter;
         if (!tahun) return;
+        // Baca pilihan ukuran kertas (a4 / f4)
+        const paperSel = document.getElementById('eac-r-paper');
+        const paper = paperSel ? paperSel.value : 'f4';
         const params = new URLSearchParams({
-            format: 'pdf',
             tipe: bulan ? 'Bulan' : 'Tahun',
             tahun,
             ...(bulan ? { bulan } : {}),
             ...(jenis ? { jenis } : {}),
+            paper,
         });
-        const url = '/laporan/export?' + params.toString();
-        const frame = document.getElementById('eac-print-frame');
-        frame.src = url;
-        frame.onload = () => { try { frame.contentWindow.print(); } catch(e) { window.open(url,'_blank'); } };
+        // Buka di tab baru supaya @page size (F4/portrait/landscape) diterapkan
+        // dengan benar oleh browser — iframe lintas-origin sering memblokir
+        // window.print() dan tidak bisa override ukuran kertas @page.
+        window.open('/laporan/print?' + params.toString(), '_blank');
     };
 
     /* ══════════════════════════════════════
@@ -837,14 +962,14 @@
         const messagesObserver = new MutationObserver(() => {
             // Hanya simpan jika sudah ada pesan dari user (bukan sekadar welcome bot)
             if (msgs.querySelector('.eac-bubble.user')) {
-                try { sessionStorage.setItem(MKEY, msgs.innerHTML); } catch (_) {}
+                try { sessionStorage.setItem(MKEY, msgs.innerHTML); } catch (_) { }
             }
         });
         messagesObserver.observe(msgs, { childList: true });
-    } catch (_) {}
+    } catch (_) { }
 
     /* ── bfcache: reset rekap & CSRF saat halaman dipulihkan via tombol Back ── */
-    window.addEventListener('pageshow', function(e) {
+    window.addEventListener('pageshow', function (e) {
         if (!e.persisted) return;
         lastFilter = {};
         rekapAutoLoaded = false;
@@ -874,14 +999,14 @@
                 sessionStorage.removeItem(MKEY);
                 sugsEl.style.display = 'grid';
             }
-        } catch (_) {}
+        } catch (_) { }
 
         try {
             if (sessionStorage.getItem(PKEY) === '1') {
                 panel.classList.add('open');
                 btn.style.display = 'none';
             }
-        } catch (_) {}
+        } catch (_) { }
     })();
 
 })();

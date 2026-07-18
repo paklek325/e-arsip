@@ -62,7 +62,7 @@
     #earsipchat-panel{
         position:fixed; right:22px; bottom:22px; z-index:2147483000;
         width:400px; max-width:calc(100vw - 24px);
-        height:min(600px, calc(100vh - 80px)); max-height:calc(100vh - 80px);
+        height:auto; max-height:min(600px, calc(100vh - 80px));
         background:var(--eac-bg); color:var(--eac-text);
         border-radius:var(--eac-radius); box-shadow:var(--eac-shadow);
         display:flex; flex-direction:column; overflow:hidden;
@@ -147,16 +147,30 @@
     @keyframes eac-blink{ 0%,80%,100%{ opacity:.3; transform:scale(.8);} 40%{ opacity:1; transform:scale(1);} }
     .eac-typing-label{ font-size:10.5px; color:var(--eac-text-muted); margin-top:2px; }
 
-    /* ── Saran cepat ── */
-    .eac-suggestions{ display:grid; grid-template-columns:repeat(3, 1fr); row-gap:5px; column-gap:5px; padding:6px 10px 7px; border-top:1px solid var(--eac-border); background:var(--eac-bg-soft); flex-shrink:0; }
-    .eac-suggestions > span{ grid-column:1 / -1; font-size:10px; color:var(--eac-text-muted); font-weight:600; margin-bottom:0; line-height:1.2; }
-    .eac-sug-btn, .eac-quick-chip{
+    /* ── Saran cepat (grid tetap di bawah #eac-suggestions) ── */
+    .eac-suggestions{ display:grid; grid-template-columns:repeat(2, 1fr); row-gap:5px; column-gap:6px; padding:14px 10px 9px; margin-top:6px; border-top:1px solid var(--eac-border); background:var(--eac-bg-soft); flex-shrink:0; }
+    .eac-suggestions > span{ grid-column:1 / -1; font-size:9px; color:var(--eac-text-muted); font-weight:600; margin-bottom:3px; line-height:1.2; }
+    .eac-sug-btn{
         border:1px solid var(--eac-border); background:var(--eac-bg); color:var(--eac-primary);
-        border-radius:999px; padding:4px 6px; font-size:10.5px; font-weight:600; cursor:pointer;
+        border-radius:999px; padding:4px 7px; font-size:9.5px; font-weight:600; cursor:pointer;
         transition:background .15s ease, transform .15s ease, box-shadow .15s ease;
-        width:100%; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+        width:100%; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.3;
     }
-    .eac-sug-btn:hover, .eac-quick-chip:hover{ background:var(--eac-primary); color:#fff; transform:translateY(-1px); box-shadow:0 4px 10px -3px rgba(76,40,140,.4); }
+    .eac-sug-btn:hover{ background:var(--eac-primary); color:#fff; transform:translateY(-1px); box-shadow:0 4px 10px -3px rgba(76,40,140,.4); }
+
+    /* ── Saran lanjutan: chip inline yang muncul di dalam jawaban Arsy
+       (mis. "Cara tambah kode", "Buka menu Surat Masuk"). Sengaja TIDAK
+       width:100% seperti .eac-sug-btn di atas — supaya beberapa chip
+       bisa sejajar rapi dalam satu baris (seperti "tanya cepat"),
+       bukan menumpuk satu kolom penuh ke bawah. ── */
+    .eac-quick-chip{
+        display:inline-flex; align-items:center; width:auto; max-width:100%;
+        border:1px solid var(--eac-border); background:var(--eac-bg); color:var(--eac-primary);
+        border-radius:999px; padding:6px 12px; font-size:11px; font-weight:600; cursor:pointer;
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.3;
+        transition:background .15s ease, transform .15s ease, box-shadow .15s ease;
+    }
+    .eac-quick-chip:hover{ background:var(--eac-primary); color:#fff; transform:translateY(-1px); box-shadow:0 4px 10px -3px rgba(76,40,140,.4); }
 
     /* ── File preview ── */
     #eac-file-preview{ display:none; flex-wrap:wrap; gap:6px; padding:8px 12px 0; flex-shrink:0; }
@@ -214,8 +228,14 @@
     }
     .eac-btn-reset:hover{ transform:translateY(-1px); color:var(--eac-danger); border-color:var(--eac-danger); }
 
-    .eac-export-btns{ display:none; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .eac-export-btns{ display:none; flex-wrap:wrap; gap:6px; margin-top:8px; align-items:center; }
     .eac-export-btns.show{ display:flex; }
+    .eac-export-btns select{
+        border:1px solid var(--eac-border); background:var(--eac-bg); color:var(--eac-text);
+        border-radius:8px; padding:5px 7px; font-size:10.5px; outline:none; cursor:pointer;
+        transition:border-color .15s ease;
+    }
+    .eac-export-btns select:focus{ border-color:var(--eac-primary); }
     .eac-export-btn{
         border:1px solid var(--eac-border); background:var(--eac-bg); color:var(--eac-text);
         border-radius:8px; padding:6px 10px; font-size:11px; font-weight:600; cursor:pointer;
@@ -289,7 +309,7 @@
     @media (max-width:480px){
         #earsipchat-panel{
             right:12px; left:12px; bottom:12px; top:auto; width:auto; max-width:360px; margin-left:auto;
-            height:min(64vh, 480px); max-height:min(64vh, 480px);
+            height:auto; max-height:min(64vh, 480px);
             font-size:11px;
         }
         .eac-avatar{ width:28px; height:28px; font-size:14px; }
@@ -298,7 +318,8 @@
         .eac-header-actions button{ width:24px; height:24px; font-size:11px; }
         .eac-bubble-avatar{ width:20px; height:20px; font-size:10px; }
         .eac-bubble-text{ font-size:11px; padding:7px 9px; line-height:1.4; }
-        .eac-sug-btn, .eac-quick-chip{ font-size:9.5px; padding:3px 4px; }
+        .eac-sug-btn{ font-size:9px; padding:4px 5px; }
+        .eac-quick-chip{ font-size:10px; padding:5px 10px; }
         #eac-input{ font-size:11px; }
         #earsipchat-btn{ right:16px; bottom:16px; }
     }
@@ -356,7 +377,7 @@
                     Saya <strong>Arsy</strong> — asisten E-Arsip SMA Babussalam.<br>
                     <span style="display:block;margin-top:6px;line-height:1.85">
                         🔍 <strong>Cari surat</strong> — "carikan surat wisuda bulan ini"<br>
-                        🎓 <strong>Data peserta_didik</strong> — "cari peserta_didik IPA angkatan 2024"<br>
+                        🎓 <strong>Data peserta_didik</strong> — "cari peserta_didik rombel angkatan 2024-2025"<br>
                         📊 <strong>Statistik</strong> — "berapa total surat masuk tahun ini?"<br>
                         🧭 <strong>Navigasi</strong> — "buka menu laporan"<br>
                         🎨 <strong>Ganti tema</strong> — "ubah ke mode gelap"<br>
@@ -374,6 +395,9 @@
             <button class="eac-sug-btn" data-url="/peserta-didik">🎓 Menu Peserta Didik</button>
             <button class="eac-sug-btn" data-url="/kode">🔢 Menu Kode Surat</button>
             <button class="eac-sug-btn" data-url="/laporan">📊 Laporan</button>
+            @if(strtolower(auth()->user()->role?->name ?? '') === 'kepala staf')
+                <button class="eac-sug-btn" data-url="{{ route('user.index') }}">👤 Menu User</button>
+            @endif
             <button class="eac-sug-btn" data-msg="tampilkan statistik arsip hari ini">📈 Statistik</button>
             <button class="eac-sug-btn" data-msg="carikan surat bulan ini">🔍 Surat Bulan Ini</button>
             <button class="eac-sug-btn" data-msg="apa saja yang bisa kamu bantu?">❓ Apa yang bisa Arsy bantu?</button>
@@ -417,6 +441,10 @@
             </div>
             {{-- Tombol Export (muncul setelah data tampil) --}}
             <div class="eac-export-btns" id="eac-export-btns">
+                <select id="eac-r-paper" title="Ukuran kertas cetak">
+                    <option value="f4">📄 F4 (Folio)</option>
+                    <option value="a4">📄 A4</option>
+                </select>
                 <button class="eac-export-btn eac-btn-print" onclick="eacCetak()">🖨 Cetak</button>
                 <div class="eac-dropdown" id="eac-download-dropdown">
                     <button class="eac-export-btn eac-btn-download" onclick="eacToggleDownloadMenu(event)">
@@ -436,9 +464,6 @@
         </div>
     </div>
 </div>
-
-{{-- Frame tersembunyi untuk cetak --}}
-<iframe id="eac-print-frame" style="display:none;"></iframe>
 
 {{-- ══ JS ══
      Semua logika widget ini ada di resources/js/chat.js (bukan inline

@@ -176,13 +176,17 @@ class LaporanController extends Controller
     }
 
     // ===========================
-    // PRINT PREVIEW (khusus mobile)
+    // PRINT PREVIEW (desktop & mobile)
     // ===========================
-    // Dipakai oleh laporan.js (printViaIframe) untuk mobile: mengembalikan
+    // Dipakai oleh laporan.js (handlePrint) — dibuka di TAB BARU lewat
+    // window.open(), sama seperti tombol Cetak pada widget Chat AI Rekap
+    // (eacCetak, lihat resources/js/chat.js). Route ini mengembalikan
     // HTML biasa (bukan stream PDF dari DomPDF), supaya:
-    //  1. Bisa dimuat & di-print langsung dari <iframe> lewat window.print()
-    //     bawaan browser (PDF-stream tidak bisa diakses via contentWindow
-    //     di banyak browser/webview mobile → hasil cetak jadi kosong).
+    //  1. Tab baru punya dokumen HTML top-level yang bisa langsung
+    //     di-print via window.print() bawaan browser (lihat script
+    //     auto-print di export.blade.php) — orientasi Potret/Lanskap
+    //     pada dialog cetak browser selalu terbaca dengan benar, karena
+    //     tab baru bukan <iframe> yang bisa membatasi @page/orientasi.
     //  2. Tidak dikenali sebagai "file unduhan" oleh extension semacam IDM,
     //     karena Content-Type-nya text/html, bukan application/pdf.
     public function printPreview(Request $request)
@@ -206,6 +210,7 @@ class LaporanController extends Controller
             'tahun' => 'required|numeric|digits:4',
             'bulan' => 'nullable|numeric|between:1,12',
             'jenis' => 'nullable|in:masuk,keluar',
+            'paper' => 'nullable|in:a4,f4',
         ]);
 
         $tipe_rekap  = $validated['tipe'];

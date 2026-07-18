@@ -12,14 +12,14 @@
     <title>Laporan Surat</title>
 
     @php
-        // Dihitung lebih awal (sebelum blok @php utama di body) supaya bisa
-        // dipakai di dalam <style> untuk menentukan SARAN orientasi cetak
-        // (@page size) — Tahunan (5 kolom) → potret, Bulanan (tabel detail
-        // 10 kolom) → lanskap. Ini hanya SARAN default di dialog cetak;
-        // user tetap bebas mengganti orientasi secara manual.
         $tipeRekapEarly = $tipe_rekap ?? (request('tipe')  ?? 'Tahun');
         $bulanEarly     = $bulan      ?? request('bulan');
         $isTahunanEarly = ($tipeRekapEarly === 'Tahun' || ($tipeRekapEarly === 'Bulan' && empty($bulanEarly)));
+
+        // Ukuran kertas: 'a4' (210x297mm) atau 'f4' (215.9x330mm).
+        // Orientasi portrait/landscape TIDAK dikunci di sini —
+        // dibiarkan dipilih user lewat dialog cetak browser.
+        $paperMode = in_array(request('paper'), ['a4', 'f4']) ? request('paper') : 'f4';
     @endphp
 
     <style>
@@ -50,29 +50,18 @@
             --clr-print-date:       #374151;
         }
 
-        /* ========== LAYOUT HALAMAN ========== */
+        /* ========== LAYOUT HALAMAN ==========
+         * TIDAK menggunakan @page size — jika size di-set via CSS,
+         * Chrome menghapus opsi Layout (portrait/landscape) dari dialog cetak.
+         * Ukuran kertas & orientasi dipilih langsung di dialog cetak browser.
+         * Dropdown A4/F4 di widget hanya mengoptimalkan layout konten.
+         * ========== */
         @page {
-            margin-top: @if(!empty($autoprint)) 10mm @else 20mm @endif;
-            margin-bottom: @if(!empty($autoprint)) 10mm @else 18mm @endif;
-            margin-left: @if(!empty($autoprint)) 10mm @else 15mm @endif;
-            margin-right: @if(!empty($autoprint)) 10mm @else 15mm @endif;
-            @if(!empty($autoprint))
-                {{-- SARAN orientasi default di dialog cetak (bukan paksaan —
-                     user tetap bisa ganti manual). Rekap Tahunan (5 kolom)
-                     lebih pas Potret; Detail Bulanan (10 kolom) lebih pas
-                     Lanskap supaya kolom tidak terlalu sempit. --}}
-                size: {{ $isTahunanEarly ? 'portrait' : 'landscape' }};
-            @endif
+            margin: 10mm 12mm;
         }
+
         @if(empty($autoprint))
-        {{-- Ukuran halaman khusus ini dibaca oleh Word (mso-page-orientation).
-             Ukuran PDF asli di-set lewat PHP di exportPdf(), CSS ini TIDAK
-             dipakai saat generate PDF. Sengaja di-skip saat $autoprint aktif
-             (dibuka langsung sebagai halaman HTML biasa untuk print dari
-             mobile), karena tinggi 21cm justru lebih pendek dari kertas
-             normal dan membuat konten kepotong ke halaman kedua yang
-             hampir kosong. Untuk print mobile, biarkan browser memakai
-             ukuran kertas & orientasi sesuai pilihan user di dialog cetak. --}}
+        {{-- Ukuran ini dibaca oleh Word (mso-page-orientation). --}}
         @page Section1 {
             size: 33cm 21cm; /* F4 landscape */
             mso-page-orientation: landscape;
@@ -266,23 +255,83 @@
             tbody tr.row-empty td { background: #e5e7eb !important; color: #4b5563 !important; }
         }
 
-        /* ========== RESPONSIF PER ORIENTASI CETAK ==========
-           Tabel "Detail Daftar Surat" (10 kolom) perlu penyesuaian ukuran
-           font & padding berbeda tergantung orientasi yang dipilih user
-           di dialog cetak, supaya kolom tidak terlalu sempit/terpotong. */
-        @media print and (orientation: portrait) {
-            .tabel-detail-surat th,
-            .tabel-detail-surat td {
-                font-size: 7.5pt;
-                padding: 4px 5px;
-            }
+        /* ========== RESPONSIF PER ORIENTASI & UKURAN KERTAS ==========
+           font & padding berbeda tergantung orientasi / ukuran kertas
+           supaya kolom tidak terlalu sempit/terpotong. */
+        table {
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
-        @media print and (orientation: landscape) {
+
+        /* ── Portrait A4 ── */
+        @media print and (orientation: portrait) {
+            body { font-size: 9pt; }
+            th, td {
+                font-size: 7pt !important;
+                padding: 4px 5px !important;
+            }
             .tabel-detail-surat th,
             .tabel-detail-surat td {
-                font-size: 9.5pt;
-                padding: 6px 9px;
+                font-size: 6pt !important;
+                padding: 3px 4px !important;
             }
+            .badge-masuk, .badge-keluar, .badge-total, .badge-zero {
+                padding: 2px 7px !important;
+                font-size: 6pt !important;
+                border-width: 1px !important;
+            }
+            .export-header-bar .judul-wrap .title-main { font-size: 10pt !important; }
+            .export-header-bar .judul-wrap .title-sub  { font-size: 8.5pt !important; }
+        }
+
+        /* ── Landscape A4 ── */
+        @media print and (orientation: landscape) {
+            body { font-size: 10pt; }
+            th, td {
+                font-size: 8.5pt !important;
+                padding: 5px 8px !important;
+            }
+            .tabel-detail-surat th,
+            .tabel-detail-surat td {
+                font-size: 7.5pt !important;
+                padding: 4px 6px !important;
+            }
+            .badge-masuk, .badge-keluar, .badge-total, .badge-zero {
+                padding: 2px 11px !important;
+                font-size: 7.5pt !important;
+            }
+            .export-header-bar .judul-wrap .title-main { font-size: 13pt !important; }
+            .export-header-bar .judul-wrap .title-sub  { font-size: 10pt !important; }
+        }
+
+        /* ── Optimasi konten untuk F4 (lebih lebar dari A4) ──
+           Berlaku untuk screen dan print saat user memilih F4 di dropdown.
+           Font sedikit lebih besar karena kertas lebih lebar. */
+        body.paper-f4 th, body.paper-f4 td {
+            font-size: 10pt;
+            padding: 6px 9px;
+        }
+        body.paper-f4 .tabel-detail-surat th,
+        body.paper-f4 .tabel-detail-surat td {
+            font-size: 9pt;
+            padding: 5px 7px;
+        }
+        body.paper-f4 .export-header-bar .judul-wrap .title-main { font-size: 14pt; }
+        body.paper-f4 .export-header-bar .judul-wrap .title-sub  { font-size: 11pt; }
+        @media print {
+            body.paper-f4 th, body.paper-f4 td {
+                font-size: 9.5pt !important; padding: 6px 9px !important;
+            }
+            body.paper-f4 .tabel-detail-surat th,
+            body.paper-f4 .tabel-detail-surat td {
+                font-size: 8.5pt !important; padding: 5px 7px !important;
+            }
+            body.paper-f4 .badge-masuk, body.paper-f4 .badge-keluar,
+            body.paper-f4 .badge-total, body.paper-f4 .badge-zero {
+                padding: 3px 14px !important; font-size: 8.5pt !important;
+            }
+            body.paper-f4 .export-header-bar .judul-wrap .title-main { font-size: 14pt !important; }
+            body.paper-f4 .export-header-bar .judul-wrap .title-sub  { font-size: 11pt !important; }
         }
 
         /* Excel compat */
@@ -305,7 +354,7 @@
     }
     </script>
 </head>
-<body>
+<body class="paper-{{ $paperMode }}">
 <div class="Section1">
 
 @php
