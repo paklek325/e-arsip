@@ -10,6 +10,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\KodeController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\BackupController;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 Route::redirect('/', '/login');
@@ -155,4 +156,15 @@ Route::middleware('auth')->group(function () {
         $pdf = Pdf::loadHTML('<h1>Hello PDF</h1>');
         return $pdf->stream('test.pdf');
     });
+
+    /*
+    |--------------------------------------------------------------------------
+    | BACKUP DATA (Kepala Staf only)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('backup')->name('backup.')->controller(BackupController::class)
+        ->middleware('role:Kepala Staf')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/generate', 'generate')->name('generate');
+        });
 });

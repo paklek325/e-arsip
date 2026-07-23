@@ -24,21 +24,21 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Nama</label>
-                        <input type="text" name="name" id="add_name" class="form-control" required>
+                        <label class="form-label" for="add_name">Nama</label>
+                        <input type="text" name="name" id="add_name" class="form-control" autocomplete="name" required>
                         <div class="invalid-feedback" id="error_add_name"></div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="email" id="add_email" class="form-control" required>
+                        <label class="form-label" for="add_email">Email</label>
+                        <input type="email" name="email" id="add_email" class="form-control" autocomplete="email" required>
                         <div class="invalid-feedback" id="error_add_email"></div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Password</label>
+                        <label class="form-label" for="add_password">Password</label>
                         <div class="input-group">
-                            <input type="password" name="password" id="add_password" class="form-control" required>
+                            <input type="password" name="password" id="add_password" class="form-control" autocomplete="new-password" required>
                             <span class="input-group-text togglePasswordAdd">
                                 <i class="bi bi-eye-slash"></i>
                             </span>
@@ -47,7 +47,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Role</label>
+                        <label class="form-label" for="add_role">Role</label>
                         {{-- Kepala Staf bersifat permanen (sudah ada & unik), jadi tidak
                              ditampilkan sebagai pilihan saat tambah user baru.
                              Role otomatis default ke "Staf". --}}
@@ -102,31 +102,31 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Nama</label>
-                        <input type="text" name="name" id="edit_name" class="form-control" required>
+                        <label class="form-label" for="edit_name">Nama</label>
+                        <input type="text" name="name" id="edit_name" class="form-control" autocomplete="name" required>
                         <div class="invalid-feedback" id="error_edit_name"></div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="email" id="edit_email" class="form-control" required>
+                        <label class="form-label" for="edit_email">Email</label>
+                        <input type="email" name="email" id="edit_email" class="form-control" autocomplete="email" required>
                         <div class="invalid-feedback" id="error_edit_email"></div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Password (Opsional)</label>
+                        <label class="form-label" for="edit_password">Password (Opsional)</label>
                         <div class="input-group">
-                            <input type="password" name="password" id="edit_password" class="form-control">
+                            <input type="password" name="password" id="edit_password" class="form-control" autocomplete="new-password">
                             <span class="input-group-text togglePasswordEdit">
                                 <i class="bi bi-eye-slash"></i>
                             </span>
                         </div>
-                        <small class="text-muted">Kosongkan bila tidak ingin mengubah password</small>
+                        <small class="text-muted">Biarkan kosong jika tidak ingin mengubah password</small>
                         <div class="invalid-feedback d-block" id="error_edit_password"></div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Role</label>
+                        <label class="form-label" for="edit_role">Role</label>
                         {{-- Pastikan variabel $roles sudah dilewatkan dari Controller --}}
                         <select name="id_role" id="edit_role" class="form-select" required>
                             @foreach($roles as $r)

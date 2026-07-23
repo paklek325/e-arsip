@@ -59,14 +59,14 @@
                 <div class="modal-body">
                     {{-- ID: edit_kode | NAME: kode --}}
                     <div class="mb-3">
-                        <label class="form-label">Kode</label>
+                        <label class="form-label" for="edit_kode">Kode</label>
                         <input type="text" id="edit_kode" name="kode" class="form-control" maxlength="10" required>
                         {{-- Pesan error (invalid-feedback) akan di-inject di sini oleh JS --}}
                     </div>
 
                     {{-- ID: edit_description | NAME: description --}}
                     <div class="mb-3">
-                        <label class="form-label">Deskripsi</label>
+                        <label class="form-label" for="edit_description">Deskripsi</label>
                         <textarea id="edit_description" name="description" class="form-control" rows="3"></textarea>
                         {{-- Pesan error (invalid-feedback) akan di-inject di sini oleh JS --}}
                     </div>

@@ -452,7 +452,7 @@
 .pd-col-tahun  { min-width: 110px; }
 .pd-col-rombel { min-width: 90px; }
 .pd-col-status { min-width: 140px; }
-.pd-col-aksi   { width: 140px; }
+.pd-col-aksi   { width: 110px; }
 
 /* ── Delete modal icon ──────────────────────────────────────────────────── */
 .pd-delete-icon { font-size: 3rem; }

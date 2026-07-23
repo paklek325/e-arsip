@@ -155,18 +155,35 @@ document.addEventListener("DOMContentLoaded", () => {
     // 📱 SIDEBAR TOGGLE (MOBILE)
     // =======================================================
     function toggleMobileSidebar() {
-        sidebar?.classList.toggle("show");
-        sidebarOverlay?.classList.toggle("active");
+        const isOpen = sidebar?.classList.contains('show');
+        if (isOpen) {
+            sidebar?.classList.remove('show');
+            sidebarOverlay?.classList.remove('active');
+        } else {
+            sidebar?.classList.add('show');
+            sidebarOverlay?.classList.add('active');
+        }
     }
 
-    mobileToggle?.addEventListener("click", (e) => {
+    mobileToggle?.addEventListener('click', (e) => {
         e.preventDefault();
         toggleMobileSidebar();
     });
-    sidebarOverlay?.addEventListener("click", () => {
-        sidebar?.classList.remove("show");
-        sidebarOverlay?.classList.remove("active");
+    // Touch support — pastikan sidebar bisa terbuka dengan tap cepat di iOS
+    mobileToggle?.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        toggleMobileSidebar();
+    }, { passive: false });
+    sidebarOverlay?.addEventListener('click', () => {
+        sidebar?.classList.remove('show');
+        sidebarOverlay?.classList.remove('active');
     });
+    // Touch di overlay juga menutup sidebar
+    sidebarOverlay?.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        sidebar?.classList.remove('show');
+        sidebarOverlay?.classList.remove('active');
+    }, { passive: false });
 
     // =======================================================
     // 🔄 RESPONSIVE FIX (Resize)
@@ -288,18 +305,100 @@ document.addEventListener("DOMContentLoaded", () => {
 
     processAllTables(document);
 
-    // Expose supaya script lain (mis. surat.js setelah reload AJAX)
-    // bisa langsung memasang data-label TANPA menunggu debounce
-    // MutationObserver di bawah → menghindari "flick" tata letak
-    // kartu mobile (label muncul telat sesaat setelah render).
+    // Expose supaya script lain bisa memanggil langsung
     window.EArsipApplyTableLabels = processAllTables;
 
+    // MutationObserver: proses LANGSUNG saat DOM berubah
     const tableObserver = new MutationObserver(() => {
-        clearTimeout(window.__earsipTableLabelTimer);
-        window.__earsipTableLabelTimer = setTimeout(
-            () => processAllTables(document),
-            50
-        );
+        processAllTables(document);
     });
     tableObserver.observe(document.body, { childList: true, subtree: true });
+
+    // =======================================================
+    // 🗄️ BACKUP PAGE — Logic (hanya aktif jika ada #formBackup)
+    // =======================================================
+    const formBackup = document.getElementById('formBackup');
+    if (formBackup) {
+        const sectionSurat   = document.getElementById('section-surat');
+        const sectionPeserta = document.getElementById('section-peserta');
+
+        function updateBackupSections() {
+            const tipe = document.querySelector('input[name="tipe"]:checked')?.value ?? 'semua';
+            sectionSurat?.classList.toggle('backup-card-dimmed', !(tipe === 'semua' || tipe === 'surat'));
+            sectionPeserta?.classList.toggle('backup-card-dimmed', !(tipe === 'semua' || tipe === 'peserta_didik'));
+        }
+
+        document.querySelectorAll('input[name="tipe"]').forEach(el =>
+            el.addEventListener('change', updateBackupSections)
+        );
+        updateBackupSections();
+
+        // Visual feedback pill — Radio & Checkbox
+        // - Radio  : hapus .checked dari seluruh grup dulu, pasang di yang aktif
+        // - Checkbox: toggle .checked sesuai state cb.checked
+        function syncPillChecked(input) {
+            if (input.type === 'radio') {
+                // Hapus .checked semua pill dalam grup yang sama
+                document.querySelectorAll(
+                    `.backup-check-pill input[name="${input.name}"]`
+                ).forEach(r => r.closest('.backup-check-pill')?.classList.remove('checked'));
+            }
+            input.closest('.backup-check-pill')?.classList.toggle('checked', input.checked);
+        }
+
+        // Inisialisasi state awal (radio yang pre-checked)
+        document.querySelectorAll('.backup-check-pill input').forEach(inp => {
+            if (inp.checked) syncPillChecked(inp);
+            inp.addEventListener('change', () => syncPillChecked(inp));
+        });
+
+        // Submit Form — stream ZIP download
+        const btnGen     = document.getElementById('btnGenerate');
+        const btnText    = document.getElementById('btnGenerateText');
+        const btnSpinner = document.getElementById('btnGenerateSpinner');
+
+        formBackup.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            btnGen.disabled = true;
+            btnText.textContent = 'Memproses...';
+            btnSpinner.classList.remove('d-none');
+
+            try {
+                const formData = new FormData(formBackup);
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+                const res = await fetch(formBackup.action, {
+                    method : 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+                    body   : formData,
+                });
+
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({ message: 'Terjadi kesalahan server.' }));
+                    window.AppToast?.(data.message ?? 'Gagal membuat backup.', 'error');
+                    return;
+                }
+
+                const blob  = await res.blob();
+                const url   = URL.createObjectURL(blob);
+                const a     = document.createElement('a');
+                const disp  = res.headers.get('Content-Disposition') ?? '';
+                const matchFile = disp.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                a.download  = matchFile ? matchFile[1].replace(/['"]/g, '') : 'backup_earsip.zip';
+                a.href = url;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+                window.AppToast?.('Backup ZIP berhasil diunduh!', 'success');
+            } catch (err) {
+                console.error(err);
+                window.AppToast?.('Gagal menghubungi server.', 'error');
+            } finally {
+                btnGen.disabled = false;
+                btnText.innerHTML = 'Generate &amp; Download ZIP';
+                btnSpinner.classList.add('d-none');
+            }
+        });
+    }
 });

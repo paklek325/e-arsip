@@ -43,7 +43,7 @@
                 <button class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal"
                     data-bs-target="#addSuratModal">
                     <i class="bi bi-plus-lg"></i>
-                    <span>Tambah Surat</span>
+                    <span>Tambah</span>
                 </button>
             </div>
         </div>

@@ -2,10 +2,10 @@
 🎓 FILTER BAR — Peserta Didik (AJAX, tanpa AI Search)
 ======================================================= --}}
 
-<div class="filter-bar shadow-sm border-0 rounded-3 p-3 mb-3">
+<div class="filter-bar shadow-sm">
     <form method="GET"
           action="{{ route('peserta-didik.index') }}"
-          class="row g-2 align-items-center w-100"
+          class="row g-3 align-items-center w-100"
           id="filterForm">
 
         {{-- 🔍 Pencarian (full width di semua ukuran) --}}
@@ -14,6 +14,7 @@
                 <span class="input-group-text">
                     <i class="bi bi-search"></i>
                 </span>
+                <label for="searchInput" class="visually-hidden">Cari Berkas</label>
                 <input type="text"
                        name="search"
                        id="searchInput"
@@ -32,6 +33,7 @@
 
         {{-- 🎓 Rombel — col-6 di mobile, col-3 di desktop --}}
         <div class="col-6 col-md-3 position-relative">
+            <label for="rombel" class="visually-hidden">Rombel</label>
             <select name="rombel" id="rombel" class="form-select filter-select">
                 <option value="">Rombel</option>
                 <option value="A" {{ request('rombel') == 'A' ? 'selected' : '' }}>A</option>
@@ -46,6 +48,7 @@
 
         {{-- ✅ Status — col-6 di mobile, col-3 di desktop --}}
         <div class="col-6 col-md-3 position-relative">
+            <label for="statusFilter" class="visually-hidden">Status</label>
             <select name="status" id="statusFilter" class="form-select filter-select">
                 <option value="">Status</option>
                 <option value="lengkap"       {{ request('status') == 'lengkap'       ? 'selected' : '' }}>✅ Lengkap</option>
@@ -60,6 +63,7 @@
 
         {{-- 📅 Urutan Angkatan — col-6 di mobile, col-3 di desktop --}}
         <div class="col-6 col-md-3 position-relative">
+            <label for="sortAngkatan" class="visually-hidden">Angkatan</label>
             <select name="sort_angkatan" id="sortAngkatan" class="form-select filter-select">
                 <option value="">Angkatan</option>
                 <option value="terbaru" {{ request('sort_angkatan') == 'terbaru' ? 'selected' : '' }}>📅 Terbaru</option>
@@ -74,6 +78,7 @@
 
         {{-- 🔤 Urutan Nama — col-6 di mobile, col-3 di desktop --}}
         <div class="col-6 col-md-3 position-relative">
+            <label for="sortNama" class="visually-hidden">Nama</label>
             <select name="sort_nama" id="sortNama" class="form-select filter-select">
                 <option value="">Nama</option>
                 <option value="az" {{ request('sort_nama') == 'az' ? 'selected' : '' }}>🔤 A - Z</option>

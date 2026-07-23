@@ -12,28 +12,26 @@
 @section('favicon', asset('template/dist/images/surat-icon.png'))
 @section('content')
 <div class="py-2" id="page-peserta-didik">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        {{-- Kiri: Judul --}}
+    {{-- Header (Seragam dengan Master Surat) --}}
+    <div class="pt-2 d-flex justify-content-between align-items-center mb-3">
         <div class="d-flex align-items-center gap-2">
             <i class="bi bi-people-fill fs-5 text-primary"></i>
-            <h5 class="fw-bold text-primary mb-0"> Peserta Didik</h5>
+            <h5 class="fw-bold text-primary mb-0">Master Peserta Didik</h5>
         </div>
-        {{-- Kanan: Tombol Reset Filter dan Tombol Tambah Peserta Didik --}}
-        <div class="d-flex align-items-center gap-2 flex-shrink-0">
-            {{-- Tombol Reset Filter (ikon saja) --}}
-            <button type="button" id="resetBtn" class="btn btn-light" data-bs-toggle="tooltip" title="Reset semua filter">
-                <i class="bi bi-arrow-counterclockwise fs-5"></i>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" id="resetBtn" class="btn btn-light shadow-sm" title="Reset Semua Filter">
+                <i class="bi bi-arrow-counterclockwise"></i>
             </button>
-            {{-- Tombol Tambah Peserta Didik --}}
-<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahPesertaDidik" id="btnTambahPesertaDidik">                <i class="bi bi-plus-lg me-1"></i>
-                Tambah<span class="d-none d-sm-inline"> Peserta Didik</span>
+            <button class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#modalTambahPesertaDidik" id="btnTambahPesertaDidik">
+                <i class="bi bi-plus-lg"></i>
+                <span>Tambah</span>
             </button>
         </div>
     </div>
     {{-- Filter --}}
     @include('peserta_didik.partials.filter')
     {{-- Table --}}
-    <div id="wrapper-table-peserta_didik" class="animate-fade-in" data-base-url="{{ route('peserta-didik.index') }}">
+    <div id="tableContainer" class="animate-fade-in" data-base-url="{{ route('peserta-didik.index') }}">
         @include('peserta_didik.partials.table')
     </div>
     {{-- Modal --}}

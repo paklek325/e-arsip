@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Profil Saya')
 
@@ -44,9 +44,13 @@
 
                             {{-- Foto preview --}}
                             <div class="position-relative mb-3 profil-photo-wrapper">
+                                @php
+                                    $hasFotoProfil = $user->foto && $user->foto !== 'default_staf.png';
+                                    $fotoProfilUrl = $hasFotoProfil ? asset('storage/foto_admin/' . $user->foto) : asset('assets/img/default_staf.png');
+                                @endphp
                                 <img id="profilFotoPreview"
-                                    src="{{ $user->foto ? asset('storage/foto_admin/' . $user->foto) : asset('assets/img/default_staf.png') }}"
-                                    onerror="this.src='{{ asset('assets/img/default_staf.png') }}'" alt="Foto Profil"
+                                    src="{{ $fotoProfilUrl }}"
+                                    onerror="this.onerror=null; this.src='{{ asset('assets/img/default_staf.png') }}';" alt="Foto Profil"
                                     class="rounded-circle border border-3 profil-photo">
                                 {{-- Tombol ganti foto --}}
                                 <label for="fotoInput"

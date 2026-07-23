@@ -1,0 +1,434 @@
+/* =====================================================================
+   🗄️ BACKUP PAGE — E-Arsip
+   Styles khusus halaman backup data
+===================================================================== */
+
+/* ── Header Icon ───────────────────────────────────────────────────── */
+.backup-header-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0ea5e9, #2563eb);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, .35);
+    flex-shrink: 0;
+}
+
+/* ── Info Banner ───────────────────────────────────────────────────── */
+.backup-info-banner {
+    background: linear-gradient(135deg, rgba(13, 110, 253, .06), rgba(13, 110, 253, .02));
+    border: 1px solid rgba(13, 110, 253, .15);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+}
+
+[data-theme="dark"] .backup-info-banner {
+    background: linear-gradient(135deg, rgba(59, 130, 246, .1), rgba(59, 130, 246, .04));
+    border-color: rgba(59, 130, 246, .2);
+}
+
+/* ── Tree Preview ──────────────────────────────────────────────────── */
+.backup-tree {
+    background: rgba(0, 0, 0, .04);
+    border: 1px solid rgba(0, 0, 0, .07);
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    overflow-x: auto;
+}
+
+[data-theme="dark"] .backup-tree {
+    background: rgba(0, 0, 0, .2);
+    border-color: rgba(255, 255, 255, .07);
+}
+
+.backup-tree-code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: .78rem;
+    line-height: 1.7;
+    color: var(--text-color);
+    white-space: pre;
+    display: block;
+}
+
+/* ── Stat Cards ────────────────────────────────────────────────────── */
+.backup-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.25rem;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, .06);
+    background: var(--card-bg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+    transition: box-shadow .2s ease, transform .2s ease;
+    height: 100%;
+}
+
+.backup-stat-card:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .1);
+    transform: translateY(-2px);
+}
+
+.backup-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.backup-stat-surat .backup-stat-icon {
+    background: linear-gradient(135deg, rgba(14, 165, 233, .15), rgba(37, 99, 235, .15));
+    color: #2563eb;
+}
+
+.backup-stat-peserta .backup-stat-icon {
+    background: linear-gradient(135deg, rgba(16, 185, 129, .15), rgba(5, 150, 105, .15));
+    color: #059669;
+}
+
+[data-theme="dark"] .backup-stat-surat .backup-stat-icon { color: #60a5fa; }
+[data-theme="dark"] .backup-stat-peserta .backup-stat-icon { color: #34d399; }
+
+.backup-stat-label {
+    font-size: .8rem;
+    color: var(--text-color);
+    opacity: .85;
+    margin-bottom: .15rem;
+}
+
+.backup-stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-color);
+    line-height: 1.2;
+}
+
+.backup-stat-size {
+    font-size: .75rem;
+    color: #6b7280;
+}
+
+[data-theme="dark"] .backup-stat-label {
+    color: #cbd5e1;
+    opacity: 1;
+}
+
+[data-theme="dark"] .backup-stat-value {
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .backup-stat-size {
+    color: #94a3b8;
+}
+
+/* ── Backup Card ───────────────────────────────────────────────────── */
+.backup-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .07);
+    transition: opacity .3s ease, box-shadow .2s ease;
+}
+
+.backup-card.backup-card-dimmed {
+    opacity: .45;
+    pointer-events: none;
+}
+
+.backup-card-header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .85rem 1.15rem;
+    background: linear-gradient(135deg, rgba(13, 110, 253, .07), rgba(13, 110, 253, .02));
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    font-size: .88rem;
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .backup-card-header {
+    background: linear-gradient(135deg, rgba(59, 130, 246, .1), rgba(59, 130, 246, .03));
+}
+
+.backup-card-header i {
+    font-size: 1rem;
+    color: #2563eb;
+}
+
+[data-theme="dark"] .backup-card-header i { color: #60a5fa; }
+
+.backup-optional-badge {
+    margin-left: auto;
+    font-size: .68rem;
+    font-weight: 500;
+    background: rgba(107, 114, 128, .15);
+    color: #6b7280;
+    border-radius: 20px;
+    padding: .12rem .55rem;
+}
+
+.backup-card-body {
+    padding: 1.15rem;
+}
+
+/* ── Tipe Option Grid ──────────────────────────────────────────────── */
+.backup-tipe-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .75rem;
+}
+
+.backup-tipe-option {
+    cursor: pointer;
+}
+
+.backup-tipe-option input[type="radio"] {
+    display: none;
+}
+
+.backup-tipe-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    padding: .85rem .4rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    text-align: center;
+    transition: all .2s ease;
+    background: var(--card-bg);
+    cursor: pointer;
+}
+
+.backup-tipe-card i {
+    font-size: 1.4rem;
+    color: #6b7280;
+    transition: color .2s ease;
+}
+
+.backup-tipe-card span {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.backup-tipe-card small {
+    font-size: .7rem;
+    color: #9ca3af;
+}
+
+.backup-tipe-option input:checked + .backup-tipe-card {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, .08);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+}
+
+.backup-tipe-option input:checked + .backup-tipe-card i {
+    color: #2563eb;
+}
+
+[data-theme="dark"] .backup-tipe-option input:checked + .backup-tipe-card {
+    border-color: #60a5fa;
+    background: rgba(96, 165, 250, .1);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, .15);
+}
+
+[data-theme="dark"] .backup-tipe-option input:checked + .backup-tipe-card i {
+    color: #60a5fa;
+}
+
+.backup-tipe-card:hover {
+    border-color: #93c5fd;
+    background: rgba(37, 99, 235, .04);
+}
+
+/* ── Check Pills ────────────────────────────────────────────────────── */
+.backup-year-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.backup-year-pill,
+.backup-check-pill {
+    cursor: pointer;
+}
+
+.backup-year-pill input,
+.backup-check-pill input {
+    display: none;
+}
+
+.backup-year-pill span,
+.backup-check-pill span {
+    display: inline-flex;
+    align-items: center;
+    padding: .28rem .75rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: 20px;
+    font-size: .78rem;
+    color: var(--text-color);
+    background: var(--card-bg);
+    transition: all .18s ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.backup-year-pill:hover span,
+.backup-check-pill:hover span {
+    border-color: #93c5fd;
+    background: rgba(37, 99, 235, .04);
+}
+
+.backup-year-pill.checked span,
+.backup-check-pill.checked span,
+.backup-year-pill input:checked + span,
+.backup-check-pill input:checked + span {
+    border-color: #2563eb;
+    background: linear-gradient(90deg, rgba(14, 165, 233, .12), rgba(37, 99, 235, .12));
+    color: #2563eb;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .backup-year-pill input:checked + span,
+[data-theme="dark"] .backup-check-pill input:checked + span {
+    border-color: #60a5fa;
+    background: rgba(96, 165, 250, .12);
+    color: #60a5fa;
+}
+
+/* ── Generate Box ──────────────────────────────────────────────────── */
+.backup-generate-box {
+    background: linear-gradient(135deg, rgba(13, 110, 253, .06), rgba(13, 110, 253, .02));
+    border: 1px solid rgba(13, 110, 253, .15);
+    border-radius: 14px;
+    padding: 1.25rem;
+    text-align: center;
+}
+
+[data-theme="dark"] .backup-generate-box {
+    background: linear-gradient(135deg, rgba(59, 130, 246, .1), rgba(59, 130, 246, .03));
+    border-color: rgba(96, 165, 250, .2);
+}
+
+.btn-backup-generate {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .65rem 1.75rem;
+    font-size: .92rem;
+    font-weight: 600;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(90deg, #0ea5e9, #2563eb);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, .4);
+    transition: filter .2s ease, transform .2s ease, box-shadow .2s ease;
+    width: 100%;
+    max-width: 300px;
+}
+
+.btn-backup-generate:hover:not(:disabled) {
+    filter: brightness(1.12);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, .5);
+}
+
+.btn-backup-generate:disabled {
+    opacity: .75;
+    cursor: not-allowed;
+}
+
+[data-theme="dark"] .backup-card {
+    background: #1f2937;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .backup-stat-card {
+    background: #1f2937;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] #formBackup .input-group-text {
+    background-color: #263349;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #94a3b8;
+}
+
+[data-theme="dark"] #formBackup .form-control {
+    background-color: #263349;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #e5e7eb;
+}
+
+[data-theme="dark"] #formBackup .form-control::placeholder {
+    color: #64748b;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .backup-tipe-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: .4rem;
+    }
+
+    .backup-tipe-card {
+        padding: .65rem .25rem;
+    }
+
+    .backup-tipe-card i {
+        font-size: 1.2rem;
+    }
+
+    .backup-tipe-card span {
+        font-size: .72rem;
+    }
+
+    .backup-tipe-card small {
+        font-size: .62rem;
+    }
+
+    .backup-stat-card {
+        padding: .85rem 1rem;
+        gap: .75rem;
+    }
+
+    .backup-stat-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 1.1rem;
+        border-radius: 10px;
+    }
+
+    .backup-stat-value {
+        font-size: 1.1rem;
+    }
+
+    .btn-backup-generate {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .backup-card-body {
+        padding: .85rem;
+    }
+
+    .backup-card-header {
+        padding: .65rem .85rem;
+        font-size: .82rem;
+    }
+}

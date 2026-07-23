@@ -32,12 +32,12 @@
 
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label fw-semibold">Nama Peserta Didik</label>
+            <label class="form-label fw-semibold" for="add_nama_peserta_didik">Nama Peserta Didik</label>
             <input type="text" name="nama_peserta_didik" id="add_nama_peserta_didik" class="form-control" required>
           </div>
 
           <div class="col-md-3 position-relative">
-            <label class="form-label fw-semibold">Jenis Kelamin</label>
+            <label class="form-label fw-semibold" for="add_jenis_kelamin">Jenis Kelamin</label>
             <select name="jenis_kelamin" id="add_jenis_kelamin" class="form-select" required>
               <option value="">-- Pilih --</option>
               <option value="L">Laki-laki</option>
@@ -46,22 +46,22 @@
           </div>
 
           <div class="col-md-3">
-            <label class="form-label fw-semibold">Tahun Angkatan</label>
-            <input type="text" name="tahun_angkatan" class="form-control" placeholder="Contoh: 2026 atau 2025/2026" required>
+            <label class="form-label fw-semibold" for="add_tahun_angkatan">Tahun Angkatan</label>
+            <input type="text" name="tahun_angkatan" id="add_tahun_angkatan" class="form-control" placeholder="Contoh: 2026 atau 2025/2026" required>
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold">Tempat Lahir</label>
-            <input type="text" name="tempat_lahir" class="form-control" required>
+            <label class="form-label fw-semibold" for="add_tempat_lahir">Tempat Lahir</label>
+            <input type="text" name="tempat_lahir" id="add_tempat_lahir" class="form-control" required>
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold">Tanggal Lahir</label>
+            <label class="form-label fw-semibold" for="add_tanggal_lahir">Tanggal Lahir</label>
             <input type="date" name="tanggal_lahir" id="add_tanggal_lahir" class="form-control" required>
           </div>
 
           <div class="col-md-6 position-relative">
-            <label class="form-label fw-semibold">Rombel</label>
+            <label class="form-label fw-semibold" for="add_rombel">Rombel</label>
             <select name="rombel" id="add_rombel" class="form-select" required>
               <option value="">-- Pilih Rombel --</option>
               <option value="A">A</option>
@@ -70,7 +70,7 @@
           </div>
 
           <div class="col-md-12">
-            <label class="form-label fw-semibold">Alamat</label>
+            <label class="form-label fw-semibold" for="add_alamat">Alamat</label>
             <textarea name="alamat" id="add_alamat" class="form-control" rows="2"></textarea>
           </div>
         </div>
@@ -141,12 +141,12 @@
 
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label fw-semibold">Nama Peserta Didik</label>
+            <label class="form-label fw-semibold" for="edit_nama_peserta_didik">Nama Peserta Didik</label>
             <input type="text" name="nama_peserta_didik" id="edit_nama_peserta_didik" class="form-control">
           </div>
 
           <div class="col-md-3 position-relative">
-            <label class="form-label fw-semibold">Jenis Kelamin</label>
+            <label class="form-label fw-semibold" for="edit_jenis_kelamin">Jenis Kelamin</label>
             <select name="jenis_kelamin" id="edit_jenis_kelamin" class="form-select">
               <option value="">-- Pilih --</option>
               <option value="L">Laki-laki</option>
@@ -155,22 +155,22 @@
           </div>
 
           <div class="col-md-3">
-            <label class="form-label fw-semibold">Tahun Angkatan</label>
+            <label class="form-label fw-semibold" for="edit_tahun_angkatan">Tahun Angkatan</label>
             <input type="text" name="tahun_angkatan" id="edit_tahun_angkatan" class="form-control" placeholder="Contoh: 2026 atau 2025/2026">
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold">Tempat Lahir</label>
+            <label class="form-label fw-semibold" for="edit_tempat_lahir">Tempat Lahir</label>
             <input type="text" name="tempat_lahir" id="edit_tempat_lahir" class="form-control">
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold">Tanggal Lahir</label>
+            <label class="form-label fw-semibold" for="edit_tanggal_lahir">Tanggal Lahir</label>
             <input type="date" name="tanggal_lahir" id="edit_tanggal_lahir" class="form-control">
           </div>
 
           <div class="col-md-6 position-relative">
-            <label class="form-label fw-semibold">Rombel</label>
+            <label class="form-label fw-semibold" for="edit_rombel">Rombel</label>
             <select name="rombel" id="edit_rombel" class="form-select">
               <option value="">-- Pilih Rombel --</option>
               <option value="A">A</option>
@@ -179,7 +179,7 @@
           </div>
 
           <div class="col-md-12">
-            <label class="form-label fw-semibold">Alamat</label>
+            <label class="form-label fw-semibold" for="edit_alamat">Alamat</label>
             <textarea name="alamat" id="edit_alamat" rows="2" class="form-control"></textarea>
           </div>
         </div>

@@ -38,7 +38,7 @@
                                 @endif
                             </td>
                             <td>
-                                <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap">
+                                <div class="d-flex justify-content-center gap-1">
                                     <button class="btn btn-sm btn-info text-white btn-view-peserta-didik" data-id="{{ $item->id_peserta_didik }}" title="Detail">
                                         <i class="bi bi-eye"></i>
                                     </button>

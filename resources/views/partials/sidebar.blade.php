@@ -60,6 +60,7 @@
                     $isKeluar       = request()->routeIs('surat.keluar');
                     $isLaporan      = request()->is('laporan*');
                     $isUser         = request()->routeIs('user.*');
+                    $isBackup       = request()->routeIs('backup.*');
                 @endphp
 
                 <li @class(['pc-item', 'active' => $isDashboard])>
@@ -122,7 +123,8 @@
 
                 {{-- SECTION: ADMIN (ROLE 1) --}}
                 @auth
-                    @if(strtolower(auth()->user()->role?->name ?? '') === 'kepala staf')
+                    @php $isKepalaStaf = strtolower(auth()->user()->role?->name ?? '') === 'kepala staf'; @endphp
+                    @if($isKepalaStaf)
                         <li class="pc-item pc-caption mt-1">
                             <i class="bi bi-shield-lock" aria-hidden="true"></i>
                             <span>Admin</span>
@@ -134,6 +136,15 @@
                                @if($isUser) aria-current="page" @endif>
                                 <i class="bi bi-person" aria-hidden="true"></i>
                                 <span>User</span>
+                            </a>
+                        </li>
+
+                        <li @class(['pc-item', 'active' => $isBackup])>
+                            <a href="{{ route('backup.index') }}"
+                               @class(['pc-link d-flex align-items-center gap-2', 'active' => $isBackup])
+                               @if($isBackup) aria-current="page" @endif>
+                                <i class="bi bi-database-down" aria-hidden="true"></i>
+                                <span>Backup Data</span>
                             </a>
                         </li>
                     @endif

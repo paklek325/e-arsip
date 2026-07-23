@@ -350,7 +350,7 @@
 
           {{-- File Lama --}}
           <div class="col-12">
-            <label class="form-label">File Lama</label>
+            <span class="form-label d-block fw-semibold">File Lama</span>
             <div id="edit_file_list" class="list-group mb-1"></div>
             <small class="text-muted">
               Tekan tombol <i class="bi bi-trash"></i> untuk menandai file yang akan dihapus
