@@ -62,7 +62,7 @@
 
           {{-- Kode Surat --}}
           <div class="col-md-6 position-relative" id="kode-container-add">
-            <label class="form-label" id="kode-surat-label-add">
+            <label class="form-label" id="kode-surat-label-add" for="kode_input_add">
               Kode Surat
               @if(($lockJenis ?? null) === 'Keluar')
                 <span class="text-danger"> *</span>

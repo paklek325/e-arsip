@@ -52,7 +52,7 @@
         @include('surat.partials.filter')
 
         {{-- Table --}}
-        <div id="tableContainer" class="animate-fade-in">
+        <div id="tableContainer">
             @include('surat.partials.table')
         </div>
 

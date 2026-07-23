@@ -139,6 +139,8 @@
                             </a>
                         </li>
 
+
+                        {{--
                         <li @class(['pc-item', 'active' => $isBackup])>
                             <a href="{{ route('backup.index') }}"
                                @class(['pc-link d-flex align-items-center gap-2', 'active' => $isBackup])
@@ -147,6 +149,8 @@
                                 <span>Backup Data</span>
                             </a>
                         </li>
+                        --}}
+
                     @endif
                 @endauth
 

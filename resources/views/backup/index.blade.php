@@ -220,15 +220,16 @@
 
                 {{-- Tombol Generate --}}
                 <div class="backup-generate-box mt-4">
-                    <button type="submit" class="btn btn-backup-generate" id="btnGenerate">
-                        <i class="bi bi-cloud-arrow-down-fill me-2"></i>
+                    <button type="button" class="btn btn-backup-generate" id="btnGenerate" onclick="jalankanBackup()">
+                        <i class="bi bi-cloud-arrow-down-fill me-2" id="btnIcon"></i>
                         <span id="btnGenerateText">Generate &amp; Download ZIP</span>
                         <span id="btnGenerateSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
                     </button>
-                    <p class="text-muted small mt-2 mb-0">
+                    <p class="text-muted small mt-2 mb-0" id="infoText">
                         <i class="bi bi-clock me-1"></i>
                         Proses mungkin memerlukan beberapa detik tergantung jumlah file.
                     </p>
+                    <div id="backupAlert" class="mt-3 d-none"></div>
                 </div>
 
             </div>
@@ -237,4 +238,75 @@
     </form>
 
 </div>
+
+@push('scripts')
+<script>
+function jalankanBackup() {
+    const btn      = document.getElementById('btnGenerate');
+    const icon     = document.getElementById('btnIcon');
+    const txt      = document.getElementById('btnGenerateText');
+    const spinner  = document.getElementById('btnGenerateSpinner');
+    const infoText = document.getElementById('infoText');
+    const alertBox = document.getElementById('backupAlert');
+    const form     = document.getElementById('formBackup');
+
+    // Reset alert
+    alertBox.className = 'mt-3 d-none';
+    alertBox.innerHTML = '';
+
+    // Set loading state
+    btn.disabled = true;
+    icon.className = 'd-none';
+    spinner.classList.remove('d-none');
+    txt.textContent = 'Sedang membuat ZIP...';
+    infoText.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Harap tunggu, jangan tutup halaman ini.';
+
+    const formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+        },
+    })
+    .then(async res => {
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || !data || !data.success) {
+            throw new Error((data && data.message)
+                ? data.message
+                : 'Terjadi kesalahan pada server (status ' + res.status + ').');
+        }
+
+        // Sukses: arahkan browser ke endpoint download GET.
+        // Browser yang handle stream ZIP — tidak kena timeout fetch().
+        const downloadUrl = '{{ route("backup.download", ":token") }}'
+            .replace(':token', encodeURIComponent(data.token));
+
+        setTimeout(() => { window.location.href = downloadUrl; }, 300);
+
+        setTimeout(() => {
+            txt.textContent = 'Generate & Download ZIP';
+            icon.className  = 'bi bi-cloud-arrow-down-fill me-2';
+            spinner.classList.add('d-none');
+            btn.disabled = false;
+            infoText.innerHTML = '<i class="bi bi-check-circle me-1 text-success"></i>Berhasil diunduh!';
+        }, 1800);
+    })
+    .catch(err => {
+        alertBox.className = 'mt-3 alert alert-danger';
+        alertBox.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i>'
+            + (err.message || 'Terjadi kesalahan. Coba lagi.');
+
+        txt.textContent = 'Generate & Download ZIP';
+        icon.className  = 'bi bi-cloud-arrow-down-fill me-2';
+        spinner.classList.add('d-none');
+        btn.disabled = false;
+        infoText.innerHTML = '<i class="bi bi-clock me-1"></i>Proses mungkin memerlukan beberapa detik tergantung jumlah file.';
+    });
+}
+</script>
+@endpush
 @endsection

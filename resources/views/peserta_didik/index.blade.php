@@ -31,7 +31,7 @@
     {{-- Filter --}}
     @include('peserta_didik.partials.filter')
     {{-- Table --}}
-    <div id="tableContainer" class="animate-fade-in" data-base-url="{{ route('peserta-didik.index') }}">
+    <div id="tableContainer" data-base-url="{{ route('peserta-didik.index') }}">
         @include('peserta_didik.partials.table')
     </div>
     {{-- Modal --}}

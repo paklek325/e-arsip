@@ -31,7 +31,6 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
     }
     $urlTotalMasuk  = route('surat.masuk',  ['tahun' => $tahun]);
     $urlTotalKeluar = route('surat.keluar', ['tahun' => $tahun]);
-    $urlTotalSemua  = route('surat.index',  ['tahun' => $tahun]);
 @endphp
 
 <div class="laporan-tahunan">
@@ -94,7 +93,6 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
 
                                 $urlMasuk  = route('surat.masuk',  ['bulan' => $row->bulan, 'tahun' => $tahun]);
                                 $urlKeluar = route('surat.keluar', ['bulan' => $row->bulan, 'tahun' => $tahun]);
-                                $urlSemua  = route('surat.index',  ['bulan' => $row->bulan, 'tahun' => $tahun]);
                             @endphp
 
                             <tr @if($tot == 0) class="row-empty" @endif>
@@ -122,7 +120,7 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
 
                                 <td>
                                     @if($tot > 0)
-                                        <a href="{{ $urlSemua }}" class="badge-total">{{ $tot }} <span class="full-text">Surat</span></a>
+                                        <span class="badge-total">{{ $tot }} <span class="full-text">Surat</span></span>
                                     @else
                                         <span class="badge-zero">0</span>
                                     @endif
@@ -150,7 +148,7 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
                             </td>
                             <td>
                                 @if(($tmTotal + $tkTotal) > 0)
-                                    <a href="{{ $urlTotalSemua }}" class="badge-total">{{ $tmTotal + $tkTotal }} <span class="full-text">Surat</span></a>
+                                    <span class="badge-total">{{ $tmTotal + $tkTotal }} <span class="full-text">Surat</span></span>
                                 @else
                                     <span class="badge-zero">0</span>
                                 @endif
@@ -176,7 +174,6 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
 
     $urlMasuk  = route('surat.masuk',  ['bulan' => $bulan, 'tahun' => $tahun]);
     $urlKeluar = route('surat.keluar', ['bulan' => $bulan, 'tahun' => $tahun]);
-    $urlSemua  = route('surat.index',  ['bulan' => $bulan, 'tahun' => $tahun]);
 @endphp
 
 <div class="laporan-bulanan">
@@ -253,7 +250,7 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
                             </td>
                             <td>
                                 @if($totalBulan > 0)
-                                    <a href="{{ $urlSemua }}" class="badge-total">{{ $totalBulan }} <span class="full-text">Surat</span></a>
+                                    <span class="badge-total">{{ $totalBulan }} <span class="full-text">Surat</span></span>
                                 @else
                                     <span class="badge-zero">0</span>
                                 @endif
@@ -280,7 +277,7 @@ $tanggalCetak = Carbon::now()->translatedFormat('d F Y H:i');
                             </td>
                             <td>
                                 @if($totalBulan > 0)
-                                    <a href="{{ $urlSemua }}" class="badge-total">{{ $totalBulan }} <span class="full-text">Surat</span></a>
+                                    <span class="badge-total">{{ $totalBulan }} <span class="full-text">Surat</span></span>
                                 @else
                                     <span class="badge-zero">0</span>
                                 @endif

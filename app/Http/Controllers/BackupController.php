@@ -80,11 +80,13 @@ class BackupController extends Controller
             'rombel'         => 'nullable',
         ]);
 
-        // Beri ruang & waktu ekstra — backup bisa berisi banyak file besar.
-        // Kalau ini timeout/OOM di tengah zip->close(), hasilnya ZIP setengah
-        // jadi alias "rusak/corrupt" ketika dibuka.
         @set_time_limit(300);
         @ini_set('memory_limit', '512M');
+
+        // Bersihkan dulu ZIP backup lama yang tertinggal (gagal/lupa
+        // diunduh) sebelum bikin ZIP baru, supaya tidak menumpuk terus
+        // menunggu jadwal harian `app:clean-temp-files`.
+        $this->cleanOldTempBackups();
 
         $tipe    = $request->tipe;
         $zipName = 'backup_earsip_' . now()->format('Ymd_His') . '.zip';
@@ -93,8 +95,6 @@ class BackupController extends Controller
         if (!is_dir(dirname($zipPath))) {
             mkdir(dirname($zipPath), 0755, true);
         }
-        // Bersihkan sisa file temp lama kalau ada, supaya tidak mewarisi
-        // ZIP korup dari percobaan sebelumnya.
         if (file_exists($zipPath)) {
             @unlink($zipPath);
         }
@@ -114,23 +114,18 @@ class BackupController extends Controller
         $tahunPesertaArray = $this->normalizeFilterArray($request->tahun_peserta);
         $rombelArray       = $this->normalizeFilterArray($request->rombel);
 
-        // ── Backup Surat ────────────────────────────────────────────
         if (in_array($tipe, ['surat', 'semua'])) {
             $result      = $this->addSuratToZip($zip, $tahunSuratArray, $request->jenis_surat ?? 'semua');
             $totalAdded += $result['added'];
             $missingReport = array_merge($missingReport, $result['missing']);
         }
 
-        // ── Backup Peserta Didik ─────────────────────────────────────
         if (in_array($tipe, ['peserta_didik', 'semua'])) {
             $result      = $this->addPesertaToZip($zip, $tahunPesertaArray, $rombelArray);
             $totalAdded += $result['added'];
             $missingReport = array_merge($missingReport, $result['missing']);
         }
 
-        // Sertakan laporan file yang tidak ditemukan di disk, supaya admin
-        // tahu persis file mana yang bermasalah — bukan menebak-nebak lagi
-        // kenapa arsip "kosong/rusak".
         if (!empty($missingReport)) {
             $zip->addFromString(
                 '_LAPORAN_FILE_TIDAK_DITEMUKAN.txt',
@@ -144,11 +139,6 @@ class BackupController extends Controller
 
         $closeOk = $zip->close();
 
-        // ── Validasi integritas ZIP sebelum dikirim ───────────────────
-        // Ini bagian penting yang sebelumnya tidak ada: kalau close() gagal
-        // atau ukuran file tidak masuk akal (ZIP kosong minimal 22 byte
-        // untuk End-Of-Central-Directory record), JANGAN kirim ke user
-        // sebagai file yang "berhasil" — itu sumber laporan "rusak lagi".
         if (!$closeOk || !file_exists($zipPath) || filesize($zipPath) < 22) {
             @unlink($zipPath);
             Log::error("Backup ZIP gagal ditutup dengan benar atau file tidak valid: {$zipName}");
@@ -158,8 +148,6 @@ class BackupController extends Controller
             ], 500);
         }
 
-        // Double-check ZIP benar-benar bisa dibuka lagi (deteksi dini
-        // corrupt) sebelum kita commit untuk mengirimkannya ke user.
         $verify = new ZipArchive();
         if ($verify->open($zipPath, ZipArchive::CHECKCONS) !== true) {
             @unlink($zipPath);
@@ -181,21 +169,67 @@ class BackupController extends Controller
 
         Log::info("Backup ZIP dibuat: {$zipName} ({$totalAdded} file, " . count($missingReport) . " hilang)");
 
-        // Matikan output buffering/kompresi sebelum stream binary — pada
-        // sebagian hosting, zlib.output_compression atau ob_gzhandler yang
-        // aktif bisa "menyisipkan diri" ke response biner dan membuat ZIP
-        // yang sampai ke user berbeda byte-nya dari file aslinya (=> corrupt
-        // walau file di server sendiri valid).
+        // Kembalikan token (nama file) ke frontend — download dilakukan via
+        // endpoint GET /backup/download/{token} agar tidak timeout di fetch().
+        return response()->json([
+            'success'  => true,
+            'token'    => $zipName,
+            'filename' => $zipName,
+            'message'  => "ZIP berhasil dibuat ({$totalAdded} file).",
+        ]);
+    }
+
+    /* =====================================================================
+     | Download ZIP yang sudah di-generate via token (nama file)
+     | GET /backup/download/{token}
+     ===================================================================== */
+    public function download(string $token)
+    {
+        // Sanitasi token — hanya izinkan karakter aman (a-z, 0-9, _, .)
+        if (!preg_match('/^backup_earsip_[0-9]{8}_[0-9]{6}\.zip$/', $token)) {
+            abort(404, 'Token tidak valid.');
+        }
+
+        $zipPath = storage_path('app/temp_backup/' . $token);
+
+        if (!file_exists($zipPath) || !is_readable($zipPath)) {
+            abort(404, 'File tidak ditemukan atau sudah kedaluwarsa.');
+        }
+
+        @ini_set('zlib.output_compression', 'Off');
         while (ob_get_level() > 0) {
             @ob_end_clean();
         }
 
         return response()
-            ->download($zipPath, $zipName, [
-                'Content-Type'   => 'application/zip',
-                'Content-Length' => filesize($zipPath),
+            ->download($zipPath, $token, [
+                'Content-Type' => 'application/zip',
             ])
             ->deleteFileAfterSend(true);
+    }
+
+    /* =====================================================================
+     | PRIVATE: Hapus ZIP backup lama di temp_backup yang sudah tidak
+     | terpakai (gagal/lupa diunduh), umur >= 1 jam.
+     |
+     | Dipanggil setiap kali ada request generate ZIP baru, sebagai lapisan
+     | tambahan selain jadwal harian `app:clean-temp-files`. Ambang 1 jam
+     | dipakai di sini (lebih ketat dari jadwal harian) supaya folder tidak
+     | sempat menumpuk banyak di antara dua kali generate.
+     ===================================================================== */
+    private function cleanOldTempBackups(): void
+    {
+        $folder = storage_path('app/temp_backup');
+
+        if (!is_dir($folder)) {
+            return;
+        }
+
+        foreach (glob($folder . '/backup_earsip_*.zip') as $oldZip) {
+            if (is_file($oldZip) && (time() - filemtime($oldZip)) >= 3600) {
+                @unlink($oldZip);
+            }
+        }
     }
 
     /* =====================================================================
@@ -472,23 +506,14 @@ class BackupController extends Controller
                 }
             }
 
-            // 2. Sapu juga seluruh file fisik yang berada di folder storage siswa
-            //    (menangkap file yang ada di disk tapi belum tercatat rapi di kolom DB)
-            if (Storage::disk('public')->exists($storageFolder)) {
-                $folderFiles = Storage::disk('public')->files($storageFolder);
-                foreach ($folderFiles as $f) {
-                    if (in_array($f, $addedDiskPaths)) continue;
-
-                    $absPath = storage_path('app/public/' . $f);
-                    if (@file_exists($absPath) && @is_readable($absPath)) {
-                        $baseName = basename($f);
-                        $zip->addFile($absPath, "{$folder}/{$baseName}");
-                        $added++;
-                        $foundAnyForThisStudent = true;
-                        $addedDiskPaths[] = $f;
-                    }
-                }
-            }
+            // Catatan: dulu ada langkah "sapu semua file fisik di folder
+            // siswa" di sini untuk menangkap file yang belum tercatat rapi
+            // di kolom DB. Langkah itu DIHAPUS karena efeknya justru ikut
+            // memasukkan file lama/sisa (mis. file_foto, file_ijazah_sma,
+            // file_kts, file_ppdb — field yang sudah tidak dipakai lagi di
+            // aplikasi) ke dalam ZIP backup. Sekarang backup HANYA berisi
+            // file sesuai 5 field yang benar-benar ada di aplikasi saat ini
+            // ($fileFields di atas), jadi datanya konsisten dengan aplikasi.
 
             if (!$foundAnyForThisStudent) {
                 // Buatkan entri folder kosong di dalam ZIP untuk siswa ini
@@ -608,18 +633,11 @@ class BackupController extends Controller
                 }
             }
 
-            if (Storage::disk('public')->exists($storageFolder)) {
-                $folderFiles = Storage::disk('public')->files($storageFolder);
-                foreach ($folderFiles as $f) {
-                    if (in_array($f, $countedPaths)) continue;
-
-                    $count++;
-                    $countedPaths[] = $f;
-                    try {
-                        $bytes += Storage::disk('public')->size($f);
-                    } catch (\Throwable) {}
-                }
-            }
+            // Catatan: sapuan folder fisik (menghitung semua file di folder
+            // siswa) dihapus dari sini juga, dengan alasan yang sama seperti
+            // di addPesertaToZip() — supaya statistik yang tampil di halaman
+            // backup mencerminkan data aplikasi saat ini, bukan ikut
+            // menghitung file lama/sisa yang sudah tidak dipakai lagi.
         }
 
         return ['count' => $count, 'size' => $this->formatBytes($bytes)];

@@ -129,8 +129,8 @@ Route::middleware('auth')->group(function () {
         // Clone dari halaman Surat, tetapi terkunci hanya menampilkan
         // jenis tertentu. Harus dideklarasikan SEBELUM wildcard /{surat}
         // agar tidak tertangkap oleh route show.
-        Route::get('/filter/masuk', 'masuk')->name('masuk');
-        Route::get('/filter/keluar', 'keluar')->name('keluar');
+        Route::get('/masuk', 'masuk')->name('masuk');
+        Route::get('/keluar', 'keluar')->name('keluar');
 
         Route::post('/download-multiple', 'downloadMultiple')->name('downloadMultiple');
 
@@ -166,5 +166,6 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:Kepala Staf')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/generate', 'generate')->name('generate');
+            Route::get('/download/{token}', 'download')->name('download');
         });
 });

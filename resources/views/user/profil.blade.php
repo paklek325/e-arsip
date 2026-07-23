@@ -117,8 +117,8 @@
 
                             {{-- Role (readonly) --}}
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">Role</label>
-                                <input type="text" class="form-control bg-body-secondary"
+                                <label class="form-label fw-semibold" for="profil_role">Role</label>
+                                <input type="text" id="profil_role" class="form-control bg-body-secondary"
                                     value="{{ $user->role->name ?? '-' }}" readonly>
                                 <div class="form-text">Role tidak dapat diubah sendiri.</div>
                             </div>
