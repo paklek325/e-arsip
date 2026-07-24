@@ -31,8 +31,7 @@
     {{-- Filter --}}
     @include('peserta_didik.partials.filter')
     {{-- Table --}}
-    <div id="tableContainer" data-base-url="{{ route('peserta-didik.index') }}">
-        @include('peserta_didik.partials.table')
+<div id="wrapper-table-peserta_didik" data-base-url="{{ route('peserta-didik.index') }}">        @include('peserta_didik.partials.table')
     </div>
     {{-- Modal --}}
     @push('modals')

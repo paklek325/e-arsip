@@ -375,46 +375,24 @@ if (window.SuratApp) {
             return `${yyyy}-${mm}-${dd}`;
         }
 
-        // Cache di memori — daftar kode surat ini master data yang jarang
-        // berubah, jadi tidak perlu di-fetch ulang ke server SETIAP KALI
-        // modal Edit/Tambah dibuka. Sebelumnya inilah yang bikin aksi Edit
-        // terasa lambat: setiap klik "Edit" menunggu 1 round-trip network
-        // baru ke /surat/kode-surat-keluar sebelum modal terisi.
-        let _kodeListCache = null;
-        let _kodeListPromise = null;
+        async function fetchKodeList() {
+            try {
+                const res = await safeFetch("/surat/kode-surat-keluar", {
+                    headers: { Accept: "application/json" },
+                });
+                const data = await res.json();
 
-        async function fetchKodeList({ forceRefresh = false } = {}) {
-            if (!forceRefresh && _kodeListCache) return _kodeListCache;
-            // Kalau ada request yang masih berjalan (mis. 2 klik Edit
-            // beruntun), pakai promise yang sama, jangan fetch dobel.
-            if (!forceRefresh && _kodeListPromise) return _kodeListPromise;
+                if (!Array.isArray(data)) return [];
 
-            _kodeListPromise = (async () => {
-                try {
-                    const res = await safeFetch("/surat/kode-surat-keluar", {
-                        headers: { Accept: "application/json" },
-                    });
-                    const data = await res.json();
-
-                    const list = Array.isArray(data)
-                        ? data.map((k) => ({
-                            kode: k.kode,
-                            description: k.description || "",
-                        }))
-                        : [];
-
-                    _kodeListCache = list;
-                    return list;
-                } catch (err) {
-                    console.error("Gagal memuat daftar kode surat:", err);
-                    toast("Gagal memuat daftar kode surat", "error");
-                    return [];
-                } finally {
-                    _kodeListPromise = null;
-                }
-            })();
-
-            return _kodeListPromise;
+                return data.map((k) => ({
+                    kode: k.kode,
+                    description: k.description || "",
+                }));
+            } catch (err) {
+                console.error("Gagal memuat daftar kode surat:", err);
+                toast("Gagal memuat daftar kode surat", "error");
+                return [];
+            }
         }
 
         // ===== CEK DUPLIKAT SURAT (no_surat + instansi + tanggal_surat) =====

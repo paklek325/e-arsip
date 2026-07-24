@@ -247,18 +247,30 @@ class UserController extends Controller
         }
 
         // --- Proses Upload Foto Baru ---
-        if ($request->hasFile('foto')) {
-            if ($user->foto) {
-                Storage::disk('public')->delete('foto_admin/' . $user->foto);
-            }
+        // URUTAN AMAN: upload foto baru dulu → update DB → hapus foto lama.
+        // Sebelumnya: hapus foto lama dulu → jika update DB gagal, foto hilang
+        // permanen (data orphan). Sekarang foto lama hanya dihapus setelah DB
+        // berhasil di-update, sehingga rollback tetap bisa mempertahankan foto.
+        $fotoLamaUntukDihapus = null;
 
+        if ($request->hasFile('foto')) {
             $file = $request->file('foto');
             $filename = time() . '-' . Str::random(8) . '.' . $file->getClientOriginalExtension();
             $file->storeAs('foto_admin', $filename, 'public');
             $data['foto'] = $filename;
+
+            // Tandai foto lama untuk dihapus setelah DB update berhasil
+            if ($user->foto) {
+                $fotoLamaUntukDihapus = $user->foto;
+            }
         }
 
         $user->update($data);
+
+        // Hapus foto lama HANYA setelah DB update berhasil
+        if ($fotoLamaUntukDihapus) {
+            Storage::disk('public')->delete('foto_admin/' . $fotoLamaUntukDihapus);
+        }
 
         return response()->json([
             'success' => true,

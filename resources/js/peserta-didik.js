@@ -44,56 +44,6 @@ if (window.PesertaDidikApp) {
 
         const token = $('meta[name="csrf-token"]')?.getAttribute("content");
 
-        // ============================================================
-        // CACHE DATA PESERTA_DIDIK PER ID
-        // ─────────────────────────────────────────────────────────
-        // Sebelumnya setiap klik Edit / Detail / Preview file selalu
-        // fetch ulang ke server (GET /peserta-didik/{id}) meskipun data
-        // yang sama baru saja diambil beberapa detik lalu — mis. user
-        // klik preview KK lalu preview Akte untuk siswa yang sama,
-        // masing-masing nunggu 1 round-trip network penuh. Cache ini
-        // menyimpan hasil fetch per id selama beberapa detik saja (cukup
-        // singkat supaya tetap terasa "fresh"), dan otomatis dibersihkan
-        // begitu data siswa itu diubah/dihapus.
-        // ============================================================
-        const _pesertaCache = new Map(); // id -> { data, ts }
-        const _pesertaInflight = new Map(); // id -> Promise
-        const PESERTA_CACHE_TTL_MS = 15000;
-
-        function invalidatePesertaCache(id) {
-            _pesertaCache.delete(String(id));
-        }
-
-        async function fetchPesertaData(id, { forceRefresh = false } = {}) {
-            const key = String(id);
-
-            if (!forceRefresh) {
-                const cached = _pesertaCache.get(key);
-                if (cached && Date.now() - cached.ts < PESERTA_CACHE_TTL_MS) {
-                    return cached.data;
-                }
-                if (_pesertaInflight.has(key)) return _pesertaInflight.get(key);
-            }
-
-            const promise = (async () => {
-                const res = await fetch(`${baseUrl}/${key}`, {
-                    headers: { "X-Requested-With": "XMLHttpRequest" },
-                });
-                const j = await res.json().catch(() => ({}));
-                if (j?.success && j?.data) {
-                    _pesertaCache.set(key, { data: j, ts: Date.now() });
-                }
-                return j;
-            })();
-
-            _pesertaInflight.set(key, promise);
-            try {
-                return await promise;
-            } finally {
-                _pesertaInflight.delete(key);
-            }
-        }
-
         // Baca param ?detail=ID dari URL (navigasi dari chat Arsy) — ditangkap
         // SINKRON di sini (sebelum initPesertaDidikPage membersihkan query
         // string) supaya modal detail bisa langsung dibuka otomatis.
@@ -138,6 +88,29 @@ if (window.PesertaDidikApp) {
         // ============================================================
         function toast(message, type = "info") {
             window.AppToast(message, type);
+        }
+
+        // ============================================================
+        // LOADING STATE TOMBOL SUBMIT
+        // Memberi feedback instan (disable + spinner) begitu tombol
+        // diklik, supaya proses yang sebenarnya cepat tidak terasa
+        // "diam/nge-freeze" di mata user.
+        // ============================================================
+        function setSubmitLoading(form, loading, loadingLabel = "Menyimpan...") {
+            const btn = form?.querySelector('[type="submit"]');
+            if (!btn) return;
+            if (loading) {
+                if (!btn.dataset.originalHtml) {
+                    btn.dataset.originalHtml = btn.innerHTML;
+                }
+                btn.disabled = true;
+                btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>${loadingLabel}`;
+            } else {
+                btn.disabled = false;
+                if (btn.dataset.originalHtml) {
+                    btn.innerHTML = btn.dataset.originalHtml;
+                }
+            }
         }
 
         // ============================================================
@@ -278,17 +251,26 @@ if (window.PesertaDidikApp) {
         async function loadTablePesertaDidik(params = {}) {
             const query = new URLSearchParams(params).toString();
             const { signal, isStale } = tableGuard.start();
-            try {
+
+            // Debounce spinner: tampilkan hanya jika fetch belum selesai dalam 150ms.
+            // Ini mencegah flicker berulang saat user mengetik cepat di search box —
+            // spinner tidak perlu muncul untuk fetch yang selesai sangat cepat.
+            let spinnerTimer = setTimeout(() => {
+                if (isStale()) return;
                 wrapper.innerHTML = `<div class="text-center p-4">
                 <div class="spinner-border" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div></div>`;
+            }, 150);
+
+            try {
                 const url = query ? `${baseUrl}?${query}` : baseUrl;
                 const res = await fetch(url, {
                     headers: { "X-Requested-With": "XMLHttpRequest" },
                     credentials: "same-origin",
                     signal,
                 });
+                clearTimeout(spinnerTimer); // batalkan spinner jika fetch sudah selesai
                 if (isStale()) return; // ada pencarian/filter lebih baru menyusul
 
                 if (!res.ok) throw new Error("Gagal memuat tabel");
@@ -298,6 +280,7 @@ if (window.PesertaDidikApp) {
                 wrapper.innerHTML = html;
                 bindRowActions();
             } catch (err) {
+                clearTimeout(spinnerTimer);
                 if (err.name === "AbortError" || isStale()) return;
                 console.error(err);
                 wrapper.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat tabel peserta_didik.</div>`;
@@ -660,7 +643,10 @@ if (window.PesertaDidikApp) {
         // ============================================================
         async function previewFile(id, field) {
             try {
-                const j = await fetchPesertaData(id);
+                const res = await fetch(`${baseUrl}/${id}`, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                });
+                const j = await res.json().catch(() => ({}));
                 const fileUrl = j?.data?.[`${field}_url`];
                 if (!j?.success || !fileUrl)
                     return toast("File tidak ditemukan.", "error");
@@ -884,9 +870,10 @@ if (window.PesertaDidikApp) {
         async function editPesertaDidik(id) {
             if (!id) return toast("ID peserta_didik tidak valid.", "error");
             try {
-                // forceRefresh: data Edit sebaiknya selalu paling akurat kalau
-                // baru saja diubah dari tab/perangkat lain, jadi lewati cache.
-                const j = await fetchPesertaData(id, { forceRefresh: true });
+                const res = await fetch(`${baseUrl}/${id}`, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                });
+                const j = await res.json().catch(() => ({}));
                 if (!j?.success || !j?.data)
                     return toast("Gagal memuat data peserta_didik", "error");
 
@@ -1018,7 +1005,10 @@ if (window.PesertaDidikApp) {
         async function detailPesertaDidik(id) {
             if (!id) return toast("ID peserta_didik tidak valid.", "error");
             try {
-                const j = await fetchPesertaData(id);
+                const res = await fetch(`${baseUrl}/${id}`, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                });
+                const j = await res.json().catch(() => ({}));
                 if (!j?.success || !j?.data)
                     return toast("Gagal memuat detail peserta_didik", "error");
 
@@ -1214,19 +1204,20 @@ if (window.PesertaDidikApp) {
                     return;
                 }
 
-                const nama = $("#add_nama_peserta_didik")?.value?.trim();
-                const tanggal = $("#add_tanggal_lahir")?.value;
-                const isDup = await cekDuplikatPesertaDidik(nama, tanggal);
-
-                if (isDup) {
-                    showFormAlert(
-                        "#alertTambahPesertaDidik",
-                        "❌ Data peserta_didik dengan nama dan tanggal lahir tersebut sudah ada."
-                    );
-                    return;
-                }
-
+                setSubmitLoading(formTambah, true, "Menyimpan...");
                 try {
+                    const nama = $("#add_nama_peserta_didik")?.value?.trim();
+                    const tanggal = $("#add_tanggal_lahir")?.value;
+                    const isDup = await cekDuplikatPesertaDidik(nama, tanggal);
+
+                    if (isDup) {
+                        showFormAlert(
+                            "#alertTambahPesertaDidik",
+                            "❌ Data peserta_didik dengan nama dan tanggal lahir tersebut sudah ada."
+                        );
+                        return;
+                    }
+
                     const res = await fetch(baseUrl, {
                         method: "POST",
                         headers: {
@@ -1255,6 +1246,8 @@ if (window.PesertaDidikApp) {
                 } catch (err) {
                     console.error(err);
                     toast("Terjadi kesalahan jaringan saat menyimpan.", "error");
+                } finally {
+                    setSubmitLoading(formTambah, false);
                 }
             });
         }
@@ -1318,6 +1311,7 @@ if (window.PesertaDidikApp) {
                 }
 
                 if (idInput) idInput.disabled = true;
+                setSubmitLoading(formEdit, true, "Memperbarui...");
 
                 const formData = new FormData(formEdit);
                 formData.append("_method", "PUT");
@@ -1349,7 +1343,6 @@ if (window.PesertaDidikApp) {
 
                     if (j.success) {
                         toast(j.message || "✅ Data diperbarui", "success");
-                        invalidatePesertaCache(id);
                         bootstrap.Modal.getInstance($("#modalEditPesertaDidik"))?.hide();
                         await loadTablePesertaDidik(getCurrentFilters());
                     } else if (res.status === 422 && j.errors) {
@@ -1366,6 +1359,7 @@ if (window.PesertaDidikApp) {
                     toast("Terjadi kesalahan jaringan saat update.", "error");
                 } finally {
                     if (idInput) idInput.disabled = false;
+                    setSubmitLoading(formEdit, false);
                 }
             });
         }
@@ -1375,9 +1369,11 @@ if (window.PesertaDidikApp) {
         // ============================================================
         $("#formHapusPesertaDidik")?.addEventListener("submit", async (e) => {
             e.preventDefault();
+            const formHapus = e.target;
             const id = $("#hapus_id")?.value;
             if (!id) return toast("ID tidak ditemukan.", "error");
 
+            setSubmitLoading(formHapus, true, "Menghapus...");
             try {
                 const res = await fetch(`${baseUrl}/${id}`, {
                     method: "DELETE",
@@ -1391,7 +1387,6 @@ if (window.PesertaDidikApp) {
 
                 if (j.success) {
                     toast(j.message || "✅ Data dihapus", "success");
-                    invalidatePesertaCache(id);
                     bootstrap.Modal.getInstance($("#modalHapusPesertaDidik"))?.hide();
                     await loadTablePesertaDidik(getCurrentFilters());
                 } else if (res.status === 419) {
@@ -1402,6 +1397,8 @@ if (window.PesertaDidikApp) {
             } catch (err) {
                 console.error(err);
                 toast("Terjadi kesalahan jaringan saat menghapus.", "error");
+            } finally {
+                setSubmitLoading(formHapus, false);
             }
         });
 
@@ -1485,8 +1482,8 @@ if (window.PesertaDidikApp) {
                 });
             });
 
-            // ── Preview & Download file ──
-            document
+            // ── Preview & Download file (dalam area tabel saja, bukan seluruh document) ──
+            wrapper
                 .querySelectorAll("[data-peserta-didik-preview]")
                 .forEach((btn) => {
                     btn.onclick = () =>
@@ -1495,7 +1492,7 @@ if (window.PesertaDidikApp) {
                             btn.dataset.field
                         );
                 });
-            document
+            wrapper
                 .querySelectorAll("[data-peserta-didik-download]")
                 .forEach((btn) => {
                     btn.onclick = () =>

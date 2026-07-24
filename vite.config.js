@@ -2,6 +2,9 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 
 export default defineConfig({
+    build: {
+        sourcemap: false, // Nonaktifkan source map untuk menghindari warning di browser
+    },
     plugins: [
         laravel({
             input: [

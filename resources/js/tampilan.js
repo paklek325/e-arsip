@@ -1,13 +1,11 @@
-// ===========================================
-// 🌓 E-ARSIP — THEME + SIDEBAR HANDLER (FINAL UNIFIED)
-// ===========================================
-
 // =======================================================
 // ⚡ ANTI-FLICKER — Terapkan tema SEBELUM DOM siap
 // -------------------------------------------------------
-// Dijalankan langsung saat script ini dieksekusi (bukan menunggu
-// DOMContentLoaded), supaya saat pindah menu/halaman, tema dark
-// sudah aktif sebelum konten ke-render → tidak ada "flick" putih.
+// CATATAN: Inline script di <head> layouts/app.blade.php sudah lebih awal
+// menjalankan hal yang sama (lihat baris data-ui-changing & data-theme di
+// app.blade.php). IIFE di sini berfungsi sebagai FALLBACK — jika tampilan.js
+// pernah dimuat tanpa melalui layout (mis. dev/testing) tema tetap diterapkan.
+// Tidak ada efek negatif dari double-set karena nilai yang sama.
 // =======================================================
 (function () {
     const THEME_KEY = "earsip-theme";

@@ -68,10 +68,14 @@ flatpickr.localize(Indonesian);
         @keyframes appToastShrink{from{transform:scaleX(1);}to{transform:scaleX(0);}}
     `;
 
-    const style = document.createElement("style");
-    style.id = "appToastStyles";
-    style.textContent = CSS;
-    document.head.appendChild(style);
+    // Guard: jangan inject ulang jika sudah ada (mencegah duplikasi saat
+    // script di-execute >1x mis. Vite HMR atau double @vite call).
+    if (!document.getElementById("appToastStyles")) {
+        const style = document.createElement("style");
+        style.id = "appToastStyles";
+        style.textContent = CSS;
+        document.head.appendChild(style);
+    }
 
     // ════════════════════════════════════════════════════════════
     // GLOBAL UTILITIES — dipakai oleh modul JS lain via window.*

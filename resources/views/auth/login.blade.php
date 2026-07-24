@@ -6,7 +6,9 @@
     <title>E-Arsip – Login</title>
 
     <link rel="icon" href="{{ asset('template/dist/images/logo.png') }}" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('template/dist/assets/css/style.css') }}">
     <link rel="stylesheet" href="{{ asset('template/dist/assets/css/style-preset.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -22,7 +24,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Inter', sans-serif;
             transition: background-color .3s ease, color .3s ease;
             background: url("{{ asset('assets/img/login.jpg') }}") no-repeat center center / cover;
             position: relative;
@@ -268,7 +270,7 @@
         .form-control {
             width: 100%;
             padding: .8rem 1rem;
-            font-family: inherit;
+            font-family: 'Inter', sans-serif;
             font-size: .95rem;
             font-weight: 500;
             line-height: 1.4;
@@ -360,7 +362,7 @@
             width: 100%;
             padding: .85rem 1rem;
             margin-top: 1.7rem;
-            font-family: inherit;
+            font-family: 'Inter', sans-serif;
             font-size: .98rem;
             font-weight: 700;
             letter-spacing: .3px;
